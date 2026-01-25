@@ -1,27 +1,158 @@
-import sys
+"""ELIN Compiler
+A simple stack-based bytecode compiler for the ELIN language.
+
+Instruction Set:
+1 = PUSH <4-byte operand>
+2 = LOAD <index>
+3 = STORE <index>
+4 = ADD
+5 = SUB
+6 = MUL
+7 = DIV
+8 = PRINT
+9 = HALT
+"""
+
 import os
+import sys
 
-def parser(line: bytes, filename: str) -> None:
-    print(f"file={filename} line={line.decode()}")
+class Compiler:
+    """
+    Compiler class to translate ELIN source code into a string-based bytecode.
+    """
+    def __init__(self):
+        self.bytecode = []
+        self.variables = {}  # var_name -> index mapping
+        self.next_var_index = 0
 
-def read_lines(path: str) -> list[bytes]:
-    with open(path, "rb") as f:
-        return [line.rstrip(b"\n") for line in f]
+    def add_push(self, value):
+        """Adds a PUSH instruction with a 4-byte string representation."""
+        self.bytecode.extend(['1', '0', '0', '0', str(value)])
 
-def main() -> None:
+    def add_op(self, op_code):
+        """Adds a single-byte operation code."""
+        self.bytecode.append(str(op_code))
+
+    def get_var_index(self, name):
+        """Retrieves or creates a variable index for a given name."""
+        if name not in self.variables:
+            self.variables[name] = self.next_var_index
+            self.next_var_index += 1
+        return self.variables[name]
+
+    def parse_operand(self, operand):
+        """Parses an operand and adds corresponding LOAD or PUSH bytecode."""
+        if operand.isdigit():
+            self.add_push(operand)
+        else:
+            index = self.get_var_index(operand)
+            self.bytecode.extend(['2', str(index)]) # LOAD index
+
+    def handle_assignment(self, segments):
+        """
+        Handles 'let' statements.
+        Supports:
+            let x = 10
+            let x = y + 5
+        """
+        # segments: ['let', 'x', '=', '10'] or ['let', 'x', '=', 'y', '+', '5']
+        if len(segments) < 4:
+            return
+
+        target_var = segments[1]
+        target_index = self.get_var_index(target_var)
+
+        if len(segments) == 4:
+            # Simple assignment: let x = 10
+            self.parse_operand(segments[3])
+        elif len(segments) >= 6:
+            # Expression assignment: let x = a + b
+            self.parse_operand(segments[3])
+            self.parse_operand(segments[5])
+            op = segments[4]
+            op_map = {'+': 4, '-': 5, '*': 6, '/': 7}
+            if op in op_map:
+                self.add_op(op_map[op])
+            else:
+                print(f"Warning: Unknown operator '{op}'")
+        
+        self.add_op(3) # STORE
+        self.bytecode.append(str(target_index))
+
+    def handle_print(self, segments):
+        """Handles 'print' statements."""
+        if len(segments) < 2:
+            return
+        
+        self.parse_operand(segments[1])
+        self.add_op(8) # PRINT
+
+    def handle_halt(self):
+        """Adds a HALT instruction."""
+        self.add_op(9) # HALT
+
+    def compile(self, lines):
+        """Compiles source lines into bytecode grouped by instruction lines."""
+        all_lines_bytecode = []
+        
+        for line in lines:
+            self.bytecode = [] # Reset for this specific line
+            line = line.strip()
+            if not line or line.startswith("//"):
+                continue
+            
+            segments = line.split()
+            command = segments[0]
+
+            if command == "let":
+                self.handle_assignment(segments)
+            elif command == "print":
+                self.handle_print(segments)
+            elif command == "halt":
+                self.handle_halt()
+            else:
+                print(f"Warning: Unknown command '{command}' in line: {line}")
+            
+            if self.bytecode:
+                all_lines_bytecode.append(" ".join(self.bytecode))
+        
+        # Ensure the program ends with a HALT instruction if not already there
+        if not all_lines_bytecode or "9" not in all_lines_bytecode[-1].split():
+            all_lines_bytecode.append("9")
+        
+        return "\n".join(all_lines_bytecode)
+
+def main():
+    """Main entry point for the ELIN compiler."""
     if len(sys.argv) < 2:
-        print(f"usage: {sys.argv[0]} <codefile.elin>")
-        return
+        print(f"Usage: {sys.argv[0]} <source_file.elin>")
+        sys.exit(1)
 
-    code_file = sys.argv[1]
+    source_path = sys.argv[1]
+    if not os.path.exists(source_path):
+        print(f"Error: File '{source_path}' not found.")
+        sys.exit(1)
 
-    # strip extension
-    stem = os.path.splitext(os.path.basename(code_file))[0]
+    # Determine output filename (source.elin -> source.outz)
+    stem = os.path.splitext(os.path.basename(source_path))[0]
+    output_path = stem + ".outz"
 
-    lines = read_lines(code_file)
+    try:
+        with open(source_path, "r") as f:
+            lines = f.readlines()
+        
+        compiler = Compiler()
+        bytecode_output = compiler.compile(lines)
+        
+        with open(output_path, "w") as f:
+            f.write(bytecode_output)
+            
+        print(f"Compilation successful: {source_path} -> {output_path}")
+        print(f"Generated Bytecode: {bytecode_output}")
 
-    for line in lines:
-        parser(line, stem)
+    except Exception as e:
+        print(f"Error during compilation: {e}")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
