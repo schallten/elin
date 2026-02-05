@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELIN - Technical Specification</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>ELIN</h1>
+            <p class="subtitle">Programming Language for the
+                <a href="https://github.com/schallten/system_operating"
+                    style="color: inherit; text-decoration: underline;">system_operating</a>
+                ESP8266 OS
+            </p>
+        </header>
+
+        <nav>
+            <a href="#overview">1.0 Overview</a>
+            <a href="#ops">2.0 Opcodes</a>
+            <a href="#syntax">3.0 Syntax</a>
+            <a href="#implementation">4.0 Implementation</a>
+        </nav>
+
+        <section id="overview">
+            <h2>1.0 Overview</h2>
+            <p>
+                ELIN is a stack-based programming language designed for the <code>system_operating</code>
+                environment on ESP8266 hardware. It provides a simple bytecode execution model suitable
+                for resource-constrained microcontrollers.
+            </p>
+            <p>
+                The toolchain consists of:
+            </p>
+            <ul>
+                <li><strong>Compiler:</strong> A Python script that converts <code>.elin</code> source files into
+                    bytecode segments.</li>
+                <li><strong>Executor:</strong> A C++ virtual machine integrated into the OS that processes compiled
+                    <code>.outz</code> files.</li>
+            </ul>
+        </section>
+
+        <hr>
+
+        <section id="ops">
+            <h2>2.0 Instruction Set (Opcodes)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dec</th>
+                        <th>Mnemonic</th>
+                        <th>Stack Effect</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>PUSH</td>
+                        <td>( -- v )</td>
+                        <td>Pushes a specified integer onto the stack.</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>LOAD</td>
+                        <td>( -- v )</td>
+                        <td>Loads a value from a variable index to the stack.</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>STORE</td>
+                        <td>( v -- )</td>
+                        <td>Pops the top value and stores it in a variable index.</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>ADD</td>
+                        <td>( a b -- a+b )</td>
+                        <td>Adds the top two stack values.</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>SUB</td>
+                        <td>( a b -- a-b )</td>
+                        <td>Subtracts the top value from the second value.</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>PRINT</td>
+                        <td>( v -- )</td>
+                        <td>Pops and outputs the top value to the console.</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>HALT</td>
+                        <td>( -- )</td>
+                        <td>Stops program execution.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <hr>
+
+        <section id="syntax">
+            <h2>3.0 Syntax</h2>
+            <p>ELIN source uses a simple assignment syntax that compiles directly to stack-based bytecode.</p>
+            <pre>
+# Sample ELIN code
+let x = 10
+let y = 20
+let sum = x + y
+
+print sum
+halt
+            </pre>
+        </section>
+
+        <hr>
+
+        <section id="implementation">
+            <h2>4.0 Implementation</h2>
+            <h3>4.1 Binary Format (.outz)</h3>
+            <p>
+                Compiled code is stored as a sequence of space-separated integers. Each line represents
+                an atomic instruction or block.
+            </p>
+            <h3>4.2 Hardware Targets</h3>
+            <p>
+                Primary Target: ESP8266 Microcontroller.<br>
+                Runtime: <code>system_operating</code> C++ Executive.
+            </p>
+        </section>
+
+        <footer>
+            <p>ELIN_SPEC // REF_ID: ESP-8266-ELIN // NO_WARRANTY</p>
+        </footer>
+    </div>
+</body>
+
+</html>
