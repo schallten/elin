@@ -21,9 +21,10 @@ class Compiler:
     Compiler class to translate ELIN source code into a string-based bytecode.
     Each bytecode instruction is on its own line.
     """
-    def __init__(self):
+    def __init__(self, package_name):
+        self.package_name = package_name
         self.bytecode = []  # Each element is a complete instruction line
-        self.variables = {}  # var_name -> index mapping
+        self.variables = {}  # var_name -> {'index': int, 'defined': bool, 'used': bool}
         self.next_var_index = 0
 
     def add_push(self, value):
@@ -45,12 +46,29 @@ class Compiler:
         """Adds a single-operation instruction (ADD, SUB, MUL, DIV, PRINT, HALT)."""
         self.bytecode.append(str(op_code))
 
-    def get_var_index(self, name):
-        """Retrieves or creates a variable index for a given name."""
+    def define_variable(self, name):
+        """Defines a new variable and returns its index."""
         if name not in self.variables:
-            self.variables[name] = self.next_var_index
+            self.variables[name] = {
+                'index': self.next_var_index,
+                'defined': True,
+                'used': False
+            }
             self.next_var_index += 1
-        return self.variables[name]
+        return self.variables[name]['index']
+
+    def use_variable(self, name):
+        """Marks a variable as used and returns its index."""
+        if name not in self.variables:
+            print(f"Error: Variable '{name}' used before definition.")
+            sys.exit(1)
+        
+        self.variables[name]['used'] = True
+        return self.variables[name]['index']
+
+    def get_var_index(self, name):
+        """Retrieves variable index (for reading/using a variable)."""
+        return self.use_variable(name)
 
     def parse_operand(self, operand):
         """Parses an operand and adds corresponding LOAD or PUSH bytecode."""
@@ -59,7 +77,7 @@ class Compiler:
             self.add_push(operand)
         else:
             # It's a variable, load it
-            index = self.get_var_index(operand)
+            index = self.use_variable(operand)
             self.add_load(index)
 
     def handle_assignment(self, segments):
@@ -74,7 +92,7 @@ class Compiler:
             return
 
         target_var = segments[1]
-        target_index = self.get_var_index(target_var)
+        target_index = self.define_variable(target_var)
 
         if len(segments) == 4:
             # Simple assignment: let x = 10
@@ -88,7 +106,8 @@ class Compiler:
             if op in op_map:
                 self.add_op(op_map[op])
             else:
-                print(f"Warning: Unknown operator '{op}'")
+                print(f"Error: Unknown operator '{op}'")
+                sys.exit(1)
         
         # Store the result in the target variable
         self.add_store(target_index)
@@ -99,7 +118,7 @@ class Compiler:
             return
         
         var_name = segments[1]
-        index = self.get_var_index(var_name)
+        index = self.use_variable(var_name)
         
         # PRINT instruction is: 8 <index>
         self.bytecode.append(f"8 {index}")
@@ -108,11 +127,34 @@ class Compiler:
         """Adds a HALT instruction."""
         self.add_op(9)  # HALT
 
+    def check_unused_variables(self):
+        """Checks if all defined variables have been used at least once."""
+        unused = []
+        for var_name, var_info in self.variables.items():
+            if var_info['defined'] and not var_info['used']:
+                unused.append(var_name)
+        
+        if unused:
+            print(f"Error: The following variables are defined but never used:")
+            for var in unused:
+                print(f"  - {var}")
+            sys.exit(1)
+
+    def generate_header(self):
+        """Generates the 4-line header comment with package name."""
+        header = [
+            f"# Package: {self.package_name}",
+            "#",
+            "#",
+            "#"
+        ]
+        return header
+
     def compile(self, lines):
         """Compiles source lines into bytecode with each instruction on its own line."""
         for line in lines:
             line = line.strip()
-            if not line or line.startswith("//"):
+            if not line or line.startswith("//") or line.startswith("#"):
                 continue
             
             segments = line.split()
@@ -131,7 +173,14 @@ class Compiler:
         if not self.bytecode or self.bytecode[-1] != "9":
             self.bytecode.append("9")
         
-        return "\n".join(self.bytecode)
+        # Check for unused variables before finalizing
+        self.check_unused_variables()
+        
+        # Generate the complete output with header
+        header = self.generate_header()
+        output_lines = header + self.bytecode
+        
+        return "\n".join(output_lines)
 
 def main():
     """Main entry point for the ELIN compiler."""
@@ -145,20 +194,22 @@ def main():
         sys.exit(1)
 
     # Determine output filename (source.elin -> source.outz)
+    # Also use the filename (without extension) as package name
     stem = os.path.splitext(os.path.basename(source_path))[0]
     output_path = stem + ".outz"
+    package_name = stem
 
     try:
         with open(source_path, "r") as f:
             lines = f.readlines()
         
-        compiler = Compiler()
+        compiler = Compiler(package_name)
         bytecode_output = compiler.compile(lines)
         
         with open(output_path, "w") as f:
             f.write(bytecode_output)
             
-        print(f"Compilation successful: {source_path} -> {output_path}")
+        print(f"✓ Compilation successful: {source_path} -> {output_path}")
         print(f"\nGenerated Bytecode:")
         print(bytecode_output)
 

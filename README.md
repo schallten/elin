@@ -9,37 +9,42 @@ The language currently supports the following features:
 - **Variables**: Assign values and retrieve them using `let` (e.g., `let x = 10`).
 - **Arithmetic**: Basic math operations including addition (`+`), subtraction (`-`), multiplication (`*`), and division (`/`).
 - **I/O**: A `print` command to output values or variables.
+- **Comments**: Lines starting with `#` or `//` are ignored by the compiler.
 - **Stack-Based Execution**: The compiler prepares bytecode meant for a stack-based virtual machine.
 - **Control**: A `halt` command to safely stop program execution.
 
+## Language Rules
+
+ELIN enforces strict variable usage to prevent common programming errors:
+
+- **Variables must be used**: All declared variables must be used at least once. The compiler will error if you define a variable but never read from it.
+- **No undefined variables**: You cannot use a variable before it has been defined with `let`. The compiler will error if you try to access an undefined variable.
+- **Automatic HALT**: If your program doesn't end with a `halt` statement, the compiler automatically adds one to ensure clean termination.
+
 ## The Compiler
 
-The compiler takes a `.elin` file and generates a `.out` file. 
+The compiler takes a `.elin` file and generates a `.outz` file. 
 
 - **Input Format**: Simple statements like `let x = 5 + 10`.
 - **Output Format**: Space-separated bytecode segments, with each source line's translation on a new line.
 
 ### Example
 
-**Source (`test.elin`):**
-```text
 let x = 10
 let y = 5
 let z = x + y
-print z
-halt
-```
 
-**Bytecode Output (`test.out`):**
-```text
-1 0 0 0 10 3 0
-1 0 0 0 5 3 1
-2 0 2 1 4 3 2
-2 2 8
+**Bytecode Output (`test.outz`):**
+1 0 0 0 10
+3 0
+1 0 0 0 5
+3 1
+2 0
+2 1
+4
+3 2
+8 2
 9
-```
-
-## Instruction Set Table
 
 | Code | Instruction | Description |
 | :--- | :--- | :--- |
