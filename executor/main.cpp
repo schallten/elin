@@ -141,6 +141,71 @@ void execute() {
             }
             break;
         }
+        case ADD: {
+            // this needs two numbers from stack so it pops -> adds -> push back
+            if (eval_stack.size()>=2){
+                int b = eval_stack.top(); eval_stack.pop();
+                int a = eval_stack.top(); eval_stack.pop();
+                eval_stack.push(a+b);
+            }
+            break;
+        }
+        case SUB: {
+            // this needs two numbers from stack so it pops -> adds -> push back
+            if (eval_stack.size()>=2){
+                int b = eval_stack.top(); eval_stack.pop();
+                int a = eval_stack.top(); eval_stack.pop();
+                eval_stack.push(a-b);
+            }
+            break;
+        }
+        case MUL: {
+            // this needs two numbers from stack so it pops -> adds -> push back
+            if (eval_stack.size()>=2){
+                int b = eval_stack.top(); eval_stack.pop();
+                int a = eval_stack.top(); eval_stack.pop();
+                eval_stack.push(a*b);
+            }
+            break;
+        }
+        case DIV: {
+            // DIVIDE: a / b
+            if (eval_stack.size() >= 2) {
+                int b = eval_stack.top(); eval_stack.pop();
+                int a = eval_stack.top(); eval_stack.pop();
+                    
+                // Check for division by zero (would crash the program!)
+                if (b != 0) {
+                    eval_stack.push(a / b);
+                } else {
+                    printer.print("Error: Division by zero");
+                }
+            }
+            break;
+        }
+
+        case PRINT: {
+            //print format : 8 var_index
+            // prints value of variable
+            int var_index = tokens[1];
+
+            if (var_index < variables.size()){
+                printer.print(variables[var_index]);
+            }else{
+                printer.print_debug("Variable not found", var_index);
+            }
+            break;
+        }
+
+        case HALT: {
+            // HALT: stops the program
+            return;
+        }
+
+        default: {
+            printer.print_debug("Unknown opcode", opcode);
+            break;
+        }
     }
   }
 }
@@ -156,6 +221,12 @@ int main() {
     index++;
   }
   file.close();
+
+  printer.print("=== Execution Started ===");
+  // Run the program!
+  execute();
+  // Print finish message
+  printer.print("=== Execution Finished ===");
 
   return 0;
 }
