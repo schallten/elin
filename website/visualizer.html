@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ELIN - Bytecode Visualizer</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .viz-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .viz-panel {
+            border: 2px solid var(--border-color);
+            padding: 10px;
+            background-color: var(--paper-color);
+            height: 400px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .viz-panel h3 {
+            position: sticky;
+            top: 0;
+            background: var(--paper-color);
+            border-bottom: 2px solid var(--border-color);
+            margin: 0;
+            padding: 5px;
+            z-index: 10;
+        }
+
+        .line {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            padding: 2px 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .line.active {
+            background-color: #ffd700;
+            color: #000;
+            font-weight: bold;
+            border-left-color: var(--accent-color);
+        }
+
+        .stack-item {
+            border: 1px solid var(--border-color);
+            margin: 2px 0;
+            padding: 5px;
+            background: #eee;
+            text-align: center;
+            animation: slideIn 0.3s ease-out;
+            transition: background-color 0.3s;
+        }
+
+        .stack-item.new {
+            background-color: #d1e7dd;
+        }
+
+        .stack-item.popping {
+            opacity: 0;
+            transform: translateX(20px);
+            transition: all 0.2s ease-in;
+        }
+
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            background: #f0f0f0;
+        }
+
+        button {
+            padding: 8px 15px;
+            font-family: var(--font-mono);
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .input-area {
+            width: 100%;
+            height: 150px;
+            font-family: var(--font-mono);
+            margin-bottom: 10px;
+            padding: 5px;
+        }
+
+        .var-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed var(--border-color);
+            padding: 2px 0;
+            transition: background-color 0.5s;
+        }
+
+        .var-row.updated {
+            background-color: #fff3cd;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #console-output {
+            font-family: var(--font-mono);
+            white-space: pre-wrap;
+            transition: all 0.3s;
+        }
+
+        .action-display {
+            background-color: #e3f2fd;
+            border: 1px solid #2196f3;
+            color: #0d47a1;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            min-height: 2.5em;
+            /* Prevent jumpiness */
+            display: flex;
+            align-items: center;
+        }
+
+        .action-display strong {
+            margin-right: 8px;
+            background: #2196f3;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>ELIN VISUALIZER</h1>
+            <p class="subtitle">Bytecode Runtime Inspection Tool</p>
+        </header>
+
+        <nav>
+            <a href="index.html">Back to Spec</a>
+        </nav>
+
+        <section id="setup">
+            <h2>Load Program</h2>
+            <textarea id="source-input" class="input-area" placeholder="Paste .outz content here..."></textarea>
+            <div class="file-upload">
+                <input type="file" id="file-input" accept=".outz">
+                <button onclick="loadFromInput()">Load Source</button>
+            </div>
+        </section>
+
+        <section id="visualizer" style="display:none;">
+            <div class="controls">
+                <button onclick="step()">Step Into</button>
+                <button id="btn-run" onclick="run()">Run All</button>
+                <button onclick="reset()">Reset</button>
+
+                <div
+                    style="display:inline-block; margin: 0 15px; vertical-align:middle; border-left: 1px solid var(--border-color); padding-left: 15px;">
+                    <label for="speed-slider" style="font-family:var(--font-mono); font-size:0.8rem;">Speed:</label>
+                    <input type="range" id="speed-slider" min="50" max="1500" step="50" value="600"
+                        oninput="updateSpeed(this.value)">
+                    <span id="speed-disp"
+                        style="font-family:var(--font-mono); font-size:0.8rem; min-width: 50px; display:inline-block;">600ms</span>
+                </div>
+
+                <span id="status" style="margin-left: 10px; color: var(--accent-color);">READY</span>
+            </div>
+
+            <div id="action-display" class="action-display">
+                Waiting to start...
+            </div>
+
+            <div class="viz-container">
+                <!-- Code Panel -->
+                <div class="viz-panel" id="code-panel">
+                    <h3>Source Code</h3>
+                    <div id="code-display"></div>
+                </div>
+
+                <!-- Stack Panel -->
+                <div class="viz-panel" id="stack-panel">
+                    <h3>Stack</h3>
+                    <div id="stack-display"></div>
+                </div>
+
+                <!-- Memory Panel -->
+                <div class="viz-panel" id="mem-panel">
+                    <h3>Memory / IO</h3>
+                    <h4>Variables</h4>
+                    <div id="vars-display"></div>
+                    <hr>
+                    <h4>Console Output</h4>
+                    <div id="console-output"></div>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>ELIN_VIZ // REF_ID: 0xDEADBEEF // NO_WARRANTY</p>
+        </footer>
+    </div>
+    <script src="vm.js"></script>
+</body>
+
+</html>

@@ -1,5 +1,6 @@
 """ELIN Compiler
 A simple stack-based bytecode compiler for the ELIN language.
+in future , if need be this will be a multi file compiler instead of one file only
 
 Instruction Set:
 1 = PUSH <4-byte operand>
@@ -26,6 +27,14 @@ class Compiler:
         self.bytecode = []  # Each element is a complete instruction line
         self.variables = {}  # var_name -> {'index': int, 'defined': bool, 'used': bool}
         self.next_var_index = 0
+
+    def priority(self, op): # used for expressions that is more than just two things , like a + b * c
+        if op == "+" or op == "-":
+            return 1
+        elif op == "*" or op == "/":
+            return 2
+        else:
+            return 0
 
     def add_push(self, value):
         """Adds a PUSH instruction with a 4-byte string representation."""
@@ -97,7 +106,7 @@ class Compiler:
         if len(segments) == 4:
             # Simple assignment: let x = 10
             self.parse_operand(segments[3])
-        elif len(segments) >= 6:
+        elif len(segments) == 6:
             # Expression assignment: let x = a + b
             self.parse_operand(segments[3])
             self.parse_operand(segments[5])
@@ -108,9 +117,80 @@ class Compiler:
             else:
                 print(f"Error: Unknown operator '{op}'")
                 sys.exit(1)
+
+        elif len(segments) > 6:
+            # Complex expression: let x = a + b * c
+            # We'll use the Shunting Yard algorithm to convert to postfix
+            # Then generate bytecode from postfix notation
+            
+            expression = segments[3:]  # Get everything after '='
+            postfix = self.infix_to_postfix(expression)
+            
+            # Now generate bytecode from postfix
+            for token in postfix:
+                if token in ['+', '-', '*', '/']:
+                    # It's an operator
+                    op_map = {'+': 4, '-': 5, '*': 6, '/': 7}
+                    self.add_op(op_map[token])
+                else:
+                    # It's an operand (number or variable)
+                    self.parse_operand(token)          
         
         # Store the result in the target variable
         self.add_store(target_index)
+
+    def infix_to_postfix(self, expression):
+        """
+        Converts infix expression to postfix using what i learnt in class.
+        Example: ['a', '+', 'b', '*', 'c'] -> ['a', 'b', 'c', '*', '+']
+        """
+        output = []           # Final postfix result
+        operator_stack = []   # Temporary holding place for operators
+        
+        operators = ['+', '-', '*', '/']  # All valid operators
+        
+        for token in expression:
+            # Is this an operator or an operand?
+            if token in operators:
+                # It's an operator! But we need to check priority first
+                
+                # Keep popping operators that should execute BEFORE this one
+                # We pop if:
+                # 1. Stack is not empty AND
+                # 2. Top of stack is an operator AND
+                # 3. Top of stack has >= priority than current operator
+                
+                while len(operator_stack) > 0:
+                    top = operator_stack[-1]  # Peek at top
+                    
+                    # Is the top an operator?
+                    if top not in operators:
+                        break
+                    
+                    # Does top have higher or equal priority?
+                    top_priority = self.priority(top)
+                    current_priority = self.priority(token)
+                    
+                    if top_priority >= current_priority:
+                        # Yes! Pop it to output
+                        output.append(operator_stack.pop())
+                    else:
+                        # No! Stop popping
+                        break
+                
+                # Now push current operator to stack
+                operator_stack.append(token)
+            
+            else:
+                # It's an operand (number or variable)
+                # Just add it directly to output
+                output.append(token)
+        
+        # Expression is done! Pop all remaining operators
+        while len(operator_stack) > 0:
+            output.append(operator_stack.pop())
+        
+        return output
 
     def handle_print(self, segments):
         """Handles 'print' statements."""

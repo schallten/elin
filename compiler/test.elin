@@ -1,5 +1,43 @@
-let x = 10
-let y = 5
-let z = x + y
-print z
+let a = 1
+let b = 2
+let c = a + b + 3
+let d = c + a + 4
+let e = d + b + 5
+let f = e + c + 6
+let g = f + d + 7
+let h = g + e + 8
+let i = h + f + 9
+let j = i + g + 10
+let k = j + h + 11
+let l = k + i + 12
+let m = l + j + 13
+let n = m + k + 14
+let o = n + l + 15
+let p = o + m + 16
+let q = p + n + 17
+let r = q + o + 18
+let s = r + p + 19
+let t = s + q + 20
+# complex aah program
+print a
+print b
+print c
+print d
+print e
+print f
+print g
+print h
+print i
+print j
+print k
+print l
+print m
+print n
+print o
+print p
+print q
+print r
+print s
+print t
+
 halt
