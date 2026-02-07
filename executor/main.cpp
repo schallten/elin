@@ -23,7 +23,14 @@ const int MUL = 6;
 const int DIV = 7;
 const int PRINT = 8;
 const int HALT = 9;
+const int CMP_EQ = 10;
+const int CMP_NEQ = 11;
+const int CMP_LT = 12;
+const int CMP_LTE = 13;
+const int CMP_GT = 14;
+const int CMP_GTE = 15;
 // TODO : add loops and other things
+// feat : added comparsion operators
 
 class Printer{
     public:
@@ -202,6 +209,65 @@ void execute() {
             return;
         }
 
+        case CMP_EQ: {
+            // is a == b ?
+            if (eval_stack.size() >= 2){
+                int b = eval_stack.top(); eval_stack.pop();
+                int a = eval_stack.top(); eval_stack.pop();
+                eval_stack.push(a == b ? 1 : 0);
+            }
+            break;
+        }
+
+        case CMP_NEQ: {
+            // is a != b ?
+            if (eval_stack.size() >= 2){
+                int b = eval_stack.top(); eval_stack.pop();
+                int a = eval_stack.top(); eval_stack.pop();
+                eval_stack.push(a != b ? 1 : 0);
+            }
+            break;
+        }
+
+        case CMP_LT: {
+            // is a < b ?
+            if (eval_stack.size() >= 2){
+                int b = eval_stack.top(); eval_stack.pop();
+                int a = eval_stack.top(); eval_stack.pop();
+                eval_stack.push(a < b ? 1 : 0);
+            }
+            break;
+        }
+
+        case CMP_GT: {
+            // is a > b ?
+            if (eval_stack.size() >= 2){
+                int b = eval_stack.top(); eval_stack.pop();
+                int a = eval_stack.top(); eval_stack.pop();
+                eval_stack.push(a > b ? 1 : 0);
+            }
+            break;
+        }
+
+        case CMP_LTE: {
+            // is a <= b ?
+            if (eval_stack.size() >= 2){
+                int b = eval_stack.top(); eval_stack.pop();
+                int a = eval_stack.top(); eval_stack.pop();
+                eval_stack.push(a <= b ? 1 : 0);
+            }
+            break;
+        }
+
+        case CMP_GTE: {
+            // is a >= b ?
+            if (eval_stack.size() >= 2){
+                int b = eval_stack.top(); eval_stack.pop();
+                int a = eval_stack.top(); eval_stack.pop();
+                eval_stack.push(a >= b ? 1 : 0);
+            }
+            break;
+        }
         default: {
             printer.print_debug("Unknown opcode", opcode);
             break;

@@ -215,6 +215,18 @@ function getExplanation(instr) {
             return `<strong>PRINT</strong> Output value of variable Index ${instr.args[0]} to console.`;
         case 9: // HALT
             return `<strong>HALT</strong> Stop execution.`;
+        case 10: // CMP_EQ
+            return `<strong>CMP_EQ</strong> Pop two values, push 1 if equal (==), 0 otherwise.`;
+        case 11: // CMP_NEQ
+            return `<strong>CMP_NEQ</strong> Pop two values, push 1 if not equal (!=), 0 otherwise.`;
+        case 12: // CMP_LT
+            return `<strong>CMP_LT</strong> Pop two values, push 1 if first < second, 0 otherwise.`;
+        case 13: // CMP_LTE
+            return `<strong>CMP_LTE</strong> Pop two values, push 1 if first <= second, 0 otherwise.`;
+        case 14: // CMP_GT
+            return `<strong>CMP_GT</strong> Pop two values, push 1 if first > second, 0 otherwise.`;
+        case 15: // CMP_GTE
+            return `<strong>CMP_GTE</strong> Pop two values, push 1 if first >= second, 0 otherwise.`;
         default:
             return `<strong>UNKNOWN</strong> Opcode ${instr.op}`;
     }
@@ -292,6 +304,54 @@ function step() {
             break;
         case 9: // HALT
             state.halted = true;
+            break;
+        case 10: // CMP_EQ (==)
+            {
+                const b = state.stack.pop();
+                const a = state.stack.pop();
+                state.stack.push(a === b ? 1 : 0);
+                highlightStack = true;
+            }
+            break;
+        case 11: // CMP_NEQ (!=)
+            {
+                const b = state.stack.pop();
+                const a = state.stack.pop();
+                state.stack.push(a !== b ? 1 : 0);
+                highlightStack = true;
+            }
+            break;
+        case 12: // CMP_LT (<)
+            {
+                const b = state.stack.pop();
+                const a = state.stack.pop();
+                state.stack.push(a < b ? 1 : 0);
+                highlightStack = true;
+            }
+            break;
+        case 13: // CMP_LTE (<=)
+            {
+                const b = state.stack.pop();
+                const a = state.stack.pop();
+                state.stack.push(a <= b ? 1 : 0);
+                highlightStack = true;
+            }
+            break;
+        case 14: // CMP_GT (>)
+            {
+                const b = state.stack.pop();
+                const a = state.stack.pop();
+                state.stack.push(a > b ? 1 : 0);
+                highlightStack = true;
+            }
+            break;
+        case 15: // CMP_GTE (>=)
+            {
+                const b = state.stack.pop();
+                const a = state.stack.pop();
+                state.stack.push(a >= b ? 1 : 0);
+                highlightStack = true;
+            }
             break;
         default:
             console.warn("Unknown opcode:", instr.op);

@@ -91,6 +91,18 @@
                         <td>Subtracts the top value from the second value.</td>
                     </tr>
                     <tr>
+                        <td>6</td>
+                        <td>MUL</td>
+                        <td>( a b -- a*b )</td>
+                        <td>Multiplies the top two stack values.</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>DIV</td>
+                        <td>( a b -- a/b )</td>
+                        <td>Divides the second value by the top value (integer division).</td>
+                    </tr>
+                    <tr>
                         <td>8</td>
                         <td>PRINT</td>
                         <td>( v -- )</td>
@@ -101,6 +113,42 @@
                         <td>HALT</td>
                         <td>( -- )</td>
                         <td>Stops program execution.</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>CMP_EQ</td>
+                        <td>( a b -- result )</td>
+                        <td>Pops two values, pushes 1 if equal, 0 if not (==).</td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>CMP_NEQ</td>
+                        <td>( a b -- result )</td>
+                        <td>Pops two values, pushes 1 if not equal, 0 if equal (!=).</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>CMP_LT</td>
+                        <td>( a b -- result )</td>
+                        <td>Pops two values, pushes 1 if a < b, 0 otherwise (&lt;).</td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>CMP_LTE</td>
+                        <td>( a b -- result )</td>
+                        <td>Pops two values, pushes 1 if a <= b, 0 otherwise (&lt;=).</td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td>CMP_GT</td>
+                        <td>( a b -- result )</td>
+                        <td>Pops two values, pushes 1 if a > b, 0 otherwise (&gt;).</td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>CMP_GTE</td>
+                        <td>( a b -- result )</td>
+                        <td>Pops two values, pushes 1 if a >= b, 0 otherwise (&gt;=).</td>
                     </tr>
                 </tbody>
             </table>

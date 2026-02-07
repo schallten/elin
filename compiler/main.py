@@ -12,10 +12,19 @@ Instruction Set:
 7 = DIV
 8 = PRINT
 9 = HALT
+# new
+10 = CMP_EQ   (==) pop two, push 1 if equal, 0 if not
+11 = CMP_NEQ   (!=) pop two, push 1 if not equal, 0 if equal
+12 = CMP_LT   (<) pop two, push 1 if less than, 0 if not
+13 = CMP_LTE   (<=) pop two, push 1 if less than or equal, 0 if not
+14 = CMP_GT   (>) pop two, push 1 if greater than, 0 if not
+15 = CMP_GTE   (>=) pop two, push 1 if greater than or equal, 0 if not
 """
 
 import os
 import sys
+
+CMP_operators = ["==", "!=", "<", "<=", ">", ">="]  # used to check if current statement has comparsion operators
 
 class Compiler:
     """
@@ -25,7 +34,7 @@ class Compiler:
     def __init__(self, package_name):
         self.package_name = package_name
         self.bytecode = []  # Each element is a complete instruction line
-        self.variables = {}  # var_name -> {'index': int, 'defined': bool, 'used': bool}
+        self.variables = {}  # var_name -> {'index': int, 'defined': bool, 'used': bool} , so the interpretor knows which variable is which number in the stack
         self.next_var_index = 0
 
     def priority(self, op): # used for expressions that is more than just two things , like a + b * c
@@ -103,38 +112,106 @@ class Compiler:
         target_var = segments[1]
         target_index = self.define_variable(target_var)
 
-        if len(segments) == 4:
-            # Simple assignment: let x = 10
-            self.parse_operand(segments[3])
-        elif len(segments) == 6:
-            # Expression assignment: let x = a + b
-            self.parse_operand(segments[3])
-            self.parse_operand(segments[5])
-            op = segments[4]
-            op_map = {'+': 4, '-': 5, '*': 6, '/': 7}
-            if op in op_map:
-                self.add_op(op_map[op])
-            else:
-                print(f"Error: Unknown operator '{op}'")
+        has_comp_op = False
+        for token in segments:
+            if token in CMP_operators:
+                has_comp_op = True
+                break
+
+        if not has_comp_op:
+            if len(segments) == 4:
+                # Simple assignment: let x = 10
+                self.parse_operand(segments[3])
+            elif len(segments) == 6:
+                # Expression assignment: let x = a + b
+                self.parse_operand(segments[3])
+                self.parse_operand(segments[5])
+                op = segments[4]
+                op_map = {'+': 4, '-': 5, '*': 6, '/': 7}
+                if op in op_map:
+                    self.add_op(op_map[op])
+                else:
+                    print(f"Error: Unknown operator '{op}'")
+                    sys.exit(1)
+
+            elif len(segments) > 6:
+                # Complex expression: let x = a + b * c
+                # We'll use the Shunting Yard algorithm to convert to postfix
+                # Then generate bytecode from postfix notation
+                
+                expression = segments[3:]  # Get everything after '='
+                postfix = self.infix_to_postfix(expression)
+                
+                # Now generate bytecode from postfix
+                for token in postfix:
+                    if token in ['+', '-', '*', '/']:
+                        # It's an operator
+                        op_map = {'+': 4, '-': 5, '*': 6, '/': 7}
+                        self.add_op(op_map[token])
+                    else:
+                        # It's an operand (number or variable)
+                        self.parse_operand(token)      
+    
+        else:
+            # Has comparison operator!
+            # Find the position of the comparison operator
+            # Start from index 3 (after 'let x =')
+            pos_of_cmp_op = -1
+            
+            for i in range(3, len(segments)):
+                if segments[i] in CMP_operators:
+                    pos_of_cmp_op = i
+                    break
+            
+            if pos_of_cmp_op == -1:
+                print("Error: No valid comparison operator found")
                 sys.exit(1)
 
-        elif len(segments) > 6:
-            # Complex expression: let x = a + b * c
-            # We'll use the Shunting Yard algorithm to convert to postfix
-            # Then generate bytecode from postfix notation
+            # Split into LHS and RHS
+            # LHS is from index 3 to pos_of_cmp_op
+            # RHS is from pos_of_cmp_op + 1 to end
+            lhs = segments[3:pos_of_cmp_op]
+            cmp_op = segments[pos_of_cmp_op]
+            rhs = segments[pos_of_cmp_op + 1:]
             
-            expression = segments[3:]  # Get everything after '='
-            postfix = self.infix_to_postfix(expression)
+            # Convert LHS to postfix and evaluate
+            if len(lhs) == 1:
+                # Simple operand like 'a' or '10'
+                self.parse_operand(lhs[0])
+            else:
+                # Complex expression like '(a + b)' or 'a + b'
+                lhs_postfix = self.infix_to_postfix(lhs)
+                for token in lhs_postfix:
+                    if token in ['+', '-', '*', '/']:
+                        op_map = {'+': 4, '-': 5, '*': 6, '/': 7}
+                        self.add_op(op_map[token])
+                    else:
+                        self.parse_operand(token)
             
-            # Now generate bytecode from postfix
-            for token in postfix:
-                if token in ['+', '-', '*', '/']:
-                    # It's an operator
-                    op_map = {'+': 4, '-': 5, '*': 6, '/': 7}
-                    self.add_op(op_map[token])
-                else:
-                    # It's an operand (number or variable)
-                    self.parse_operand(token)          
+            # Convert RHS to postfix and evaluate
+            if len(rhs) == 1:
+                # Simple operand like 'b' or '5'
+                self.parse_operand(rhs[0])
+            else:
+                # Complex expression like '(c + d)' or 'c + d'
+                rhs_postfix = self.infix_to_postfix(rhs)
+                for token in rhs_postfix:
+                    if token in ['+', '-', '*', '/']:
+                        op_map = {'+': 4, '-': 5, '*': 6, '/': 7}
+                        self.add_op(op_map[token])
+                    else:
+                        self.parse_operand(token)
+            
+            # Now apply the comparison operator
+            cmp_op_map = {
+                '==': 10, 
+                '!=': 11, 
+                '<': 12, 
+                '<=': 13, 
+                '>': 14, 
+                '>=': 15
+            }
+            self.add_op(cmp_op_map[cmp_op])
         
         # Store the result in the target variable
         self.add_store(target_index)
@@ -142,7 +219,8 @@ class Compiler:
     def infix_to_postfix(self, expression):
         """
         Converts infix expression to postfix using what i learnt in class.
-        Example: ['a', '+', 'b', '*', 'c'] -> ['a', 'b', 'c', '*', '+']
+        Now supports parentheses!
+        Example: ['(', 'a', '+', 'b', ')', '*', 'c'] -> ['a', 'b', '+', 'c', '*']
         """
         output = []           # Final postfix result
         operator_stack = []   # Temporary holding place for operators
@@ -150,20 +228,33 @@ class Compiler:
         operators = ['+', '-', '*', '/']  # All valid operators
         
         for token in expression:
-            # Is this an operator or an operand?
-            if token in operators:
-                # It's an operator! But we need to check priority first
+            # Is this a left parenthesis?
+            if token == '(':
+                # Push it onto the stack
+                operator_stack.append(token)
+            
+            # Is this a right parenthesis?
+            elif token == ')':
+                # Pop operators until we find the matching '('
+                while len(operator_stack) > 0 and operator_stack[-1] != '(':
+                    output.append(operator_stack.pop())
                 
+                # Pop the '(' itself
+                if len(operator_stack) > 0:
+                    operator_stack.pop()
+            
+            # Is this an operator?
+            elif token in operators:                
                 # Keep popping operators that should execute BEFORE this one
                 # We pop if:
                 # 1. Stack is not empty AND
-                # 2. Top of stack is an operator AND
+                # 2. Top of stack is an operator (not '(') AND
                 # 3. Top of stack has >= priority than current operator
                 
                 while len(operator_stack) > 0:
                     top = operator_stack[-1]  # Peek at top
                     
-                    # Is the top an operator?
+                    # Is the top an operator (not a parenthesis)?
                     if top not in operators:
                         break
                     
