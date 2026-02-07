@@ -19,8 +19,12 @@ Instruction Set:
 13 = CMP_LTE   (<=) pop two, push 1 if less than or equal, 0 if not
 14 = CMP_GT   (>) pop two, push 1 if greater than, 0 if not
 15 = CMP_GTE   (>=) pop two, push 1 if greater than or equal, 0 if not
+16 = JMP <address> # jump to the address
+17 = JZ <address> # jump if zero , meaning if the top of the stack is 0, jump to the address
+18 = JNZ <address> # jump if not zero , meaning if the top of the stack is not 0, jump to the address
 """
 
+import enum
 import os
 import sys
 
@@ -36,6 +40,11 @@ class Compiler:
         self.bytecode = []  # Each element is a complete instruction line
         self.variables = {}  # var_name -> {'index': int, 'defined': bool, 'used': bool} , so the interpretor knows which variable is which number in the stack
         self.next_var_index = 0
+        self.label_map = {} # label -> address , used for if and else . it works like this : 
+        # when we see an if , we add a label to the label_map with the current address
+        # when we see an else , we add a label to the label_map with the current address
+        # when we see an end , we add a label to the label_map with the current address
+        # then we go back and fill the addresses in the bytecode
 
     def priority(self, op): # used for expressions that is more than just two things , like a + b * c
         if op == "+" or op == "-":
@@ -283,6 +292,123 @@ class Compiler:
         
         return output
 
+    def handle_if(self,lines_to_check,has_else):
+        # i am thinking of a c like syntax , but since the language is line based , and some users might have preference of their position of {} , i am not so sure
+        # so i will go with if ... end , this way it can work for else as well
+        # i am not sure if this is a good idea , but i will try it for now
+        # uses labels
+        # if the condition in if is false , it will jump to the end
+        # if the condition in if is true , it will execute the code in if
+        # if the condition in else is true , it will execute the code in else
+        # if the condition in else is false , it will jump to the end
+        # every if will have an end and so will every else , nothing like combined end for both of them
+        # kind of like this will be the syntax
+        # if a >=b
+        # line1
+        # line2
+        # line3
+        # end
+        # else
+        # line4
+        # line5
+        # line6
+        # end
+        # look for end statement
+        end_positions = []
+        for i,line in enumerate(lines_to_check):
+            if line.strip() == "end":
+                end_positions.append(i)
+        
+        if not end_positions:
+            print("Error: Missing 'end' for 'if' statement")
+            sys.exit(1)
+
+        if has_else:
+            else_pos = -1
+            for i,line in enumerate(lines_to_check):
+                if line.strip() == "else":
+                    else_pos = i
+                    break
+            
+            if else_pos == -1:
+                print("Error: Missing 'else' for 'if' statement")
+                sys.exit(1)
+
+            # structre: if_line -> if_body -> end -> else -> else_body -> end
+            if_line = lines_to_check[0]
+            if_body = lines_to_check[1:end_positions[0]]
+            else_body = []
+
+        if_condition = if_line.strip().split()[1:] # everything after if
+        self.handle_comparsion(if_condition)
+
+        # now we need to generate jumps
+        # # the stack now has : 1 (true) or 0 (false)
+
+        if has_else:
+            # structure:
+            # [condition evaluation]
+            # JZ else_label <- if false , jump to else
+            # [if body]
+            # JMP end_label <- if true , jump to end
+            # else_label:
+            # [else body]
+            # end_label:
+
+        # saving positions for JZ ( jump it zero - condition is false)
+            jz_pos = len(self.bytecode)
+            self.bytecode.append("PLACEHOLDER_JZ") # will fix this later
+
+            # now handle if body
+            for line in if_body:
+                self.compile_line(line.strip())        
+
+
+            # save postionm for JMP , jump to skip else
+            jmp_pos = len(self.bytecode)
+            self.bytecode.append("PLACEHOLDER_JMP") # will fix this later
+
+            #else label where JZ should jump to
+            else_label = len(self.bytecode)
+
+            for line in else_body:
+                self.compile_line(line.strip())
+
+            # end label where JMP should jump to
+            end_label = len(self.bytecode)
+
+            # now fix the placeholders
+            self.bytecode[jz_pos] = f"17 {else_label}"
+            self.bytecode[jmp_pos] = f"16 {end_label}"
+        
+        else:
+            # man i am tired
+            # strucutre:
+            # [condition eval]
+            # JZ end_label <- if false, jump to end
+            # [if body]
+            # end_label:
+
+            # save position for JZ
+            jz_pos = len(self.bytecode)
+            self.bytecode.append("PLACEHOLDER_JZ") # will fix this later
+
+            # now handle if body
+            for line in if_body:
+                self.compile_line(line.strip())
+
+            # end label where JZ should jump to
+            end_label = len(self.bytecode)
+
+            # now fix the placeholder
+            self.bytecode[jz_pos] = f"17 {end_label}"
+
+    def compile_line(self,line):
+        # used to compile single lines inside if elses
+        # will do tmrw
+        # am tired
+        pass
+
     def handle_print(self, segments):
         """Handles 'print' statements."""
         if len(segments) < 2:
@@ -337,6 +463,17 @@ class Compiler:
                 self.handle_print(segments)
             elif command == "halt":
                 self.handle_halt()
+            elif command == "if":
+                # thinking to pass from if to end as a list , then check for else and pass from else to end as well , combined in that list
+                lines_of_conditions = []
+                has_else = False
+                while segments[-1] != "end":
+                    lines_of_conditions.append(line)
+                    line = lines.pop(0)
+                    if segments[-1] == "else":
+                        has_else = True
+                self.handle_if(lines_of_conditions,has_else)
+                
             else:
                 print(f"Warning: Unknown command '{command}' in line: {line}")
         
