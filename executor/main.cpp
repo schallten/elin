@@ -29,6 +29,9 @@ const int CMP_LT = 12;
 const int CMP_LTE = 13;
 const int CMP_GT = 14;
 const int CMP_GTE = 15;
+const int JMP = 16;
+const int JZ = 17;
+const int JNZ = 18;
 // TODO : add loops and other things
 // feat : added comparsion operators
 
@@ -268,6 +271,13 @@ void execute() {
             }
             break;
         }
+
+        case JMP: {
+            // JMP format: 16 <line_number>
+            int address = tokens[1];
+            
+        }
+
         default: {
             printer.print_debug("Unknown opcode", opcode);
             break;

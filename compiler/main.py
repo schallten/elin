@@ -407,7 +407,73 @@ class Compiler:
         # used to compile single lines inside if elses
         # will do tmrw
         # am tired
-        pass
+        if not line or line.startswith("//") or line.startswith("#"):
+            return
+        
+        if line == "end" or line == "else":
+            return
+        
+        segments = line.split()
+
+        command = segments[0]
+
+        if command == "let":
+            self.handle_assignment(segments)
+        elif command == "print":
+            self.handle_print(segments)
+        elif command == "halt":
+            self.handle_halt()
+        elif command == "if":
+            print("Nested If-Else is not supported right now")
+            sys.exit(1)
+        else:
+            print(f"Error: Unknown command: {command}")
+            sys.exit(1)
+            
+
+    def handle_comparison(self, segments):
+        """Handles comparison operations."""
+        pos = -1
+        for i in range(len(segments)):
+            if segments[i] in CMP_operators:
+                pos = i
+                break
+        
+        if pos == -1:
+            print("Error: No comparison operator found")
+            sys.exit(1)
+        
+        lhs = segments[:pos]
+        cmp_operator = segments[pos]
+        rhs = segments[pos+1:]
+
+        #pase lhs
+        if len(lhs) == 1:
+            self.parse_operand(lhs[0])
+        else:
+            lhs_postfix = self.infix_to_postfix(lhs)
+            for token in lhs_postfix:
+                if token in ['+', '-', '*', '/']:
+                    op_map = {'+':4,'-':5,'*':6,'/':7}
+                    self.add_op(op_map[token])
+                else:
+                    self.parse_operand(token)
+
+        # parse rhs
+        if len(rhs) == 1:
+            self.parse_operand(rhs[0])
+        else:
+            rhs_postfix = self.infix_to_postfix(rhs)
+            for token in rhs_postfix:
+                if token in ['+', '-', '*', '/']:
+                    op_map = {'+':4,'-':5,'*':6,'/':7}
+                    self.add_op(op_map[token])
+                else:
+                    self.parse_operand(token)
+
+        # parse cmp operator
+        cmp_op_map = {'==': 10, '!=': 11, '<': 12, '<=': 13, '>': 14, '>=': 15}
+        self.add_op(cmp_op_map[cmp_operator])
 
     def handle_print(self, segments):
         """Handles 'print' statements."""
@@ -449,39 +515,69 @@ class Compiler:
 
     def compile(self, lines):
         """Compiles source lines into bytecode with each instruction on its own line."""
-        for line in lines:
-            line = line.strip()
+        i = 0
+        while i < len(lines):
+            line = lines[i].strip()
+            
             if not line or line.startswith("//") or line.startswith("#"):
+                i += 1
                 continue
             
             segments = line.split()
             command = segments[0]
 
-            if command == "let":
+            if command == "if":
+                # First pass: collect ALL lines and determine structure
+                lines_of_conditions = [line]
+                i += 1
+                end_count = 0
+                has_else = False
+                required_ends = 1  # Start with 1 end needed
+                
+                while i < len(lines):
+                    current_line = lines[i].strip()
+                    lines_of_conditions.append(current_line)
+                    
+                    # If we find 'else', we need TWO ends total
+                    if current_line == "else" and not has_else:
+                        has_else = True
+                        required_ends = 2  # Now we need 2 ends
+                    
+                    # Count ends
+                    if current_line == "end":
+                        end_count += 1
+                        # Stop when we've found all required ends
+                        if end_count == required_ends:
+                            break
+                    
+                    i += 1
+                
+                # Check if we got all the ends we needed
+                if end_count < required_ends:
+                    print(f"Error: 'if' statement missing 'end' (found {end_count}, needed {required_ends})")
+                    sys.exit(1)
+                
+                self.handle_if(lines_of_conditions, has_else)
+                i += 1
+            
+            elif command == "let":
                 self.handle_assignment(segments)
+                i += 1
             elif command == "print":
                 self.handle_print(segments)
+                i += 1
             elif command == "halt":
                 self.handle_halt()
-            elif command == "if":
-                # thinking to pass from if to end as a list , then check for else and pass from else to end as well , combined in that list
-                lines_of_conditions = []
-                has_else = False
-                while segments[-1] != "end":
-                    lines_of_conditions.append(line)
-                    line = lines.pop(0)
-                    if segments[-1] == "else":
-                        has_else = True
-                self.handle_if(lines_of_conditions,has_else)
-                
+                i += 1
             else:
                 print(f"Warning: Unknown command '{command}' in line: {line}")
+                i += 1
         
-        # Ensure the program ends with a HALT instruction if not already there
+        # Ensure the program ends with a HALT instruction
         if not self.bytecode or self.bytecode[-1] != "9":
             self.bytecode.append("9")
         
-        # Check for unused variables before finalizing
+        # Check for unused variables
         self.check_unused_variables()
         
         # Generate the complete output with header
