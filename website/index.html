@@ -150,6 +150,24 @@
                         <td>( a b -- result )</td>
                         <td>Pops two values, pushes 1 if a >= b, 0 otherwise (&gt;=).</td>
                     </tr>
+                    <tr>
+                        <td>16</td>
+                        <td>JMP</td>
+                        <td>( -- )</td>
+                        <td>Unconditional jump to address (instruction index).</td>
+                    </tr>
+                    <tr>
+                        <td>17</td>
+                        <td>JZ</td>
+                        <td>( v -- )</td>
+                        <td>Pops value, jumps to address if value is 0.</td>
+                    </tr>
+                    <tr>
+                        <td>18</td>
+                        <td>JNZ</td>
+                        <td>( v -- )</td>
+                        <td>Pops value, jumps to address if value is not 0.</td>
+                    </tr>
                 </tbody>
             </table>
         </section>
@@ -166,6 +184,15 @@ let y = 20
 let sum = x + y
 
 print sum
+
+# If-Else Control Flow
+if sum > 20
+    print sum
+end
+else
+    let msg = 0 
+    print msg
+end
 halt
             </pre>
         </section>

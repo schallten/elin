@@ -57,6 +57,31 @@ let z = x + y
 | **7** | DIV | Divides the top two values |
 | **8** | PRINT | Prints the top value of the stack |
 | **9** | HALT | Stops execution |
+| **10** | CMP_EQ | Pop two, push 1 if equal, 0 if not (==) |
+| **11** | CMP_NEQ | Pop two, push 1 if not equal, 0 if equal (!=) |
+| **12** | CMP_LT | Pop two, push 1 if less than, 0 if not (<) |
+| **13** | CMP_LTE | Pop two, push 1 if less than or equal, 0 if not (<=) |
+| **14** | CMP_GT | Pop two, push 1 if greater than, 0 if not (>) |
+| **15** | CMP_GTE | Pop two, push 1 if greater than or equal, 0 if not (>=) |
+| **16** | JMP | Unconditional jump to address |
+| **17** | JZ | Jump if zero (pop value, if 0 jump) |
+| **18** | JNZ | Jump if not zero (pop value, if !0 jump) |
+
+## Control Flow
+
+ELIN supports `if` and `if-else` statements.
+
+```elin
+let a = 10
+let b = 20
+
+if a < b
+    print a
+end
+else
+    print b
+end
+```
 
 ## How to Run
 

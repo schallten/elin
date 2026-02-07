@@ -67,8 +67,8 @@ function parseSource(source) {
             if (tokens.length >= 5) {
                 instruction.args = [parseInt(tokens[4], 10)];
             }
-        } else if ([2, 3, 8].includes(opcode)) {
-            // LOAD (2), STORE (3), PRINT (8) take 1 arg (index)
+        } else if ([2, 3, 8, 16, 17, 18].includes(opcode)) {
+            // LOAD (2), STORE (3), PRINT (8), JMP (16), JZ (17), JNZ (18) take 1 arg
             if (tokens.length >= 2) {
                 instruction.args = [parseInt(tokens[1], 10)];
             }
@@ -227,6 +227,12 @@ function getExplanation(instr) {
             return `<strong>CMP_GT</strong> Pop two values, push 1 if first > second, 0 otherwise.`;
         case 15: // CMP_GTE
             return `<strong>CMP_GTE</strong> Pop two values, push 1 if first >= second, 0 otherwise.`;
+        case 16: // JMP
+            return `<strong>JMP</strong> Jump to instruction at index ${instr.args[0]}.`;
+        case 17: // JZ
+            return `<strong>JZ</strong> Pop value. If 0, jump to instruction at index ${instr.args[0]}.`;
+        case 18: // JNZ
+            return `<strong>JNZ</strong> Pop value. If not 0, jump to instruction at index ${instr.args[0]}.`;
         default:
             return `<strong>UNKNOWN</strong> Opcode ${instr.op}`;
     }
@@ -351,6 +357,36 @@ function step() {
                 const a = state.stack.pop();
                 state.stack.push(a >= b ? 1 : 0);
                 highlightStack = true;
+            }
+            break;
+        case 16: // JMP <address>
+            state.pc = instr.args[0];
+            updateUI(highlightStack, updatedVarIndex);
+            // We do *not* increment PC here, because we already set it.
+            // But the main look increments PC at the end.
+            // To prevent double increment, we must modify logic or decrement it here.
+            // Let's modify logic below.
+            return; // Return early since we manually set PC
+        case 17: // JZ <address>
+            {
+                const cond = state.stack.pop();
+                if (cond === 0) {
+                    state.pc = instr.args[0];
+                    updateUI(highlightStack, updatedVarIndex);
+                    return; // Jump taken
+                }
+                highlightStack = true; // Stack changed (pop)
+            }
+            break;
+        case 18: // JNZ <address>
+            {
+                const cond = state.stack.pop();
+                if (cond !== 0) {
+                    state.pc = instr.args[0];
+                    updateUI(highlightStack, updatedVarIndex);
+                    return; // Jump taken
+                }
+                highlightStack = true; // Stack changed (pop)
             }
             break;
         default:

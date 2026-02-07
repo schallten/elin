@@ -1,60 +1,35 @@
-# initialization
-let a = 7
-let b = 13
-let c = 21
-let d = 34
-let e = 55
+let a = 10
+let b = 20
 
-# arithmetic chain
-let r1 = a + b
-let r2 = r1 * c
-let r3 = r2 - d
-let r4 = r3 / a
-let r5 = r4 + e
+// Test 1: Simple If (True condition)
+// Should print 10
+if a < b
+    print a
+end
+else
+    print b
+end
 
-# comparisons
-let c1 = r5 == b
-let c2 = r5 != c
-let c3 = r5 < d
-let c4 = r5 <= e
-let c5 = r5 > a
-let c6 = r5 >= r4
+// Test 2: Simple If (False condition)
+// Should print 20
+if a > b
+    print a
+end
+else
+    print b
+end
 
-# numeric normalization of booleans
-let n1 = c1 + c2
-let n2 = c3 + c4
-let n3 = c5 + c6
-let n4 = n1 + n2
-let n5 = n4 + n3
+// Test 3: If without Else (True)
+// Should print 100
+let c = 100
+if c == 100
+    print c
+end
 
-# heavy recomposition
-let x1 = n5 * r5
-let x2 = x1 + r3
-let x3 = x2 * r2
-let x4 = x3 / b
-let x5 = x4 - a
+// Test 4: If without Else (False)
+// Should NOT print anything
+if c != 100
+    print b
+end
 
-# more comparisons on derived values
-let k1 = x5 > r1
-let k2 = x5 < r2
-let k3 = x5 == r3
-let k4 = x5 != r4
-
-let m1 = k1 + k2
-let m2 = k3 + k4
-let m3 = m1 + m2
-
-# final result
-let final = m3 * x5 + r5
-
-print a
-print b
-print c
-print d
-print e
-print r5
-print n5
-print x5
-print m3
-print final
 halt

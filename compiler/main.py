@@ -292,121 +292,118 @@ class Compiler:
         
         return output
 
-    def handle_if(self,lines_to_check,has_else):
-        # i am thinking of a c like syntax , but since the language is line based , and some users might have preference of their position of {} , i am not so sure
-        # so i will go with if ... end , this way it can work for else as well
-        # i am not sure if this is a good idea , but i will try it for now
-        # uses labels
-        # if the condition in if is false , it will jump to the end
-        # if the condition in if is true , it will execute the code in if
-        # if the condition in else is true , it will execute the code in else
-        # if the condition in else is false , it will jump to the end
-        # every if will have an end and so will every else , nothing like combined end for both of them
-        # kind of like this will be the syntax
-        # if a >=b
-        # line1
-        # line2
-        # line3
-        # end
-        # else
-        # line4
-        # line5
-        # line6
-        # end
-        # look for end statement
-        end_positions = []
-        for i,line in enumerate(lines_to_check):
-            if line.strip() == "end":
-                end_positions.append(i)
-        
-        if not end_positions:
-            print("Error: Missing 'end' for 'if' statement")
-            sys.exit(1)
-
+    def handle_if(self, lines_to_check, has_else):
         if has_else:
             else_pos = -1
-            for i,line in enumerate(lines_to_check):
+            end_pos = -1
+            
+            # Find positions of 'else' and 'end'
+            for i, line in enumerate(lines_to_check):
                 if line.strip() == "else":
                     else_pos = i
-                    break
+                elif line.strip() == "end":
+                    end_pos = i
+                    # We want the first 'end' after 'else'
+                    if else_pos != -1:
+                        break
             
-            if else_pos == -1:
-                print("Error: Missing 'else' for 'if' statement")
+            if else_pos == -1 or end_pos == -1:
+                print("Error: Missing 'else' or 'end' for 'if' statement")
                 sys.exit(1)
-
-            # structre: if_line -> if_body -> end -> else -> else_body -> end
+            
+            # if_line: the line with "if condition"
+            # if_body: lines between if_line and else
+            # else_body: lines between else and end
             if_line = lines_to_check[0]
-            if_body = lines_to_check[1:end_positions[0]]
-            else_body = []
-
-        if_condition = if_line.strip().split()[1:] # everything after if
-        self.handle_comparsion(if_condition)
-
-        # now we need to generate jumps
-        # # the stack now has : 1 (true) or 0 (false)
-
-        if has_else:
-            # structure:
+            if_body = lines_to_check[1:else_pos]
+            else_body = lines_to_check[else_pos + 1:end_pos]
+            
+            # Now parse the if condition
+            if_condition = if_line.strip().split()[1:]  # everything after 'if'
+            self.handle_comparison(if_condition)
+            
+            # Stack now has: 1 (true) or 0 (false)
+            # Structure:
             # [condition evaluation]
-            # JZ else_label <- if false , jump to else
+            # JZ else_label (if false, jump to else)
             # [if body]
-            # JMP end_label <- if true , jump to end
+            # JMP end_label (skip else)
             # else_label:
             # [else body]
             # end_label:
-
-        # saving positions for JZ ( jump it zero - condition is false)
+            
+            # Save position for JZ (jump to else if condition is false)
             jz_pos = len(self.bytecode)
-            self.bytecode.append("PLACEHOLDER_JZ") # will fix this later
-
-            # now handle if body
+            self.bytecode.append("PLACEHOLDER_JZ")
+            
+            # Compile if body
             for line in if_body:
-                self.compile_line(line.strip())        
-
-
-            # save postionm for JMP , jump to skip else
+                if line.strip() and not line.strip().startswith("//"):
+                    self.compile_line(line.strip())
+            
+            # Save position for JMP (jump to end after if body)
             jmp_pos = len(self.bytecode)
-            self.bytecode.append("PLACEHOLDER_JMP") # will fix this later
-
-            #else label where JZ should jump to
+            self.bytecode.append("PLACEHOLDER_JMP")
+            
+            # Else label where JZ should jump to
             else_label = len(self.bytecode)
-
+            
+            # Compile else body
             for line in else_body:
-                self.compile_line(line.strip())
-
-            # end label where JMP should jump to
+                if line.strip() and not line.strip().startswith("//"):
+                    self.compile_line(line.strip())
+            
+            # End label where JMP should jump to
             end_label = len(self.bytecode)
-
-            # now fix the placeholders
+            
+            # Fix the placeholders
             self.bytecode[jz_pos] = f"17 {else_label}"
             self.bytecode[jmp_pos] = f"16 {end_label}"
         
         else:
-            # man i am tired
-            # strucutre:
-            # [condition eval]
-            # JZ end_label <- if false, jump to end
+            # If without else
+            # Find the end position
+            end_pos = -1
+            for i, line in enumerate(lines_to_check):
+                if line.strip() == "end":
+                    end_pos = i
+                    break
+            
+            if end_pos == -1:
+                print("Error: Missing 'end' for 'if' statement")
+                sys.exit(1)
+            
+            if_line = lines_to_check[0]
+            if_body = lines_to_check[1:end_pos]
+            
+            # Parse the if condition
+            if_condition = if_line.strip().split()[1:]  # everything after 'if'
+            self.handle_comparison(if_condition)
+            
+            # Stack now has: 1 (true) or 0 (false)
+            # Structure:
+            # [condition evaluation]
+            # JZ end_label (if false, jump to end)
             # [if body]
             # end_label:
-
-            # save position for JZ
+            
+            # Save position for JZ
             jz_pos = len(self.bytecode)
-            self.bytecode.append("PLACEHOLDER_JZ") # will fix this later
-
-            # now handle if body
+            self.bytecode.append("PLACEHOLDER_JZ")
+            
+            # Compile if body
             for line in if_body:
-                self.compile_line(line.strip())
-
-            # end label where JZ should jump to
+                if line.strip() and not line.strip().startswith("//"):
+                    self.compile_line(line.strip())
+            
+            # End label where JZ should jump to
             end_label = len(self.bytecode)
-
-            # now fix the placeholder
+            
+            # Fix the placeholder
             self.bytecode[jz_pos] = f"17 {end_label}"
 
-    def compile_line(self,line):
-        # used to compile single lines inside if elses
-        # will do tmrw
-        # am tired
+    def compile_line(self, line):
+        # Skip empty lines and comments
         if not line or line.startswith("//") or line.startswith("#"):
             return
         
@@ -414,7 +411,6 @@ class Compiler:
             return
         
         segments = line.split()
-
         command = segments[0]
 
         if command == "let":
@@ -429,7 +425,7 @@ class Compiler:
         else:
             print(f"Error: Unknown command: {command}")
             sys.exit(1)
-            
+                
 
     def handle_comparison(self, segments):
         """Handles comparison operations."""
