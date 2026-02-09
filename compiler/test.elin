@@ -1,35 +1,5 @@
-let a = 10
-let b = 20
-
-// Test 1: Simple If (True condition)
-// Should print 10
-if a < b
-    print a
+let x = 10
+if x > 5
+    print 100
 end
-else
-    print b
-end
-
-// Test 2: Simple If (False condition)
-// Should print 20
-if a > b
-    print a
-end
-else
-    print b
-end
-
-// Test 3: If without Else (True)
-// Should print 100
-let c = 100
-if c == 100
-    print c
-end
-
-// Test 4: If without Else (False)
-// Should NOT print anything
-if c != 100
-    print b
-end
-
-halt
+print 999

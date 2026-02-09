@@ -477,7 +477,21 @@ class Compiler:
             return
         
         var_name = segments[1]
-        index = self.use_variable(var_name)
+
+        if var_name.isdigit() or (var_name.startswith('-') and var_name[1:].isdigit()):
+             # It's a number, so we need to create a temporary variable for it
+             # because PRINT only works with variables
+             temp_var = f"__literal_{var_name}"
+             index = self.define_variable(temp_var)
+             
+             # load the value into the variable
+             self.add_push(var_name)
+             self.add_store(index)
+             
+             # Mark as used so compiler doesn't complain
+             self.variables[temp_var]['used'] = True
+        else:
+             index = self.use_variable(var_name)
         
         # PRINT instruction is: 8 <index>
         self.bytecode.append(f"8 {index}")

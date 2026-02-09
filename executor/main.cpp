@@ -1,6 +1,7 @@
 // reads the .outz file and executes the instructions
 // first it will read the whole file then store it in an indexed array
 // so that goto commands ( will be executed later ) knows where to go
+// i will consider this language to be completed for v0.1.0 when it is able to do a bubble sort in an array
 
 #include <bits/stdc++.h>
 #include <sstream>
