@@ -1,5 +1,18 @@
-let x = 10
-if x > 5
-    print 100
-end
-print 999
+let i = 1
+while i <= 10
+    print i
+    if i == 5
+        let five = 555
+        print five
+    else
+        if i == 8
+            let eight = 888
+            print eight
+        else
+            let zero = 0
+            print zero
+        end
+    end
+    let i = i + 1
+wend
+halt

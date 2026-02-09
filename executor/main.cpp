@@ -1,16 +1,18 @@
 // reads the .outz file and executes the instructions
 // first it will read the whole file then store it in an indexed array
 // so that goto commands ( will be executed later ) knows where to go
-// i will consider this language to be completed for v0.1.0 when it is able to do a bubble sort in an array
+// i will consider this language to be completed for v0.1.0 when it is able to
+// do a bubble sort in an array
 
 #include <bits/stdc++.h>
 #include <sstream>
 using namespace std;
+typedef long long ll;
 
 vector<pair<int, string>>
     bytecode_program; // int stores index , string stores the instruction ,
                       // which are just space separated integers
-vector<int> variables;
+vector<ll> variables;
 stack<int> eval_stack; // for evaluation , in simmple words , it stores the
                        // values of variables and operands
 
@@ -304,41 +306,41 @@ void execute() {
     }
 
     case JZ: {
-        // JZ format: 17 <line_number>
-        // Jump if the top of stack is 0
-        int address = tokens[1];
-        
-        if (!eval_stack.empty()) {
-            int value = eval_stack.top();
-            eval_stack.pop();
-            
-            if (value == 0) {
-                // Condition is true (zero) - jump!
-                pc = address;
-                pc--;  // Compensate for the pc++ at end
-            }
-            // If value != 0, we just continue normally (pc++ happens automatically)
+      // JZ format: 17 <line_number>
+      // Jump if the top of stack is 0
+      int address = tokens[1];
+
+      if (!eval_stack.empty()) {
+        int value = eval_stack.top();
+        eval_stack.pop();
+
+        if (value == 0) {
+          // Condition is true (zero) - jump!
+          pc = address;
+          pc--; // Compensate for the pc++ at end
         }
-        break;
+        // If value != 0, we just continue normally (pc++ happens automatically)
+      }
+      break;
     }
 
     case JNZ: {
-        // JNZ format: 18 <line_number>
-        // Jump if the top of stack is NOT 0
-        int address = tokens[1];
-        
-        if (!eval_stack.empty()) {
-            int value = eval_stack.top();
-            eval_stack.pop();
-            
-            if (value != 0) {
-                // Condition is true (not zero) - jump!
-                pc = address;
-                pc--;  // Compensate for the pc++ at end
-            }
-            // If value == 0, we just continue normally
+      // JNZ format: 18 <line_number>
+      // Jump if the top of stack is NOT 0
+      int address = tokens[1];
+
+      if (!eval_stack.empty()) {
+        int value = eval_stack.top();
+        eval_stack.pop();
+
+        if (value != 0) {
+          // Condition is true (not zero) - jump!
+          pc = address;
+          pc--; // Compensate for the pc++ at end
         }
-        break;
+        // If value == 0, we just continue normally
+      }
+      break;
     }
 
     default: {
@@ -348,17 +350,21 @@ void execute() {
     }
 
     pc++; // <-- Move to next instruction
-
   }
 }
 
 int main() {
 
   // read the entire file line by line
+  // read the entire file line by line
   ifstream file("test.outz");
   string line;
   int index = 0;
   while (getline(file, line)) {
+    // Skip header or comment lines starting with #
+    if (line.empty() || line[0] == '#') {
+      continue;
+    }
     bytecode_program.push_back(make_pair(index, line));
     index++;
   }

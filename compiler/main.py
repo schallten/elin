@@ -45,6 +45,7 @@ class Compiler:
         # when we see an else , we add a label to the label_map with the current address
         # when we see an end , we add a label to the label_map with the current address
         # then we go back and fill the addresses in the bytecode
+        self.while_stack = []
 
     def priority(self, op): # used for expressions that is more than just two things , like a + b * c
         if op == "+" or op == "-":
@@ -293,113 +294,58 @@ class Compiler:
         return output
 
     def handle_if(self, lines_to_check, has_else):
-        if has_else:
-            else_pos = -1
-            end_pos = -1
-            
-            # Find positions of 'else' and 'end'
-            for i, line in enumerate(lines_to_check):
-                if line.strip() == "else":
-                    else_pos = i
-                elif line.strip() == "end":
-                    end_pos = i
-                    # We want the first 'end' after 'else'
-                    if else_pos != -1:
-                        break
-            
-            if else_pos == -1 or end_pos == -1:
-                print("Error: Missing 'else' or 'end' for 'if' statement")
-                sys.exit(1)
-            
-            # if_line: the line with "if condition"
-            # if_body: lines between if_line and else
-            # else_body: lines between else and end
-            if_line = lines_to_check[0]
-            if_body = lines_to_check[1:else_pos]
-            else_body = lines_to_check[else_pos + 1:end_pos]
-            
-            # Now parse the if condition
-            if_condition = if_line.strip().split()[1:]  # everything after 'if'
-            self.handle_comparison(if_condition)
-            
-            # Stack now has: 1 (true) or 0 (false)
-            # Structure:
-            # [condition evaluation]
-            # JZ else_label (if false, jump to else)
-            # [if body]
-            # JMP end_label (skip else)
-            # else_label:
-            # [else body]
-            # end_label:
-            
-            # Save position for JZ (jump to else if condition is false)
-            jz_pos = len(self.bytecode)
-            self.bytecode.append("PLACEHOLDER_JZ")
-            
-            # Compile if body
-            for line in if_body:
-                if line.strip() and not line.strip().startswith("//"):
-                    self.compile_line(line.strip())
-            
-            # Save position for JMP (jump to end after if body)
-            jmp_pos = len(self.bytecode)
-            self.bytecode.append("PLACEHOLDER_JMP")
-            
-            # Else label where JZ should jump to
-            else_label = len(self.bytecode)
-            
-            # Compile else body
-            for line in else_body:
-                if line.strip() and not line.strip().startswith("//"):
-                    self.compile_line(line.strip())
-            
-            # End label where JMP should jump to
-            end_label = len(self.bytecode)
-            
-            # Fix the placeholders
-            self.bytecode[jz_pos] = f"17 {else_label}"
-            self.bytecode[jmp_pos] = f"16 {end_label}"
+        else_pos = -1
+        end_pos = -1
+        depth = 0
         
-        else:
-            # If without else
-            # Find the end position
-            end_pos = -1
-            for i, line in enumerate(lines_to_check):
-                if line.strip() == "end":
+        # Find the matching 'else' and 'end' at the same depth
+        for i in range(1, len(lines_to_check)):
+            line = lines_to_check[i].strip()
+            if line.startswith("if"):
+                depth += 1
+            elif line.startswith("end"):
+                if depth == 0:
                     end_pos = i
                     break
-            
-            if end_pos == -1:
-                print("Error: Missing 'end' for 'if' statement")
-                sys.exit(1)
-            
-            if_line = lines_to_check[0]
-            if_body = lines_to_check[1:end_pos]
-            
-            # Parse the if condition
-            if_condition = if_line.strip().split()[1:]  # everything after 'if'
-            self.handle_comparison(if_condition)
-            
-            # Stack now has: 1 (true) or 0 (false)
-            # Structure:
-            # [condition evaluation]
-            # JZ end_label (if false, jump to end)
-            # [if body]
-            # end_label:
-            
-            # Save position for JZ
+                else:
+                    depth -= 1
+            elif line == "else" and depth == 0:
+                else_pos = i
+
+        if end_pos == -1:
+            print("Error: Missing 'end' for 'if' statement")
+            sys.exit(1)
+
+        if_line = lines_to_check[0]
+        if_condition = if_line.strip().split()[1:]
+        self.handle_comparison(if_condition)
+
+        if has_else and else_pos != -1:
+            if_body = lines_to_check[1:else_pos]
+            else_body = lines_to_check[else_pos + 1:end_pos]
+
             jz_pos = len(self.bytecode)
             self.bytecode.append("PLACEHOLDER_JZ")
-            
-            # Compile if body
-            for line in if_body:
-                if line.strip() and not line.strip().startswith("//"):
-                    self.compile_line(line.strip())
-            
-            # End label where JZ should jump to
+
+            self.compile_raw(if_body)
+
+            jmp_pos = len(self.bytecode)
+            self.bytecode.append("PLACEHOLDER_JMP")
+
+            else_label = len(self.bytecode)
+            self.compile_raw(else_body)
+
             end_label = len(self.bytecode)
-            
-            # Fix the placeholder
+            self.bytecode[jz_pos] = f"17 {else_label}"
+            self.bytecode[jmp_pos] = f"16 {end_label}"
+        else:
+            if_body = lines_to_check[1:end_pos]
+            jz_pos = len(self.bytecode)
+            self.bytecode.append("PLACEHOLDER_JZ")
+
+            self.compile_raw(if_body)
+
+            end_label = len(self.bytecode)
             self.bytecode[jz_pos] = f"17 {end_label}"
 
     def compile_line(self, line):
@@ -407,7 +353,7 @@ class Compiler:
         if not line or line.startswith("//") or line.startswith("#"):
             return
         
-        if line == "end" or line == "else":
+        if line == "end" or line == "else" or line == "wend":
             return
         
         segments = line.split()
@@ -419,9 +365,6 @@ class Compiler:
             self.handle_print(segments)
         elif command == "halt":
             self.handle_halt()
-        elif command == "if":
-            print("Nested If-Else is not supported right now")
-            sys.exit(1)
         else:
             print(f"Error: Unknown command: {command}")
             sys.exit(1)
@@ -470,6 +413,32 @@ class Compiler:
         # parse cmp operator
         cmp_op_map = {'==': 10, '!=': 11, '<': 12, '<=': 13, '>': 14, '>=': 15}
         self.add_op(cmp_op_map[cmp_operator])
+
+    def handle_while(self, while_condition, while_body):
+        """
+        Handles while loops with support for nesting.
+        """
+        # Save the position where we'll evaluate the condition
+        while_start = len(self.bytecode)
+        
+        # Evaluate the condition
+        self.handle_comparison(while_condition)
+        
+        # If condition is FALSE (0), jump to end of loop
+        jz_pos = len(self.bytecode)
+        self.bytecode.append("PLACEHOLDER_JZ")
+        
+        # Compile the loop body (recursively!)
+        self.compile_raw(while_body)
+        
+        # After body executes, jump back to THIS while's condition check
+        self.bytecode.append(f"16 {while_start}")  # JMP to while_start
+        
+        # This is where we land when condition is false
+        end_label = len(self.bytecode)
+        
+        # Fix the placeholder for THIS while
+        self.bytecode[jz_pos] = f"17 {end_label}"
 
     def handle_print(self, segments):
         """Handles 'print' statements."""
@@ -523,8 +492,8 @@ class Compiler:
         ]
         return header
 
-    def compile(self, lines):
-        """Compiles source lines into bytecode with each instruction on its own line."""
+    def compile_raw(self, lines):
+        """Internal recursive compiler loop."""
         i = 0
         while i < len(lines):
             line = lines[i].strip()
@@ -536,52 +505,62 @@ class Compiler:
             segments = line.split()
             command = segments[0]
 
-            if command == "if":
-                # First pass: collect ALL lines and determine structure
-                lines_of_conditions = [line]
+            if command == "while":
+                block_lines = [line]
                 i += 1
-                end_count = 0
-                has_else = False
-                required_ends = 1  # Start with 1 end needed
-                
-                while i < len(lines):
-                    current_line = lines[i].strip()
-                    lines_of_conditions.append(current_line)
-                    
-                    # If we find 'else', we need TWO ends total
-                    if current_line == "else" and not has_else:
-                        has_else = True
-                        required_ends = 2  # Now we need 2 ends
-                    
-                    # Count ends
-                    if current_line == "end":
-                        end_count += 1
-                        # Stop when we've found all required ends
-                        if end_count == required_ends:
-                            break
-                    
+                depth = 1
+                while i < len(lines) and depth > 0:
+                    curr = lines[i].strip()
+                    block_lines.append(curr)
+                    if curr.startswith("while"): depth += 1
+                    elif curr.startswith("wend"): depth -= 1
                     i += 1
                 
-                # Check if we got all the ends we needed
-                if end_count < required_ends:
-                    print(f"Error: 'if' statement missing 'end' (found {end_count}, needed {required_ends})")
+                if depth > 0:
+                    print(f"Error: 'while' missing 'wend'")
                     sys.exit(1)
                 
-                self.handle_if(lines_of_conditions, has_else)
+                cond = block_lines[0].split()[1:]
+                body = block_lines[1:-1]
+                self.handle_while(cond, body)
+
+            elif command == "if":
+                block_lines = [line]
                 i += 1
+                depth = 1
+                while i < len(lines) and depth > 0:
+                    curr = lines[i].strip()
+                    block_lines.append(curr)
+                    if curr.startswith("if"): depth += 1
+                    elif curr.startswith("end"): depth -= 1
+                    i += 1
+                
+                if depth > 0:
+                    print(f"Error: 'if' missing 'end'")
+                    sys.exit(1)
+                
+                # Check for 'else' inside the block
+                has_else = False
+                for b_line in block_lines:
+                    if b_line.strip() == "else":
+                        has_else = True
+                        break
+                
+                self.handle_if(block_lines, has_else)
             
-            elif command == "let":
-                self.handle_assignment(segments)
+            elif command == "let" or command == "print" or command == "halt":
+                self.compile_line(line)
                 i += 1
-            elif command == "print":
-                self.handle_print(segments)
-                i += 1
-            elif command == "halt":
-                self.handle_halt()
+            elif command == "else" or command == "end" or command == "wend":
+                # These should be consumed by collectors
                 i += 1
             else:
                 print(f"Warning: Unknown command '{command}' in line: {line}")
                 i += 1
+
+    def compile(self, lines):
+        """Compiles source lines into bytecode with each instruction on its own line."""
+        self.compile_raw(lines)
         
         # Ensure the program ends with a HALT instruction
         if not self.bytecode or self.bytecode[-1] != "9":

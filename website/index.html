@@ -178,21 +178,13 @@
             <h2>3.0 Syntax</h2>
             <p>ELIN source uses a simple assignment syntax that compiles directly to stack-based bytecode.</p>
             <pre>
-# Sample ELIN code
-let x = 10
-let y = 20
-let sum = x + y
+# While Loop example
+let counter = 1
+while counter <= 10
+    print counter
+    let counter = counter + 1
+wend
 
-print sum
-
-# If-Else Control Flow
-if sum > 20
-    print sum
-end
-else
-    let msg = 0 
-    print msg
-end
 halt
             </pre>
         </section>

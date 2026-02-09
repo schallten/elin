@@ -62,13 +62,15 @@ function parseSource(source) {
         if (opcode === 1) {
             // PUSH: 1 0 0 0 <val>
             // We expect 5 tokens usually, the last one is the value
-            // But handle cases where value might be missing or different format?
-            // main.py: "1 0 0 0 {value}"
             if (tokens.length >= 5) {
-                instruction.args = [parseInt(tokens[4], 10)];
+                try {
+                    instruction.args = [BigInt(tokens[4])];
+                } catch (e) {
+                    instruction.args = [0n];
+                }
             }
         } else if ([2, 3, 8, 16, 17, 18].includes(opcode)) {
-            // LOAD (2), STORE (3), PRINT (8), JMP (16), JZ (17), JNZ (18) take 1 arg
+            // LOAD (2), STORE (3), PRINT (8), JMP (16), JZ (17), JNZ (18) take 1 arg (indices/addresses are small)
             if (tokens.length >= 2) {
                 instruction.args = [parseInt(tokens[1], 10)];
             }
@@ -261,9 +263,9 @@ function step() {
             const val = state.vars[instr.args[0]];
             if (val === undefined) {
                 console.error("Runtime Error: Loading undefined var");
-                state.stack.push(0);
+                state.stack.push(0n);
             } else {
-                state.stack.push(val);
+                state.stack.push(BigInt(val));
             }
             highlightStack = true;
             break;
@@ -300,13 +302,18 @@ function step() {
             {
                 const b = state.stack.pop();
                 const a = state.stack.pop();
-                state.stack.push(Math.floor(a / b));
+                if (b === 0n) {
+                    state.output.push("Runtime Error: Division by zero");
+                    state.halted = true;
+                } else {
+                    state.stack.push(a / b);
+                }
                 highlightStack = true;
             }
             break;
         case 8: // PRINT <index>
             const valPrint = state.vars[instr.args[0]];
-            state.output.push(valPrint !== undefined ? valPrint : "undefined");
+            state.output.push(valPrint !== undefined ? valPrint.toString() : "undefined");
             break;
         case 9: // HALT
             state.halted = true;
@@ -315,7 +322,7 @@ function step() {
             {
                 const b = state.stack.pop();
                 const a = state.stack.pop();
-                state.stack.push(a === b ? 1 : 0);
+                state.stack.push(a === b ? 1n : 0n);
                 highlightStack = true;
             }
             break;
@@ -323,7 +330,7 @@ function step() {
             {
                 const b = state.stack.pop();
                 const a = state.stack.pop();
-                state.stack.push(a !== b ? 1 : 0);
+                state.stack.push(a !== b ? 1n : 0n);
                 highlightStack = true;
             }
             break;
@@ -331,7 +338,7 @@ function step() {
             {
                 const b = state.stack.pop();
                 const a = state.stack.pop();
-                state.stack.push(a < b ? 1 : 0);
+                state.stack.push(a < b ? 1n : 0n);
                 highlightStack = true;
             }
             break;
@@ -339,7 +346,7 @@ function step() {
             {
                 const b = state.stack.pop();
                 const a = state.stack.pop();
-                state.stack.push(a <= b ? 1 : 0);
+                state.stack.push(a <= b ? 1n : 0n);
                 highlightStack = true;
             }
             break;
@@ -347,7 +354,7 @@ function step() {
             {
                 const b = state.stack.pop();
                 const a = state.stack.pop();
-                state.stack.push(a > b ? 1 : 0);
+                state.stack.push(a > b ? 1n : 0n);
                 highlightStack = true;
             }
             break;
@@ -355,7 +362,7 @@ function step() {
             {
                 const b = state.stack.pop();
                 const a = state.stack.pop();
-                state.stack.push(a >= b ? 1 : 0);
+                state.stack.push(a >= b ? 1n : 0n);
                 highlightStack = true;
             }
             break;
@@ -370,7 +377,7 @@ function step() {
         case 17: // JZ <address>
             {
                 const cond = state.stack.pop();
-                if (cond === 0) {
+                if (cond === 0n) {
                     state.pc = instr.args[0];
                     updateUI(highlightStack, updatedVarIndex);
                     return; // Jump taken
@@ -381,7 +388,7 @@ function step() {
         case 18: // JNZ <address>
             {
                 const cond = state.stack.pop();
-                if (cond !== 0) {
+                if (cond !== 0n) {
                     state.pc = instr.args[0];
                     updateUI(highlightStack, updatedVarIndex);
                     return; // Jump taken

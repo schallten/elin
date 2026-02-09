@@ -20,6 +20,7 @@ ELIN enforces strict variable usage to prevent common programming errors:
 - **Variables must be used**: All declared variables must be used at least once. The compiler will error if you define a variable but never read from it.
 - **No undefined variables**: You cannot use a variable before it has been defined with `let`. The compiler will error if you try to access an undefined variable.
 - **Automatic HALT**: If your program doesn't end with a `halt` statement, the compiler automatically adds one to ensure clean termination.
+- **While loop limit**: While you can definetly do a large number of loops the max it can go to is 999999999
 
 ## The Compiler
 
