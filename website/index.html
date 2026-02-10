@@ -4,58 +4,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ELIN - Technical Specification</title>
+    <title>ELIN | Documentation</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div class="container">
+    <aside class="sidebar">
+        <div style="padding: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color);">
+            <h1 style="font-size: 1.5rem; margin: 0;">ELIN DOCS</h1>
+            <p style="font-size: 0.75rem; color: var(--text-secondary);">REFERENCE MANUAL v0.1.0</p>
+        </div>
+
+        <h2>0. Introduction</h2>
+        <ul class="sidebar-links">
+            <li><a href="#intro" class="active">0.1 — Introduction to ELIN</a></li>
+            <li><a href="#setup">0.2 — Setup and Compilation</a></li>
+        </ul>
+
+        <h2 style="margin-top: 25px;">1. Basics</h2>
+        <ul class="sidebar-links">
+            <li><a href="#syntax">1.1 — Basic Syntax</a></li>
+
+            <li><a href="#math">1.2 — Mathematics & Expressions</a></li>
+        </ul>
+
+        <h2 style="margin-top: 25px;">2. Control Flow</h2>
+        <ul class="sidebar-links">
+            <li><a href="#conditionals">2.1 — If-Else Statements</a></li>
+            <li><a href="#whiles">2.2 — While Loops</a></li>
+        </ul>
+
+        <h2 style="margin-top: 25px;">3. Advanced</h2>
+        <ul class="sidebar-links">
+            <li><a href="#opcodes">3.1 — Opcode Specification</a></li>
+            <li><a href="visualizer.html">3.2 — VM Visualizer</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
         <header>
-            <h1>ELIN</h1>
-            <p class="subtitle">Programming Language for the
-                <a href="https://github.com/schallten/system_operating"
-                    style="color: inherit; text-decoration: underline;">system_operating</a>
-                ESP8266 OS
-            </p>
+            <div class="lesson-meta">Lesson 0.1</div>
+            <h1>Introduction to the ELIN Language</h1>
         </header>
 
-        <nav>
-            <a href="#overview">1.0 Overview</a>
-            <a href="#ops">2.0 Opcodes</a>
-            <a href="#syntax">3.0 Syntax</a>
-            <a href="#implementation">4.0 Implementation</a>
-            <a href="visualizer.html">5.0 Visualizer</a>
-        </nav>
+        <section id="intro">
+            <p>ELIN is a stack-oriented, integer-only programming language designed for high-performance execution on
+                low-power hardware (specifically the ESP8266). By using a virtual machine approach, ELIN allows for
+                complex logic to be stored in a compact bytecode format.</p>
 
-        <section id="overview">
-            <h2>1.0 Overview</h2>
-            <p>
-                ELIN is a stack-based programming language designed for the <code>system_operating</code>
-                environment on ESP8266 hardware. It provides a simple bytecode execution model suitable
-                for resource-constrained microcontrollers.
-            </p>
-            <p>
-                The toolchain consists of:
-            </p>
-            <ul>
-                <li><strong>Compiler:</strong> A Python script that converts <code>.elin</code> source files into
-                    bytecode segments.</li>
-                <li><strong>Executor:</strong> A C++ virtual machine integrated into the OS that processes compiled
-                    <code>.outz</code> files.
-                </li>
-            </ul>
+            <div class="box box-tutorial">
+                <div class="box-header">What is a stack-based language?</div>
+                <p>Unlike languages like C++ or Python that use registers or named memory for every single intermediate
+                    calculation, a stack-based language uses a "Push/Pop" model. To add two numbers, you push both onto
+                    a "stack" and then call an <code>ADD</code> instruction which consumes them and pushes the result
+                    back.</p>
+            </div>
         </section>
 
-        <hr>
+        <section id="syntax">
+            <header>
+                <div class="lesson-meta">Lesson 1.1</div>
+                <h1>Basic Syntax</h1>
+            </header>
+            <p>Writing code in ELIN is simple. Every instruction occupies its own line. Comments can be added using the
+                <code>#</code> or <code>//</code> prefix.
+            </p>
 
-        <section id="ops">
-            <h2>2.0 Instruction Set (Opcodes)</h2>
+            <h3>Defining Variables</h3>
+            <p>Variables are created using the <code>let</code> keyword. Once a variable is defined, it can be reused in
+                any expression.</p>
+            <pre>
+let x = 10
+let y = x + 5
+print y
+            </pre>
+
+            <div class="box box-key">
+                <div class="box-header">Key Takeaway</div>
+                <p>ELIN variables are globally scoped within a single program file and must be defined before they are
+                    used in any calculation or print statement.</p>
+            </div>
+        </section>
+
+
+
+        <section id="math">
+            <header>
+                <div class="lesson-meta">Lesson 1.2</div>
+                <h1>Mathematics & Expressions</h1>
+            </header>
+            <p>ELIN supports standard mathematical operators with proper order of operations (PEMDAS/BODMAS). This is
+                achieved through an internal <strong>Shunting Yard</strong> parser.</p>
+
             <table>
                 <thead>
                     <tr>
-                        <th>Dec</th>
+                        <th>Operator</th>
+                        <th>Meaning</th>
+                        <th>Example</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>+</code></td>
+                        <td>Addition</td>
+                        <td><code>x + 5</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>-</code></td>
+                        <td>Subtraction</td>
+                        <td><code>x - 5</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>*</code></td>
+                        <td>Multiplication</td>
+                        <td><code>x * 10</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>/</code></td>
+                        <td>Division</td>
+                        <td><code>x / 2</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>( )</code></td>
+                        <td>Grouping</td>
+                        <td><code>(1 + 2) * 3</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="conditionals">
+            <header>
+                <div class="lesson-meta">Lesson 2.1</div>
+                <h1>If-Else Statements</h1>
+            </header>
+            <p>Conditional logic allows your program to make decisions. ELIN uses a block-based
+                <code>if...else...end</code> structure.
+            </p>
+            <pre>
+let temp = 80
+if temp > 100
+    let msg = 911
+    print msg
+else
+    let msg = 0
+    print msg
+end
+            </pre>
+
+            <div class="box box-key">
+                <div class="box-header">Nesting Support</div>
+                <p>You can nest <code>if</code> statements inside other <code>if</code> or <code>while</code> blocks as
+                    deeply as needed. The compiler tracks block depth automatically.</p>
+            </div>
+        </section>
+
+        <section id="whiles">
+            <header>
+                <div class="lesson-meta">Lesson 2.2</div>
+                <h1>While Loops</h1>
+            </header>
+            <p>Loops continue as long as the condition evaluates to non-zero (True). Use <code>wend</code> to close the
+                loop.</p>
+            <pre>
+let i = 1
+while i <= 10
+    print i
+    let i = i + 1
+wend
+            </pre>
+
+            <div class="box box-warning">
+                <div class="box-header">Iteration Limit</div>
+                <p>To prevent infinite loops and system lockups on the ESP8266, ELIN enforces a maximum iteration limit
+                    of <strong>999,999,999</strong> cycles for any single loop construct.</p>
+            </div>
+        </section>
+
+        <section id="opcodes">
+            <header>
+                <div class="lesson-meta">Lesson 3.1</div>
+                <h1>Opcode Specification</h1>
+            </header>
+            <p>For those interested in the internal mechanics, here are some of the current instruction set recognized by the
+                ELIN Virtual Machine.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
                         <th>Mnemonic</th>
-                        <th>Stack Effect</th>
                         <th>Description</th>
                     </tr>
                 </thead>
@@ -63,152 +201,52 @@
                     <tr>
                         <td>1</td>
                         <td>PUSH</td>
-                        <td>( -- v )</td>
-                        <td>Pushes a specified integer onto the stack.</td>
+                        <td>Push value to stack</td>
                     </tr>
                     <tr>
                         <td>2</td>
                         <td>LOAD</td>
-                        <td>( -- v )</td>
-                        <td>Loads a value from a variable index to the stack.</td>
+                        <td>Load variable index to stack</td>
                     </tr>
                     <tr>
                         <td>3</td>
                         <td>STORE</td>
-                        <td>( v -- )</td>
-                        <td>Pops the top value and stores it in a variable index.</td>
-                    </tr>
-                    <tr>
-                        <td>4</td>
-                        <td>ADD</td>
-                        <td>( a b -- a+b )</td>
-                        <td>Adds the top two stack values.</td>
-                    </tr>
-                    <tr>
-                        <td>5</td>
-                        <td>SUB</td>
-                        <td>( a b -- a-b )</td>
-                        <td>Subtracts the top value from the second value.</td>
-                    </tr>
-                    <tr>
-                        <td>6</td>
-                        <td>MUL</td>
-                        <td>( a b -- a*b )</td>
-                        <td>Multiplies the top two stack values.</td>
-                    </tr>
-                    <tr>
-                        <td>7</td>
-                        <td>DIV</td>
-                        <td>( a b -- a/b )</td>
-                        <td>Divides the second value by the top value (integer division).</td>
+                        <td>Store stack top into variable index</td>
                     </tr>
                     <tr>
                         <td>8</td>
                         <td>PRINT</td>
-                        <td>( v -- )</td>
-                        <td>Pops and outputs the top value to the console.</td>
+                        <td>Output variable contents to console</td>
                     </tr>
                     <tr>
                         <td>9</td>
                         <td>HALT</td>
-                        <td>( -- )</td>
-                        <td>Stops program execution.</td>
-                    </tr>
-                    <tr>
-                        <td>10</td>
-                        <td>CMP_EQ</td>
-                        <td>( a b -- result )</td>
-                        <td>Pops two values, pushes 1 if equal, 0 if not (==).</td>
-                    </tr>
-                    <tr>
-                        <td>11</td>
-                        <td>CMP_NEQ</td>
-                        <td>( a b -- result )</td>
-                        <td>Pops two values, pushes 1 if not equal, 0 if equal (!=).</td>
-                    </tr>
-                    <tr>
-                        <td>12</td>
-                        <td>CMP_LT</td>
-                        <td>( a b -- result )</td>
-                        <td>Pops two values, pushes 1 if a < b, 0 otherwise (&lt;).</td>
-                    </tr>
-                    <tr>
-                        <td>13</td>
-                        <td>CMP_LTE</td>
-                        <td>( a b -- result )</td>
-                        <td>Pops two values, pushes 1 if a <= b, 0 otherwise (&lt;=).</td>
-                    </tr>
-                    <tr>
-                        <td>14</td>
-                        <td>CMP_GT</td>
-                        <td>( a b -- result )</td>
-                        <td>Pops two values, pushes 1 if a > b, 0 otherwise (&gt;).</td>
-                    </tr>
-                    <tr>
-                        <td>15</td>
-                        <td>CMP_GTE</td>
-                        <td>( a b -- result )</td>
-                        <td>Pops two values, pushes 1 if a >= b, 0 otherwise (&gt;=).</td>
+                        <td>Immediately stop execution</td>
                     </tr>
                     <tr>
                         <td>16</td>
                         <td>JMP</td>
-                        <td>( -- )</td>
-                        <td>Unconditional jump to address (instruction index).</td>
+                        <td>Unconditional jump to address</td>
                     </tr>
                     <tr>
                         <td>17</td>
                         <td>JZ</td>
-                        <td>( v -- )</td>
-                        <td>Pops value, jumps to address if value is 0.</td>
-                    </tr>
-                    <tr>
-                        <td>18</td>
-                        <td>JNZ</td>
-                        <td>( v -- )</td>
-                        <td>Pops value, jumps to address if value is not 0.</td>
+                        <td>Jump to address if stack top is zero</td>
                     </tr>
                 </tbody>
             </table>
         </section>
 
-        <hr>
+        <div class="nav-buttons">
+            <span>&nbsp;</span>
+            <a href="visualizer.html" class="btn">Launch Visualizer &rarr;</a>
+        </div>
 
-        <section id="syntax">
-            <h2>3.0 Syntax</h2>
-            <p>ELIN source uses a simple assignment syntax that compiles directly to stack-based bytecode.</p>
-            <pre>
-# While Loop example
-let counter = 1
-while counter <= 10
-    print counter
-    let counter = counter + 1
-wend
-
-halt
-            </pre>
-        </section>
-
-        <hr>
-
-        <section id="implementation">
-            <h2>4.0 Implementation</h2>
-            <h3>4.1 Binary Format (.outz)</h3>
-            <p>
-                Compiled code is stored as a sequence of space-separated integers. Each line represents
-                an atomic instruction or block.
-            </p>
-            <h3>4.2 Hardware Targets</h3>
-            <p>
-                Primary Target: ESP8266 Microcontroller.<br>
-                Runtime: <code>system_operating</code> C++ Executive.
-            </p>
-        </section>
-
-        <footer>
-            <p>ELIN_SPEC // REF_ID: ESP-8266-ELIN // NO_WARRANTY</p>
+        <footer
+            style="margin-top: 100px; padding: 20px; border-top: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem;">
+            &copy; 2026 ELIN Project
         </footer>
-    </div>
+    </main>
 </body>
 
 </html>

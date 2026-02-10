@@ -1,5 +1,5 @@
 let i = 1
-while i <= 10
+while i <= 10000
     print i
     if i == 5
         let five = 555
@@ -14,5 +14,6 @@ while i <= 10
         end
     end
     let i = i + 1
+    print i
 wend
 halt
