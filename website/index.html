@@ -74,8 +74,10 @@
             <p>Variables are created using the <code>let</code> keyword. Once a variable is defined, it can be reused in
                 any expression.</p>
             <pre>
-let x = 10
-let y = x + 5
+let int x = 10
+let int y = x + 5
+let str msg = "Total is: "
+print msg
 print y
             </pre>
 
@@ -143,12 +145,12 @@ print y
                 <code>if...else...end</code> structure.
             </p>
             <pre>
-let temp = 80
+let int temp = 80
 if temp > 100
-    let msg = 911
+    let str msg = "CRITICAL"
     print msg
 else
-    let msg = 0
+    let str msg = "SAFE"
     print msg
 end
             </pre>
@@ -168,10 +170,10 @@ end
             <p>Loops continue as long as the condition evaluates to non-zero (True). Use <code>wend</code> to close the
                 loop.</p>
             <pre>
-let i = 1
+let int i = 1
 while i <= 10
     print i
-    let i = i + 1
+    let int i = i + 1
 wend
             </pre>
 
@@ -187,7 +189,8 @@ wend
                 <div class="lesson-meta">Lesson 3.1</div>
                 <h1>Opcode Specification</h1>
             </header>
-            <p>For those interested in the internal mechanics, here are some of the current instruction set recognized by the
+            <p>For those interested in the internal mechanics, here are some of the current instruction set recognized
+                by the
                 ELIN Virtual Machine.</p>
             <table>
                 <thead>
@@ -222,6 +225,11 @@ wend
                         <td>9</td>
                         <td>HALT</td>
                         <td>Immediately stop execution</td>
+                    </tr>
+                    <tr>
+                        <td>20</td>
+                        <td>PUSH_STR</td>
+                        <td>Push pointer to string pool index</td>
                     </tr>
                     <tr>
                         <td>16</td>

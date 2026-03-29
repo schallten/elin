@@ -1,251 +1,249 @@
 import sys
 from ops import (
-    HALT, OP_MAP, CMP_OP_MAP, CMP_OPERATORS
+    HALT, PUSH, LOAD, STORE, JMP, JZ, PRINT, PRINT_STR, PUSH_STR,
+    OP_MAP, CMP_OP_MAP, CMP_OPERATORS
 )
-from expression_parser import infix_to_postfix
+from ast_nodes import *
 
 class Compiler:
     """
-    Core ELIN Compiler class.
-    Translates source lines into bytecode instructions.
+    The ELIN Code Generator walks the Abstract Syntax Tree (AST) and 
+    translates it into linear bytecode instructions for the Virtual Machine.
+    It now includes a compile-time type system and string pool.
     """
     def __init__(self, package_name):
         self.package_name = package_name
         self.bytecode = []
-        self.variables = {} # name -> {'index': int, 'defined': bool, 'used': bool}
-        self.next_var_index = 0
+        # Symbol table to track variable memory indices and types
+        self.variables = {}  # { name: {index, type, is_defined, is_used} }
+        self.next_available_index = 0
+        self.string_pool = [] # List of unique string literals
+
+    def register_variable(self, name, var_type):
+        """Assigns a memory index and type to a new variable."""
+        if name in self.variables:
+            print(f"Compilation Error: Variable '{name}' is already declared. Use reassignment without 'let'.")
+            sys.exit(1)
+            
+        self.variables[name] = {
+            'index': self.next_available_index,
+            'type': var_type,
+            'is_defined': True,
+            'is_used': False
+        }
+        self.next_available_index += 1
+        return self.variables[name]['index']
+
+    def register_internal_variable(self, name, var_type):
+        """Assigns or retrieves an internal variable index (used for print literals)."""
+        if name not in self.variables:
+            return self.register_variable(name, var_type)
+        return self.variables[name]['index']
+
+
+    def lookup_variable_index(self, name):
+        """Retrieves variable index, ensuring it has been previously defined."""
+        if name not in self.variables:
+            print(f"Compilation Error: You are trying to use '{name}' before defining it.")
+            sys.exit(1)
+        self.variables[name]['is_used'] = True
+        return self.variables[name]['index']
+
+    def get_variable_type(self, name):
+        """Retrieves the declared type of a variable."""
+        if name not in self.variables:
+            print(f"Compilation Error: Variable '{name}' is undefined.")
+            sys.exit(1)
+        return self.variables[name]['type']
+
+    def infer_type(self, node):
+        """Determines the result type of an expression node."""
+        if isinstance(node, NumberNode):
+            return "int"
+        if isinstance(node, StringNode):
+            return "str"
+        if isinstance(node, VariableNode):
+            return self.get_variable_type(node.name)
+        if isinstance(node, BinaryOpNode):
+            # For simplicity, ELIN currently assumes all math results in an int
+            left_t = self.infer_type(node.left)
+            right_t = self.infer_type(node.right)
+            if left_t != "int" or right_t != "int":
+                print(f"Type Error: Math operations only supported for 'int', found {left_t} and {right_t}.")
+                sys.exit(1)
+            return "int"
+        if isinstance(node, ConditionNode):
+            # Comparisons return boolean results (stored as int 0 or 1)
+            return "int"
+        return "unknown"
 
     def add_push(self, value):
-        self.bytecode.append(f"1 0 0 0 {value}")
+        """Emits a PUSH instruction. Format: PUSH <0> <0> <0> <value>."""
+        self.bytecode.append(f"{PUSH} 0 0 0 {value}")
 
-    def add_load(self, index):
-        self.bytecode.append(f"2 {index}")
+    def add_push_str(self, string_value):
+        """Adds a string to the pool and emits PUSH_STR with its index."""
+        if string_value not in self.string_pool:
+            self.string_pool.append(string_value)
+        index = self.string_pool.index(string_value)
+        self.bytecode.append(f"{PUSH_STR} {index}")
 
-    def add_store(self, index):
-        self.bytecode.append(f"3 {index}")
+    def add_load(self, var_index):
+        """Emits a LOAD instruction for a specific memory address."""
+        self.bytecode.append(f"{LOAD} {var_index}")
 
-    def add_op(self, op_code):
-        self.bytecode.append(str(op_code))
+    def add_store(self, var_index):
+        """Emits a STORE instruction for a specific memory address."""
+        self.bytecode.append(f"{STORE} {var_index}")
 
-    def define_variable(self, name):
-        if name not in self.variables:
-            self.variables[name] = {
-                'index': self.next_var_index,
-                'defined': True,
-                'used': False
-            }
-            self.next_var_index += 1
-        return self.variables[name]['index']
+    def add_operation(self, opcode):
+        """Emits a raw opcode (add, sub, halt, etc.)."""
+        self.bytecode.append(str(opcode))
 
-    def use_variable(self, name):
-        if name not in self.variables:
-            print(f"Error: Variable '{name}' used before definition.")
-            sys.exit(1)
-        self.variables[name]['used'] = True
-        return self.variables[name]['index']
+    def generate(self, ast):
+        """
+        Recursively walks the AST and generates corresponding bytecode.
+        Implementation of the Visitor pattern (simplified).
+        """
+        if isinstance(ast, ProgramNode):
+            for stmt in ast.statements:
+                self.generate(stmt)
 
-    def parse_operand(self, operand):
-        if operand.isdigit() or (operand.startswith('-') and operand[1:].isdigit()):
-            self.add_push(operand)
-        else:
-            index = self.use_variable(operand)
-            self.add_load(index)
-
-    def handle_assignment(self, segments):
-        if len(segments) < 4: return
-        
-        target_var = segments[1]
-        target_index = self.define_variable(target_var)
-        
-        expression = segments[3:]
-        # Check for comparison in assignment
-        pos_of_cmp = -1
-        for i, token in enumerate(expression):
-            if token in CMP_OPERATORS:
-                pos_of_cmp = i
-                break
-        
-        if pos_of_cmp != -1:
-            lhs = expression[:pos_of_cmp]
-            cmp_op = expression[pos_of_cmp]
-            rhs = expression[pos_of_cmp + 1:]
+        elif isinstance(ast, AssignNode):
+            # 1. Check types at compile time
+            val_type = self.infer_type(ast.value)
+            if ast.type_name != val_type:
+                print(f"Type Error: Attempting to assign {val_type} to variable '{ast.name}' declared as {ast.type_name}.")
+                sys.exit(1)
             
-            self._compile_expression(lhs)
-            self._compile_expression(rhs)
-            self.add_op(CMP_OP_MAP[cmp_op])
-        else:
-            self._compile_expression(expression)
-            
-        self.add_store(target_index)
+            # 2. Register variable and emit storage ops
+            index = self.register_variable(ast.name, ast.type_name)
+            self.generate(ast.value)
+            self.add_store(index)
 
-    def _compile_expression(self, expr_tokens):
-        if len(expr_tokens) == 1:
-            self.parse_operand(expr_tokens[0])
-        else:
-            postfix = infix_to_postfix(expr_tokens)
-            for token in postfix:
-                if token in OP_MAP:
-                    self.add_op(OP_MAP[token])
-                else:
-                    self.parse_operand(token)
+        elif isinstance(ast, ReassignNode):
+            # 1. Ensure variable exists
+            if ast.name not in self.variables:
+                print(f"Compilation Error: Variable '{ast.name}' is undefined. Use 'let' to declare it.")
+                sys.exit(1)
 
-    def handle_comparison(self, segments):
-        pos = -1
-        for i, token in enumerate(segments):
-            if token in CMP_OPERATORS:
-                pos = i
-                break
-        
-        if pos == -1:
-            print("Error: No comparison operator found")
-            sys.exit(1)
-            
-        self._compile_expression(segments[:pos])
-        self._compile_expression(segments[pos + 1:])
-        self.add_op(CMP_OP_MAP[segments[pos]])
+            # 2. Check types
+            val_type = self.infer_type(ast.value)
+            existing_type = self.variables[ast.name]['type']
+            if val_type != existing_type:
+                print(f"Type Error: Cannot assign {val_type} to variable '{ast.name}' of type {existing_type}.")
+                sys.exit(1)
 
-    def handle_while(self, while_condition, while_body):
-        start_addr = len(self.bytecode)
-        self.handle_comparison(while_condition)
-        
-        jz_pos = len(self.bytecode)
-        self.bytecode.append("PLACEHOLDER_JZ")
-        
-        self.compile_raw(while_body)
-        
-        self.bytecode.append(f"16 {start_addr}") # JMP back
-        
-        end_addr = len(self.bytecode)
-        self.bytecode[jz_pos] = f"17 {end_addr}" # Fill JZ
+            # 3. Emit store ops
+            index = self.variables[ast.name]['index']
+            self.generate(ast.value)
+            self.add_store(index)
 
-    def handle_if(self, lines, has_else):
-        else_pos = -1
-        end_pos = -1
-        depth = 0
-        
-        for i in range(1, len(lines)):
-            line = lines[i].strip()
-            if line.startswith("if"): depth += 1
-            elif line.startswith("end"):
-                if depth == 0:
-                    end_pos = i
-                    break
-                else: depth -= 1
-            elif line == "else" and depth == 0:
-                else_pos = i
-
-        if end_pos == -1:
-            print("Error: Missing 'end' for 'if'")
-            sys.exit(1)
-
-        if_line = lines[0]
-        self.handle_comparison(if_line.split()[1:])
-
-        if has_else and else_pos != -1:
-            if_body = lines[1:else_pos]
-            else_body = lines[else_pos + 1:end_pos]
-
-            jz_pos = len(self.bytecode)
-            self.bytecode.append("PLACEHOLDER_JZ")
-            self.compile_raw(if_body)
-
-            jmp_pos = len(self.bytecode)
-            self.bytecode.append("PLACEHOLDER_JMP")
-
-            else_label = len(self.bytecode)
-            self.compile_raw(else_body)
-
-            end_label = len(self.bytecode)
-            self.bytecode[jz_pos] = f"17 {else_label}"
-            self.bytecode[jmp_pos] = f"16 {end_label}"
-        else:
-            if_body = lines[1:end_pos]
-            jz_pos = len(self.bytecode)
-            self.bytecode.append("PLACEHOLDER_JZ")
-            self.compile_raw(if_body)
-            end_label = len(self.bytecode)
-            self.bytecode[jz_pos] = f"17 {end_label}"
-
-    def handle_print(self, segments):
-        if len(segments) < 2: return
-        var_name = segments[1]
-
-        if var_name.isdigit() or (var_name.startswith('-') and var_name[1:].isdigit()):
-             temp_var = f"__literal_{var_name}"
-             index = self.define_variable(temp_var)
-             self.add_push(var_name)
-             self.add_store(index)
-             self.variables[temp_var]['used'] = True
-        else:
-             index = self.use_variable(var_name)
-        
-        self.bytecode.append(f"8 {index}")
-
-    def compile_line(self, line):
-        if not line or line.startswith("//") or line.startswith("#"): return
-        if line in ["end", "else", "wend"]: return
-        
-        segments = line.split()
-        cmd = segments[0]
-
-        if cmd == "let": self.handle_assignment(segments)
-        elif cmd == "print": self.handle_print(segments)
-        elif cmd == "halt": self.add_op(HALT)
-        else:
-            print(f"Error: Unknown command '{cmd}'")
-            sys.exit(1)
-
-    def compile_raw(self, lines):
-        i = 0
-        while i < len(lines):
-            line = lines[i].strip()
-            if not line or line.startswith("//") or line.startswith("#"):
-                i += 1
-                continue
-            
-            segments = line.split()
-            cmd = segments[0]
-
-            if cmd == "while":
-                block, i_next = self._collect_block(lines, i, "while", "wend")
-                self.handle_while(block[0].split()[1:], block[1:-1])
-                i = i_next
-            elif cmd == "if":
-                block, i_next = self._collect_block(lines, i, "if", "end")
-                # Special check for else sibling
-                has_else = False
-                for b_line in block:
-                    if b_line.strip() == "else":
-                        has_else = True
-                        break
-                self.handle_if(block, has_else)
-                i = i_next
+        elif isinstance(ast, PrintNode):
+            # The VM's PRINT expects a memory index, so literals must be stored first
+            if isinstance(ast.value_node, NumberNode):
+                val = ast.value_node.value
+                temp_name = f"__literal_{val}"
+                idx = self.register_internal_variable(temp_name, "int")
+                self.add_push(val)
+                self.add_store(idx)
+                self.variables[temp_name]['is_used'] = True
+                self.bytecode.append(f"{PRINT} {idx}")
+            elif isinstance(ast.value_node, StringNode):
+                val = ast.value_node.value
+                temp_name = f"__literal_str_{val}"
+                idx = self.register_internal_variable(temp_name, "str")
+                self.add_push_str(val)
+                self.add_store(idx)
+                self.variables[temp_name]['is_used'] = True
+                self.bytecode.append(f"{PRINT_STR} {idx}")
             else:
-                self.compile_line(line)
-                i += 1
+                # Variable: use type info to decide which print opcode to emit
+                idx = self.lookup_variable_index(ast.value_node.name)
+                var_type = self.get_variable_type(ast.value_node.name)
+                if var_type == "str":
+                    self.bytecode.append(f"{PRINT_STR} {idx}")
+                else:
+                    self.bytecode.append(f"{PRINT} {idx}")
 
-    def _collect_block(self, lines, start_idx, open_tag, close_tag):
-        block = [lines[start_idx].strip()]
-        i = start_idx + 1
-        depth = 1
-        while i < len(lines) and depth > 0:
-            curr = lines[i].strip()
-            block.append(curr)
-            if curr.startswith(open_tag): depth += 1
-            elif curr.startswith(close_tag): depth -= 1
-            i += 1
-        return block, i
+        elif isinstance(ast, IfNode):
+            self.generate(ast.condition)
+            jz_index = len(self.bytecode)
+            self.bytecode.append("PLACEHOLDER_JZ")
+            for stmt in ast.body:
+                self.generate(stmt)
+            if ast.else_body:
+                jmp_index = len(self.bytecode)
+                self.bytecode.append("PLACEHOLDER_JMP")
+                else_start = len(self.bytecode)
+                self.bytecode[jz_index] = f"{JZ} {else_start}"
+                for stmt in ast.else_body:
+                    self.generate(stmt)
+                finish = len(self.bytecode)
+                self.bytecode[jmp_index] = f"{JMP} {finish}"
+            else:
+                finish = len(self.bytecode)
+                self.bytecode[jz_index] = f"{JZ} {finish}"
+        elif isinstance(ast, WhileNode):
+            loop_start = len(self.bytecode)
+            self.generate(ast.condition)
+            jz_index = len(self.bytecode)
+            self.bytecode.append("PLACEHOLDER_JZ")
+            for stmt in ast.body:
+                self.generate(stmt)
+            self.bytecode.append(f"{JMP} {loop_start}")
+            loop_end = len(self.bytecode)
+            self.bytecode[jz_index] = f"{JZ} {loop_end}"
+        elif isinstance(ast, HaltNode):
+            self.add_operation(HALT)
+        elif isinstance(ast, ConditionNode):
+            self.generate(ast.left)
+            self.generate(ast.right)
+            self.add_operation(CMP_OP_MAP[ast.op])
+        elif isinstance(ast, BinaryOpNode):
+            self.generate(ast.left)
+            self.generate(ast.right)
+            self.add_operation(OP_MAP[ast.op])
+        elif isinstance(ast, NumberNode):
+            self.add_push(ast.value)
+        elif isinstance(ast, StringNode):
+            self.add_push_str(ast.value)
+        elif isinstance(ast, VariableNode):
+            idx = self.lookup_variable_index(ast.name)
+            self.add_load(idx)
 
-    def check_unused_variables(self):
-        unused = [name for name, info in self.variables.items() if not info['used']]
-        if unused:
-            print(f"Error: Unused variables: {', '.join(unused)}")
+    def compile(self, source_code_string_or_lines):
+        from lexer import lex
+        from parser import Parser
+        if isinstance(source_code_string_or_lines, list):
+            source_code_string = "\n".join(source_code_string_or_lines)
+        else:
+            source_code_string = source_code_string_or_lines
+        tokens = lex(source_code_string)
+        parser = Parser(tokens)
+        ast = parser.parse()
+        self.generate(ast)
+        if not self.bytecode or not self.bytecode[-1].startswith(str(HALT)):
+            self.add_operation(HALT)
+        self.verify_variables_were_used()
+        
+        # Build Section: String Pool
+        string_section = [f"STR {i} {s}" for i, s in enumerate(self.string_pool)]
+        if string_section:
+            string_section = ["# --- STRING POOL ---"] + string_section + ["# --- END STRINGS ---", ""]
+        else:
+            string_section = []
+            
+        header = [
+            f"# Package: {self.package_name}",
+            "# Generated by ELIN Compiler",
+            "#"
+        ]
+        return "\n".join(header + string_section + self.bytecode)
+        
+    def verify_variables_were_used(self):
+        """Simple linter to catch unused variables."""
+        unused_vars = [name for name, info in self.variables.items() if not info['is_used']]
+        if unused_vars:
+            print(f"Compilation Warning: You defined these variables but never used them: {', '.join(unused_vars)}")
             sys.exit(1)
-
-    def compile(self, lines):
-        self.compile_raw(lines)
-        if not self.bytecode or self.bytecode[-1] != str(HALT):
-            self.add_op(HALT)
-        self.check_unused_variables()
-        header = [f"# Package: {self.package_name}", "#", "#", "#"]
-        return "\n".join(header + self.bytecode)

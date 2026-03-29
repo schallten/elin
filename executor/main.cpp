@@ -1,20 +1,13 @@
-// reads the .outz file and executes the instructions
-// first it will read the whole file then store it in an indexed array
-// so that goto commands ( will be executed later ) knows where to go
-// i will consider this language to be completed for v0.1.0 when it is able to
-// do a bubble sort in an array
-
 #include <bits/stdc++.h>
 #include <sstream>
 using namespace std;
 typedef long long ll;
 
 vector<pair<int, string>>
-    bytecode_program; // int stores index , string stores the instruction ,
-                      // which are just space separated integers
+    bytecode_program; // int stores index , string stores the instruction
 vector<ll> variables;
-stack<int> eval_stack; // for evaluation , in simmple words , it stores the
-                       // values of variables and operands
+vector<string> string_pool; // Store string literals from pool
+stack<ll> eval_stack;       // Use ll to store indices/values
 
 // defintion of all integers
 const int PUSH = 1;
@@ -35,346 +28,282 @@ const int CMP_GTE = 15;
 const int JMP = 16;
 const int JZ = 17;
 const int JNZ = 18;
-// TODO : add loops and other things
-// feat : added comparsion operators
+const int PUSH_STR = 20;
+const int PRINT_STR = 21;
 
 class Printer {
 public:
-  void print(int value) { cout << value << "\n"; }
-  void print(const string &message) { cout << message << "\n"; }
-  void print_debug(const string &label, int value) {
+  void print(ll value) { cout << value << "\n"; }
+  void print_str(const string &message) { cout << message << "\n"; }
+  void print_debug(const string &label, ll value) {
     cout << "[DEBUG] " << label << ": " << value << "\n";
-  }
-  void print_variables() {
-    cout << "\n === Variables === " << "\n";
-    for (int i = 0; i < variables.size(); i++) {
-      cout << "var[" << i << "] = " << variables[i] << "\n";
-    }
-    cout << " ===== END ===== " << "\n";
-  }
-  void print_stack() {
-    cout << "\n === Stack ===\n";
-    stack<int> temp = eval_stack;
-    vector<int> items;
-    while (!temp.empty()) {
-      items.push_back(temp.top());
-      temp.pop();
-    }
-    reverse(items.begin(), items.end());
-    for (int item : items) {
-      cout << item << "\n";
-    }
-    cout << " ===== END ===== " << "\n";
   }
 };
 
 Printer printer;
 
 bool is_comment(const string &line) {
-  size_t start = line.find_first_not_of(
-      " \t\r\n"); // what this does is it ignores the leading spaces and tabs
+  size_t start = line.find_first_not_of(" \t\r\n");
   return (start == string::npos || line[start] == '#');
 }
 
 void execute() {
-  // Executes the program line by line.
-  // Each line in the bytecode_program contains space-separated integers
-  // representing instructions and operands.
-  int pc = 0; // Program Counter - which instruction we're on
-
+  int pc = 0;
   while (pc < bytecode_program.size()) {
     string instruction_line = bytecode_program[pc].second;
-    // Format of instructions:
-    // 1 (PUSH): Followed by 4 tokens (e.g., "1 0 0 0 value"). The value is in
-    // the 5th position. 2 (LOAD): Followed by 1 token (the variable index). 3
-    // (STORE): Followed by 1 token (the variable index). 4 (ADD), 5 (SUB), 6
-    // (MUL), 7 (DIV): Single token operations. 8 (PRINT): Single token
-    // operation. 9 (HALT): Single token operation.
     if (is_comment(instruction_line)) {
-      pc++; // Skip this line
+      pc++;
       continue;
     }
 
     istringstream iss(instruction_line);
-    // istringstream is like a "string reader"
-    // It lets us read numbers from a string one at a time
-    // Example: "1 2 3" becomes individual numbers: 1, then 2, then 3
-    // This will store all the numbers from the instruction
-    vector<int> tokens;
-    int token; // Temporary variable to hold each number
-
-    // The >> operator reads one number at a time from the string
-    // It keeps going until there are no more numbers to read
-    // Example: "1 0 0 0 10" becomes tokens = [1, 0, 0, 0, 10]
+    vector<ll> tokens;
+    ll token;
     while (iss >> token) {
       tokens.push_back(token);
     }
 
     if (tokens.empty()) {
-      pc++; // Skip this line
+      pc++;
       continue;
     }
 
-    int opcode = tokens[0];
+    int opcode = (int)tokens[0];
 
     switch (opcode) {
     case PUSH: {
-      int value = tokens[4];
-      eval_stack.push(value);
+      eval_stack.push(tokens[4]);
       break;
     }
-
+    case PUSH_STR: {
+      eval_stack.push(tokens[1]); // Push string index
+      break;
+    }
     case LOAD: {
-      int var_index = tokens[1]; // load format is 2 var_index , so we load the
-                                 // vairables value onto the stack
+      int var_index = (int)tokens[1];
       if (var_index < variables.size()) {
         eval_stack.push(variables[var_index]);
-      } // making sure variable exists before loading it
-      else {
+      } else {
         printer.print_debug("Variable not found", var_index);
       }
       break;
     }
     case STORE: {
-      // STORE format: 3 var_index
-      // Take the top value from stack and save it in a variable
-      int var_index = tokens[1];
-
-      // Make sure there's something on the stack
+      int var_index = (int)tokens[1];
       if (!eval_stack.empty()) {
-        // Get the top value (and remove it from stack)
-        int value = eval_stack.top();
+        ll value = eval_stack.top();
         eval_stack.pop();
-
-        // If the variables array isn't big enough, make it bigger
         if (var_index >= variables.size()) {
-          variables.resize(var_index + 1, 0); // Fill new slots with 0
+          variables.resize(var_index + 1, 0);
         }
-
-        // Store the value in the variable
         variables[var_index] = value;
       }
       break;
     }
     case ADD: {
-      // this needs two numbers from stack so it pops -> adds -> push back
       if (eval_stack.size() >= 2) {
-        int b = eval_stack.top();
+        ll b = eval_stack.top();
         eval_stack.pop();
-        int a = eval_stack.top();
+        ll a = eval_stack.top();
         eval_stack.pop();
         eval_stack.push(a + b);
       }
       break;
     }
     case SUB: {
-      // this needs two numbers from stack so it pops -> adds -> push back
       if (eval_stack.size() >= 2) {
-        int b = eval_stack.top();
+        ll b = eval_stack.top();
         eval_stack.pop();
-        int a = eval_stack.top();
+        ll a = eval_stack.top();
         eval_stack.pop();
         eval_stack.push(a - b);
       }
       break;
     }
     case MUL: {
-      // this needs two numbers from stack so it pops -> adds -> push back
       if (eval_stack.size() >= 2) {
-        int b = eval_stack.top();
+        ll b = eval_stack.top();
         eval_stack.pop();
-        int a = eval_stack.top();
+        ll a = eval_stack.top();
         eval_stack.pop();
         eval_stack.push(a * b);
       }
       break;
     }
     case DIV: {
-      // DIVIDE: a / b
       if (eval_stack.size() >= 2) {
-        int b = eval_stack.top();
+        ll b = eval_stack.top();
         eval_stack.pop();
-        int a = eval_stack.top();
+        ll a = eval_stack.top();
         eval_stack.pop();
-
-        // Check for division by zero (would crash the program!)
-        if (b != 0) {
+        if (b != 0)
           eval_stack.push(a / b);
-        } else {
-          printer.print("Error: Division by zero");
-        }
+        else
+          printer.print_str("Error: Division by zero");
       }
       break;
     }
-
     case PRINT: {
-      // print format : 8 var_index
-      //  prints value of variable
-      int var_index = tokens[1];
-
-      if (var_index < variables.size()) {
+      int var_index = (int)tokens[1];
+      if (var_index < (int)variables.size()) {
         printer.print(variables[var_index]);
       } else {
         printer.print_debug("Variable not found", var_index);
       }
       break;
     }
-
-    case HALT: {
-      // HALT: stops the program
-      return;
+    case PRINT_STR: {
+      int var_index = (int)tokens[1];
+      if (var_index < (int)variables.size()) {
+        ll str_idx = variables[var_index];
+        if (str_idx >= 0 && str_idx < (ll)string_pool.size()) {
+          printer.print_str(string_pool[str_idx]);
+        } else {
+          printer.print_debug("Invalid string pool index", str_idx);
+        }
+      } else {
+        printer.print_debug("Variable not found", var_index);
+      }
+      break;
     }
-
+    case HALT:
+      return;
     case CMP_EQ: {
-      // is a == b ?
       if (eval_stack.size() >= 2) {
-        int b = eval_stack.top();
+        ll b = eval_stack.top();
         eval_stack.pop();
-        int a = eval_stack.top();
+        ll a = eval_stack.top();
         eval_stack.pop();
         eval_stack.push(a == b ? 1 : 0);
       }
       break;
     }
-
     case CMP_NEQ: {
-      // is a != b ?
       if (eval_stack.size() >= 2) {
-        int b = eval_stack.top();
+        ll b = eval_stack.top();
         eval_stack.pop();
-        int a = eval_stack.top();
+        ll a = eval_stack.top();
         eval_stack.pop();
         eval_stack.push(a != b ? 1 : 0);
       }
       break;
     }
-
     case CMP_LT: {
-      // is a < b ?
       if (eval_stack.size() >= 2) {
-        int b = eval_stack.top();
+        ll b = eval_stack.top();
         eval_stack.pop();
-        int a = eval_stack.top();
+        ll a = eval_stack.top();
         eval_stack.pop();
         eval_stack.push(a < b ? 1 : 0);
       }
       break;
     }
-
     case CMP_GT: {
-      // is a > b ?
       if (eval_stack.size() >= 2) {
-        int b = eval_stack.top();
+        ll b = eval_stack.top();
         eval_stack.pop();
-        int a = eval_stack.top();
+        ll a = eval_stack.top();
         eval_stack.pop();
         eval_stack.push(a > b ? 1 : 0);
       }
       break;
     }
-
     case CMP_LTE: {
-      // is a <= b ?
       if (eval_stack.size() >= 2) {
-        int b = eval_stack.top();
+        ll b = eval_stack.top();
         eval_stack.pop();
-        int a = eval_stack.top();
+        ll a = eval_stack.top();
         eval_stack.pop();
         eval_stack.push(a <= b ? 1 : 0);
       }
       break;
     }
-
     case CMP_GTE: {
-      // is a >= b ?
       if (eval_stack.size() >= 2) {
-        int b = eval_stack.top();
+        ll b = eval_stack.top();
         eval_stack.pop();
-        int a = eval_stack.top();
+        ll a = eval_stack.top();
         eval_stack.pop();
         eval_stack.push(a >= b ? 1 : 0);
       }
       break;
     }
-
     case JMP: {
-      // JMP format: 16 <line_number>
-      int address = tokens[1];
-      pc = address;
-      pc--; // since we increment pc at the end of the loop
+      pc = (int)tokens[1];
+      pc--;
       break;
     }
-
     case JZ: {
-      // JZ format: 17 <line_number>
-      // Jump if the top of stack is 0
-      int address = tokens[1];
-
+      int address = (int)tokens[1];
       if (!eval_stack.empty()) {
-        int value = eval_stack.top();
+        ll value = eval_stack.top();
         eval_stack.pop();
-
         if (value == 0) {
-          // Condition is true (zero) - jump!
           pc = address;
-          pc--; // Compensate for the pc++ at end
+          pc--;
         }
-        // If value != 0, we just continue normally (pc++ happens automatically)
       }
       break;
     }
-
     case JNZ: {
-      // JNZ format: 18 <line_number>
-      // Jump if the top of stack is NOT 0
-      int address = tokens[1];
-
+      int address = (int)tokens[1];
       if (!eval_stack.empty()) {
-        int value = eval_stack.top();
+        ll value = eval_stack.top();
         eval_stack.pop();
-
         if (value != 0) {
-          // Condition is true (not zero) - jump!
           pc = address;
-          pc--; // Compensate for the pc++ at end
+          pc--;
         }
-        // If value == 0, we just continue normally
       }
       break;
     }
-
-    default: {
-      printer.print_debug("Unknown opcode", opcode);
+    default:
       break;
     }
-    }
-
-    pc++; // <-- Move to next instruction
+    pc++;
   }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+  string filename = "test.outz";
+  if (argc > 1) {
+    filename = argv[1];
+  }
 
-  // read the entire file line by line
-  // read the entire file line by line
-  ifstream file("test.outz");
+  ifstream file(filename);
+  if (!file.is_open()) {
+    cout << "Error opening file: " << filename << "\n";
+    return 1;
+  }
+
   string line;
   int index = 0;
   while (getline(file, line)) {
-    // Skip header or comment lines starting with #
-    if (line.empty() || line[0] == '#') {
+    if (line.empty() || line[0] == '#')
+      continue;
+
+    if (line.substr(0, 4) == "STR ") {
+      // Format: STR index value (value can have spaces)
+      istringstream iss(line);
+      string dummy;
+      int s_idx;
+      string s_val;
+      iss >> dummy >> s_idx;
+      getline(iss, s_val);
+      if (!s_val.empty() && s_val[0] == ' ')
+        s_val = s_val.substr(1);
+      if (s_idx >= string_pool.size())
+        string_pool.resize(s_idx + 1);
+      string_pool[s_idx] = s_val;
       continue;
     }
-    bytecode_program.push_back(make_pair(index, line));
-    index++;
+
+    bytecode_program.push_back(make_pair(index++, line));
   }
   file.close();
 
-  printer.print("=== Execution Started ===");
-  // Run the program!
+  printer.print_str("=== Execution Started ===");
   execute();
-  // Print finish message
-  printer.print("=== Execution Finished ===");
-
+  printer.print_str("=== Execution Finished ===");
   return 0;
 }
