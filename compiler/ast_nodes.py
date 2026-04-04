@@ -75,3 +75,45 @@ class ConditionNode(Node):
         self.op = op  # '==', '<', '>', etc.
         self.left = left  # Left operand node
         self.right = right  # Right operand node
+
+class ArrayNode(Node):
+    """Represents a literal array: [val1, val2, ...]."""
+    def __init__(self, elements):
+        self.elements = elements  # List of expression nodes
+
+class ArrayAccessNode(Node):
+    """Represents accessing an array element: name[index]."""
+    def __init__(self, name, index):
+        self.name = name  # The array variable name
+        self.index = index  # The expression node for the index
+
+class ArrayAssignNode(Node):
+    """Represents setting an array element: name[index] = value."""
+    def __init__(self, name, index, value):
+        self.name = name
+        self.index = index
+        self.value = value
+
+class ArrayLenNode(Node):
+    """Represents the length of an array: len(name)."""
+    def __init__(self, name):
+        self.name = name
+
+class FunctionDefNode(Node):
+    """Represents a function definition: func <ret_type> <name> <params...> ... end."""
+    def __init__(self, ret_type, name, params, body):
+        self.ret_type = ret_type
+        self.name = name
+        self.params = params  # List of tuples (type, name)
+        self.body = body  # List of statements
+
+class FunctionCallNode(Node):
+    """Represents calling a function: name(arg1, arg2...)"""
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
+
+class ReturnNode(Node):
+    """Represents a return statement: return <val>."""
+    def __init__(self, value):
+        self.value = value

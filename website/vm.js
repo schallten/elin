@@ -1,11 +1,43 @@
+let runInterval = null;
+let runSpeedMs = 600;
+
+function updateSpeed(val) {
+    runSpeedMs = parseInt(val, 10);
+    document.getElementById('speed-disp').textContent = val + "ms";
+    if (runInterval) {
+        stop();
+        run();
+    }
+}
+
+function loadFromInput() {
+    const src = document.getElementById('source-input').value;
+    if (src) parseSource(src);
+}
+
+function renderCode() {
+    const container = document.getElementById('code-display');
+    if (!container) return;
+    container.innerHTML = '';
+    state.instructions.forEach((instr, idx) => {
+        const div = document.createElement('div');
+        div.className = 'line';
+        div.id = `instr-${idx}`;
+        div.onclick = () => { state.pc = idx; updateUI(); };
+        div.innerHTML = `<span style="color:#888; width:30px; display:inline-block;">${idx}</span> ${instr.text}`;
+        container.appendChild(div);
+    });
+}
 
 const state = {
     lines: [],        // Raw source lines
     instructions: [], // Parsed instructions { op, args, originalLineIndex }
     stringPool: {},   // index -> string
+    arrayPool: {},    // index -> array of BigInt/Strings
     pc: 0,            // Program Counter
     stack: [],        // values (BigInt or String)
     vars: {},         // index -> { value, isString }
+    callStack: [],    // stack of { returnPc, locals }
     halted: false,
     output: []
 };
@@ -16,6 +48,8 @@ function reset() {
     state.stack = [];
     state.vars = {};
     state.stringPool = {};
+    state.arrayPool = {};
+    state.callStack = [];
     state.halted = false;
     state.output = [];
     state.lastExplanation = "";
@@ -39,6 +73,19 @@ function parseSource(source) {
             continue;
         }
 
+        if (line.startsWith('ARR ')) {
+            const parts = line.split(' ');
+            const idx = parseInt(parts[1], 10);
+            const valStr = parts.slice(2).join(' ');
+            const vals = valStr.split(',').filter(v => v !== "").map(v => {
+                // If it looks like a number, use BigInt, else it's a string index? 
+                // Actually strings in arrays are stored as indices (BigInt)
+                return BigInt(v);
+            });
+            state.arrayPool[idx] = vals;
+            continue;
+        }
+
         const tokens = line.split(/\s+/);
         const opcode = parseInt(tokens[0], 10);
 
@@ -51,9 +98,9 @@ function parseSource(source) {
 
         if (opcode === 1) { // PUSH
             instruction.args = [tokens.length >= 5 ? BigInt(tokens[4]) : 0n];
-        } else if ([2, 3, 8, 16, 17, 18, 20].includes(opcode)) {
-            // LOAD, STORE, PRINT, JMP, JZ, JNZ, PUSH_STR
-            instruction.args = [parseInt(tokens[1], 10)];
+        } else if ([2, 3, 8, 16, 17, 18, 20, 21, 30, 31, 32, 33, 34, 40, 41, 42, 43].includes(opcode)) {
+            // Updated to handle all new opcodes
+            instruction.args = tokens.slice(1).map(t => parseInt(t, 10));
         }
 
         state.instructions.push(instruction);
@@ -88,18 +135,23 @@ function updateUI(highlightStack = false, updatedVarIndex = -1) {
     }
     if (state.stack.length === 0) stackDiv.innerHTML = '<div style="color:#888; font-style:italic;">Empty</div>';
 
-    // Render Vars
-    const varsDiv = document.getElementById('vars-display');
-    varsDiv.innerHTML = '';
-    Object.keys(state.vars).forEach(key => {
-        const row = document.createElement('div');
-        row.className = 'var-row';
-        if (parseInt(key) === updatedVarIndex) row.classList.add('updated');
-        const v = state.vars[key];
-        const displayVal = v.isString ? `"${v.value}"` : v.value.toString();
-        row.innerHTML = `<span>Idx ${key}</span><span>${displayVal}</span>`;
-        varsDiv.appendChild(row);
-    });
+    // Render Call Stack
+    const callStackDiv = document.getElementById('callstack-display');
+    if (callStackDiv) {
+        callStackDiv.innerHTML = '';
+        for (let i = state.callStack.length - 1; i >= 0; i--) {
+            const frame = state.callStack[i];
+            const item = document.createElement('div');
+            item.className = 'stack-item frame';
+            item.innerHTML = `<span>Frame ${i} (Ret: ${frame.returnPc})</span> <div style='font-size:0.8em'>Locals: ${JSON.stringify(frame.locals.map(v => v.toString()))}</div>`;
+            callStackDiv.appendChild(item);
+        }
+        if (state.callStack.length === 0) callStackDiv.innerHTML = '<div style="color:#888; font-style:italic;">Top Level</div>';
+    }
+    const actionDisplay = document.getElementById('action-display');
+    if (actionDisplay) {
+        actionDisplay.innerHTML = state.lastExplanation || "Waiting to start...";
+    }
 
     document.getElementById('console-output').textContent = state.output.join('\n');
 }
@@ -119,6 +171,15 @@ function getExplanation(instr) {
         case 16: return `<strong>JMP</strong> Jump to instruction at index ${instr.args[0]}.`;
         case 17: return `<strong>JZ</strong> Pop value. If 0, jump to index ${instr.args[0]}.`;
         case 18: return `<strong>JNZ</strong> Pop value. If !0, jump to index ${instr.args[0]}.`;
+        case 30: return `<strong>MAKE_ARR</strong> Create array of size ${instr.args[0]} from stack.`;
+        case 31: return `<strong>ARR_GET</strong> Get value from array at index.`;
+        case 32: return `<strong>ARR_SET</strong> Set value in array at index.`;
+        case 33: return `<strong>ARR_LEN</strong> Pushes array length to stack.`;
+        case 34: return `<strong>PUSH_ARR</strong> Push array pool index ${instr.args[0]} to stack.`;
+        case 40: return `<strong>CALL</strong> Jump to ${instr.args[0]} and push frame with ${instr.args[1]} args.`;
+        case 41: return `<strong>RET</strong> Pop frame and return with top stack value.`;
+        case 42: return `<strong>LOAD_LOCAL</strong> Retrieve local variable Index ${instr.args[0]}.`;
+        case 43: return `<strong>STORE_LOCAL</strong> Save value to local variable Index ${instr.args[0]}.`;
         default: return `<strong>OP ${instr.op}</strong> Executing internal instruction.`;
     }
 }
@@ -137,7 +198,7 @@ function step() {
             highlightStack = true;
             break;
         case 20: // PUSH_STR
-            state.stack.push(state.stringPool[instr.args[0]] || "");
+            state.stack.push(BigInt(instr.args[0]));
             highlightStack = true;
             break;
         case 2: // LOAD
@@ -158,7 +219,14 @@ function step() {
             break;
         case 8: // PRINT
             const p = state.vars[instr.args[0]];
-            state.output.push(p ? p.value.toString() : "undefined");
+            state.output.push(p ? p.value.toString() : "0");
+            break;
+        case 21: // PRINT_STR
+            const ps = state.vars[instr.args[0]];
+            if (ps) {
+                const strIdx = Number(ps.value);
+                state.output.push(state.stringPool[strIdx] || "");
+            }
             break;
         case 9: state.halted = true; break;
         case 16: state.pc = instr.args[0]; return updateUI();
@@ -167,6 +235,73 @@ function step() {
             break;
         case 18: // JNZ
             if (state.stack.pop() !== 0n) { state.pc = instr.args[0]; return updateUI(); }
+            break;
+        case 30: // MAKE_ARR
+            const n = instr.args[0];
+            const arr = [];
+            for (let i = 0; i < n; i++) arr.push(state.stack.pop());
+            arr.reverse();
+            const newIdx = Object.keys(state.arrayPool).length;
+            state.arrayPool[newIdx] = arr;
+            state.stack.push(BigInt(newIdx));
+            highlightStack = true;
+            break;
+        case 31: // ARR_GET
+            const idxGet = Number(state.stack.pop());
+            const refGet = Number(state.stack.pop());
+            const arrayGet = state.arrayPool[refGet];
+            state.stack.push(arrayGet ? arrayGet[idxGet] : 0n);
+            highlightStack = true;
+            break;
+        case 32: // ARR_SET
+            const valSet = state.stack.pop();
+            const idxSet = Number(state.stack.pop());
+            const refSet = Number(state.stack.pop());
+            if (state.arrayPool[refSet]) state.arrayPool[refSet][idxSet] = valSet;
+            break;
+        case 33: // ARR_LEN
+            const refLen = Number(state.stack.pop());
+            state.stack.push(state.arrayPool[refLen] ? BigInt(state.arrayPool[refLen].length) : 0n);
+            highlightStack = true;
+            break;
+        case 34: // PUSH_ARR
+            state.stack.push(BigInt(instr.args[0]));
+            highlightStack = true;
+            break;
+        case 40: // CALL
+            const addr = instr.args[0];
+            const argc = instr.args[1];
+            const frame = { returnPc: state.pc, locals: [] };
+            for (let i = 0; i < argc; i++) frame.locals.push(state.stack.pop());
+            frame.locals.reverse();
+            state.callStack.push(frame);
+            state.pc = addr;
+            return updateUI();
+        case 41: // RET
+            const retVal = state.stack.length > 0 ? state.stack.pop() : 0n;
+            const poppedFrame = state.callStack.pop();
+            if (poppedFrame) {
+                state.pc = poppedFrame.returnPc;
+                state.stack.push(retVal);
+                highlightStack = true;
+            } else {
+                state.halted = true;
+            }
+            break;
+        case 42: // LOAD_LOCAL
+            const curFrameIdx = state.callStack.length - 1;
+            if (curFrameIdx >= 0) {
+                const lval = state.callStack[curFrameIdx].locals[instr.args[0]];
+                state.stack.push(lval !== undefined ? lval : 0n);
+                highlightStack = true;
+            }
+            break;
+        case 43: // STORE_LOCAL
+            const curFrameIdxSt = state.callStack.length - 1;
+            if (curFrameIdxSt >= 0) {
+                const valSt = state.stack.pop();
+                state.callStack[curFrameIdxSt].locals[instr.args[0]] = valSt;
+            }
             break;
     }
     state.pc++;

@@ -4,242 +4,315 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ELIN | Documentation</title>
+    <title>ELIN | Technical Handbook v0.2.0</title>
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <aside class="sidebar">
-        <div style="padding: 10px; margin-bottom: 20px; border-bottom: 2px solid var(--border-color);">
-            <h1 style="font-size: 1.5rem; margin: 0;">ELIN DOCS</h1>
-            <p style="font-size: 0.75rem; color: var(--text-secondary);">REFERENCE MANUAL v0.1.0</p>
+        <div style="padding: 10px; margin-bottom: 30px; border-bottom: 4px solid var(--text-primary);">
+            <h1 style="font-size: 1.2rem; margin: 0; font-family: var(--font-mono); font-weight: 700;">ELIN_SYSTEM</h1>
+            <p>// v0.2.0</p>
         </div>
 
-        <h2>0. Introduction</h2>
+        <h2>I. Fundamentals</h2>
         <ul class="sidebar-links">
-            <li><a href="#intro" class="active">0.1 — Introduction to ELIN</a></li>
-            <li><a href="#setup">0.2 — Setup and Compilation</a></li>
+            <li><a href="#intro" class="active">01 // Introduction</a></li>
+            <li><a href="#logic">02 // The Stack Logic</a></li>
+            <li><a href="#setup">03 // Environment Setup</a></li>
         </ul>
 
-        <h2 style="margin-top: 25px;">1. Basics</h2>
+        <h2 style="margin-top: 35px;">II. Language Spec</h2>
         <ul class="sidebar-links">
-            <li><a href="#syntax">1.1 — Basic Syntax</a></li>
-
-            <li><a href="#math">1.2 — Mathematics & Expressions</a></li>
+            <li><a href="#syntax">04 // Basic Syntax</a></li>
+            <li><a href="#types">05 // Memory & Types</a></li>
+            <li><a href="#math">06 // Mathematics</a></li>
         </ul>
 
-        <h2 style="margin-top: 25px;">2. Control Flow</h2>
+        <h2 style="margin-top: 35px;">III. Control & Logic</h2>
         <ul class="sidebar-links">
-            <li><a href="#conditionals">2.1 — If-Else Statements</a></li>
-            <li><a href="#whiles">2.2 — While Loops</a></li>
+            <li><a href="#conditionals">07 // Conditionals</a></li>
+            <li><a href="#loops">08 // Loops (While)</a></li>
+            <li><a href="#functions">09 // Functions & Scoping</a></li>
         </ul>
 
-        <h2 style="margin-top: 25px;">3. Advanced</h2>
+        <h2 style="margin-top: 35px;">IV. Resources</h2>
         <ul class="sidebar-links">
-            <li><a href="#opcodes">3.1 — Opcode Specification</a></li>
-            <li><a href="visualizer.html">3.2 — VM Visualizer</a></li>
+            <li><a href="#opcodes">10 // Opcode Table</a></li>
+            <li><a href="visualizer.html">11 // System Visualizer</a></li>
         </ul>
     </aside>
 
     <main class="main-content">
         <header>
-            <div class="lesson-meta">Lesson 0.1</div>
-            <h1>Introduction to the ELIN Language</h1>
+            <div class="lesson-meta">Section 01 // Overview</div>
+            <h1>The ELIN Programming System</h1>
+            <p style="font-style: italic; color: var(--text-secondary);">A high-performance bytecode language for
+                early-generation microcontrollers.</p>
         </header>
 
         <section id="intro">
-            <p>ELIN is a stack-oriented, integer-only programming language designed for high-performance execution on
-                low-power hardware (specifically the ESP8266). By using a virtual machine approach, ELIN allows for
-                complex logic to be stored in a compact bytecode format.</p>
+            <p><strong>ELIN</strong> is a specialized, stack-oriented language designed to solve the complexity of logic
+                execution on extremely low-power hardware. By compiling human-readable code into a compact, fixed-size
+                bytecode, ELIN allows developers to run sophisticated programs on devices with as little as 32KB of
+                available RAM.</p>
 
             <div class="box box-tutorial">
-                <div class="box-header">What is a stack-based language?</div>
-                <p>Unlike languages like C++ or Python that use registers or named memory for every single intermediate
-                    calculation, a stack-based language uses a "Push/Pop" model. To add two numbers, you push both onto
-                    a "stack" and then call an <code>ADD</code> instruction which consumes them and pushes the result
-                    back.</p>
+                <p>If you are new to programming, ELIN is a great place to start understanding how computers actually
+                    work at the hardware level. It strips away the "magic" of modern languages to show the raw flow of
+                    data.</p>
             </div>
+        </section>
+
+        <section id="logic">
+            <header>
+                <div class="lesson-meta">Section 02 // Core Concepts</div>
+                <h1>How ELIN Thinks: The Stack</h1>
+            </header>
+            <p>Most modern languages (like Python) let you name every temporary value. ELIN is different. It uses a
+                <strong>Stack</strong>—a vertical pile of data where you can only interact with the very top item.
+            </p>
+
+            <h3>The Plate Analogy</h3>
+            <p>Imagine a stack of dinner plates. To add two numbers (5 and 10):</p>
+            <ol style="margin-left: 40px; margin-bottom: 25px;">
+                <li>You <strong>PUSH</strong> 10 onto the stack.</li>
+                <li>You <strong>PUSH</strong> 5 onto the stack (it sits on top of 10).</li>
+                <li>You call <strong>ADD</strong>. The computer "pops" the top two plates, adds them, and places a new
+                    plate with "15" back on the stack.</li>
+            </ol>
+
+            <div class="box box-key">
+                <p>This "Push/Pop" model is why ELIN is so fast. The CPU doesn't have to search for names in memory; it
+                    always knows that the data it needs is at the very top of the stack.</p>
+            </div>
+        </section>
+
+        <section id="setup">
+            <header>
+                <div class="lesson-meta">Section 03 // Environment Setup</div>
+                <h1>Getting Started with ELIN</h1>
+            </header>
+            <p>To start programming in ELIN, you'll need the compiler and optionally the visualizer.</p>
+
+            <h3>Requirements</h3>
+            <ul>
+                <li>Python 3.6+ for the compiler</li>
+                <li>A web browser for the visualizer</li>
+            </ul>
+
+            <h3>Installation</h3>
+            <p>Clone the repository and navigate to the compiler directory:</p>
+            <pre><code>git clone https://github.com/schallten/elin.git
+cd elin/compiler
+python main.py your_program.elin</code></pre>
+
+            <p>This will generate a <code>.outz</code> file that can be run on the VM or visualized.</p>
         </section>
 
         <section id="syntax">
             <header>
-                <div class="lesson-meta">Lesson 1.1</div>
+                <div class="lesson-meta">Section 04 // Implementation</div>
                 <h1>Basic Syntax</h1>
             </header>
-            <p>Writing code in ELIN is simple. Every instruction occupies its own line. Comments can be added using the
-                <code>#</code> or <code>//</code> prefix.
-            </p>
+            <p>ELIN combines the readability of modern code with the strictness of professional engineering. Every
+                statement is evaluated line-by-line.</p>
 
-            <h3>Defining Variables</h3>
-            <p>Variables are created using the <code>let</code> keyword. Once a variable is defined, it can be reused in
-                any expression.</p>
             <pre>
-let int x = 10
-let int y = x + 5
-let str msg = "Total is: "
-print msg
-print y
+# This is a comment
+let int x = 10;
+let int y = 20;
+
+let int result = x + y;
+print result;
+
+# Update existing variable
+x = 30;
             </pre>
 
-            <div class="box box-key">
-                <div class="box-header">Key Takeaway</div>
-                <p>ELIN variables are globally scoped within a single program file and must be defined before they are
-                    used in any calculation or print statement.</p>
-            </div>
+            <p>Recent updates to ELIN (v0.2.0) allow for the optional use of <code>;</code> (semicolons) to clearly
+                terminate your thoughts, making the code more robust against whitespace errors.</p>
         </section>
 
-
-
-        <section id="math">
+        <section id="types">
             <header>
-                <div class="lesson-meta">Lesson 1.2</div>
-                <h1>Mathematics & Expressions</h1>
+                <div class="lesson-meta">Section 05 // Memory</div>
+                <h1>Memory & Types</h1>
             </header>
-            <p>ELIN supports standard mathematical operators with proper order of operations (PEMDAS/BODMAS). This is
-                achieved through an internal <strong>Shunting Yard</strong> parser.</p>
+            <p>In low-power systems, memory is a precious resource. ELIN uses fixed types to ensure the computer knows
+                exactly how many "slots" to reserve for your data.</p>
 
             <table>
                 <thead>
                     <tr>
-                        <th>Operator</th>
-                        <th>Meaning</th>
-                        <th>Example</th>
+                        <th>Type</th>
+                        <th>Storage</th>
+                        <th>Use Case</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td><code>+</code></td>
-                        <td>Addition</td>
-                        <td><code>x + 5</code></td>
+                        <td><code>int</code></td>
+                        <td>64-bit Integer</td>
+                        <td>Whole numbers, loop counters, math.</td>
                     </tr>
                     <tr>
-                        <td><code>-</code></td>
-                        <td>Subtraction</td>
-                        <td><code>x - 5</code></td>
+                        <td><code>str</code></td>
+                        <td>Pool Pointer</td>
+                        <td>Text display and logging prefixes.</td>
                     </tr>
                     <tr>
-                        <td><code>*</code></td>
-                        <td>Multiplication</td>
-                        <td><code>x * 10</code></td>
-                    </tr>
-                    <tr>
-                        <td><code>/</code></td>
-                        <td>Division</td>
-                        <td><code>x / 2</code></td>
-                    </tr>
-                    <tr>
-                        <td><code>( )</code></td>
-                        <td>Grouping</td>
-                        <td><code>(1 + 2) * 3</code></td>
+                        <td><code>arr</code></td>
+                        <td>Fixed Buffer</td>
+                        <td>Lists of numbers (e.g. sensor history).</td>
                     </tr>
                 </tbody>
             </table>
         </section>
 
-        <section id="conditionals">
+        <section id="math">
             <header>
-                <div class="lesson-meta">Lesson 2.1</div>
-                <h1>If-Else Statements</h1>
+                <div class="lesson-meta">Section 06 // Mathematics</div>
+                <h1>Mathematical Operations</h1>
             </header>
-            <p>Conditional logic allows your program to make decisions. ELIN uses a block-based
-                <code>if...else...end</code> structure.
-            </p>
-            <pre>
-let int temp = 80
-if temp > 100
-    let str msg = "CRITICAL"
-    print msg
-else
-    let str msg = "SAFE"
-    print msg
-end
-            </pre>
+            <p>ELIN supports standard arithmetic operations on integers: addition (+), subtraction (-), multiplication (*), and division (/). Operations follow stack-based evaluation.</p>
+
+            <h3>Basic Math</h3>
+            <pre><code>let int a = 10;
+let int b = 5;
+let int sum = a + b;  # 15
+let int diff = a - b; # 5
+let int prod = a * b; # 50
+let int quot = a / b; # 2</code></pre>
+
+            <h3>Complex Expressions</h3>
+            <p>You can nest operations and function calls:</p>
+            <pre><code>let int result = (a + b) * (a - b);  # 75</code></pre>
 
             <div class="box box-key">
-                <div class="box-header">Nesting Support</div>
-                <p>You can nest <code>if</code> statements inside other <code>if</code> or <code>while</code> blocks as
-                    deeply as needed. The compiler tracks block depth automatically.</p>
+                <p>All math is performed on 64-bit integers. Division truncates towards zero.</p>
             </div>
         </section>
 
-        <section id="whiles">
+        <section id="conditionals">
             <header>
-                <div class="lesson-meta">Lesson 2.2</div>
-                <h1>While Loops</h1>
+                <div class="lesson-meta">Section 07 // Conditionals</div>
+                <h1>Decision Making</h1>
             </header>
-            <p>Loops continue as long as the condition evaluates to non-zero (True). Use <code>wend</code> to close the
-                loop.</p>
+            <p>ELIN supports basic branching via <code>if</code> blocks, allowing your script to make choices based on
+                program state.</p>
             <pre>
-let int i = 1
-while i <= 10
-    print i
-    let int i = i + 1
-wend
+let int value = 5;
+if value > 0;
+    print "Positive";
+else;
+    print "Negative or Zero";
+end;
             </pre>
+            <p>Under the hood, these compile down to <code>JZ</code> (Jump if Zero) instructions, gracefully skipping
+                sections of bytecode when conditions aren't met.</p>
+        </section>
 
+        <section id="loops">
+            <header>
+                <div class="lesson-meta">Section 08 // Loops (While)</div>
+                <h1>Repetition</h1>
+            </header>
+            <p>Use <code>while</code> loops to repeat actions until a condition fails. Combine with conditionals to
+                build complex state machines.</p>
+            <pre>
+let int limit = 3;
+let int i = 0;
+while i < limit;
+    print i;
+    i = i + 1;
+wend;
+            </pre>
             <div class="box box-warning">
-                <div class="box-header">Iteration Limit</div>
-                <p>To prevent infinite loops and system lockups on the ESP8266, ELIN enforces a maximum iteration limit
-                    of <strong>999,999,999</strong> cycles for any single loop construct.</p>
+                <p>Because ELIN operates close to the hardware, infinite loops will stall the host CPU. Always make sure
+                    your loop condition will eventually be false.</p>
+            </div>
+        </section>
+
+        <section id="functions">
+            <header>
+                <div class="lesson-meta">Section 09 // Functions & Scoping</div>
+                <h1>Functions & Scoping</h1>
+            </header>
+            <p>Functions allow you to compartmentalize logic. In ELIN, every function has its own <strong>Private
+                    Memory</strong> (a Local Frame). Variables defined inside <code>func</code> stay inside
+                <code>func</code>.
+            </p>
+            <pre>
+func int double int value;
+    let int result = value * 2;
+    return result;
+end;
+
+print double 5; # Outputs 10
+            </pre>
+            <div class="box box-warning">
+                <p>Attempting to access a variable defined inside a function from the "Main" script will result in a
+                    <strong>Compilation Error</strong>. This prevents "Side Effects" that can crash small hardware.
+                </p>
             </div>
         </section>
 
         <section id="opcodes">
             <header>
-                <div class="lesson-meta">Lesson 3.1</div>
+                <div class="lesson-meta">Section 10 // Opcode Table</div>
                 <h1>Opcode Specification</h1>
             </header>
-            <p>For those interested in the internal mechanics, here are some of the current instruction set recognized
-                by the
-                ELIN Virtual Machine.</p>
+            <p>The following instructions are the raw commands the ELIN Virtual Machine understands. Every high-level
+                command you write is translated into these numbers.</p>
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>Hex/ID</th>
                         <th>Mnemonic</th>
-                        <th>Description</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>1</td>
+                        <td>0x01</td>
                         <td>PUSH</td>
-                        <td>Push value to stack</td>
+                        <td>Push numeric literal to stack</td>
                     </tr>
                     <tr>
-                        <td>2</td>
+                        <td>0x02</td>
                         <td>LOAD</td>
-                        <td>Load variable index to stack</td>
+                        <td>Load global variable to stack</td>
                     </tr>
                     <tr>
-                        <td>3</td>
+                        <td>0x03</td>
                         <td>STORE</td>
-                        <td>Store stack top into variable index</td>
+                        <td>Store stack top to global variable</td>
                     </tr>
                     <tr>
-                        <td>8</td>
-                        <td>PRINT</td>
-                        <td>Output variable contents to console</td>
-                    </tr>
-                    <tr>
-                        <td>9</td>
-                        <td>HALT</td>
-                        <td>Immediately stop execution</td>
-                    </tr>
-                    <tr>
-                        <td>20</td>
+                        <td>0x20</td>
                         <td>PUSH_STR</td>
-                        <td>Push pointer to string pool index</td>
+                        <td>Push string index reference</td>
                     </tr>
                     <tr>
-                        <td>16</td>
-                        <td>JMP</td>
-                        <td>Unconditional jump to address</td>
+                        <td>0x21</td>
+                        <td>PRN_STR</td>
+                        <td>Print string from pool reference</td>
                     </tr>
                     <tr>
-                        <td>17</td>
-                        <td>JZ</td>
-                        <td>Jump to address if stack top is zero</td>
+                        <td>0x31</td>
+                        <td>ARR_G</td>
+                        <td>Get array value at index</td>
+                    </tr>
+                    <tr>
+                        <td>0x40</td>
+                        <td>CALL</td>
+                        <td>Shift to Local Frame & Jump</td>
+                    </tr>
+                    <tr>
+                        <td>0x41</td>
+                        <td>RET</td>
+                        <td>Return value and pop Frame</td>
                     </tr>
                 </tbody>
             </table>
@@ -247,14 +320,38 @@ wend
 
         <div class="nav-buttons">
             <span>&nbsp;</span>
-            <a href="visualizer.html" class="btn">Launch Visualizer &rarr;</a>
+            <a href="visualizer.html" class="btn">Launch System Visualizer &rarr;</a>
         </div>
 
-        <footer
-            style="margin-top: 100px; padding: 20px; border-top: 1px solid var(--border-color); color: var(--text-secondary); font-size: 0.8rem;">
-            &copy; 2026 ELIN Project
+        <footer>
+            <span>&copy; 2026 ELIN_CORE_PROJECT</span>
+            <span>REF: MANUAL_V0.2.0_FINAL</span>
         </footer>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.sidebar-links a');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            }, {
+                rootMargin: '-20% 0px -80% 0px'
+            });
+
+            sections.forEach(section => observer.observe(section));
+        });
+    </script>
 </body>
 
 </html>

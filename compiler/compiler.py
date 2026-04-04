@@ -1,7 +1,9 @@
 import sys
 from ops import (
     HALT, PUSH, LOAD, STORE, JMP, JZ, PRINT, PRINT_STR, PUSH_STR,
-    OP_MAP, CMP_OP_MAP, CMP_OPERATORS
+    OP_MAP, CMP_OP_MAP, CMP_OPERATORS,
+    MAKE_ARR, ARR_GET, ARR_SET, ARR_LEN, PUSH_ARR,
+    CALL, RET, LOAD_LOCAL, STORE_LOCAL
 )
 from ast_nodes import *
 
@@ -18,39 +20,64 @@ class Compiler:
         self.variables = {}  # { name: {index, type, is_defined, is_used} }
         self.next_available_index = 0
         self.string_pool = [] # List of unique string literals
+        self.array_pool = []  # List of unique array templates (list of values)
+        self.functions = {}   # {name: {'address': int, 'argc': int, 'ret_type': str}}
+        self.current_scope_locals = None
+        self.local_next_index = 0
 
     def register_variable(self, name, var_type):
         """Assigns a memory index and type to a new variable."""
-        if name in self.variables:
-            print(f"Compilation Error: Variable '{name}' is already declared. Use reassignment without 'let'.")
-            sys.exit(1)
-            
-        self.variables[name] = {
-            'index': self.next_available_index,
-            'type': var_type,
-            'is_defined': True,
-            'is_used': False
-        }
-        self.next_available_index += 1
-        return self.variables[name]['index']
+        if self.current_scope_locals is not None:
+            if name in self.current_scope_locals:
+                print(f"Compilation Error: Local variable '{name}' is already declared.")
+                sys.exit(1)
+            idx = self.local_next_index
+            self.current_scope_locals[name] = {'index': idx, 'type': var_type, 'is_defined': True, 'is_used': False}
+            self.local_next_index += 1
+            return idx, True
+        else:
+            if name in self.variables:
+                print(f"Compilation Error: Variable '{name}' is already declared. Use reassignment without 'let'.")
+                sys.exit(1)
+                
+            self.variables[name] = {
+                'index': self.next_available_index,
+                'type': var_type,
+                'is_defined': True,
+                'is_used': False
+            }
+            self.next_available_index += 1
+            return self.variables[name]['index'], False
 
     def register_internal_variable(self, name, var_type):
-        """Assigns or retrieves an internal variable index (used for print literals)."""
+        """Assigns or retrieves an internal variable index (used for print literals).
+           MUST be a global variable since PRINT only reads globals."""
         if name not in self.variables:
-            return self.register_variable(name, var_type)
-        return self.variables[name]['index']
+            self.variables[name] = {
+                'index': self.next_available_index,
+                'type': var_type,
+                'is_defined': True,
+                'is_used': False
+            }
+            self.next_available_index += 1
+        return self.variables[name]['index'], False
 
 
     def lookup_variable_index(self, name):
         """Retrieves variable index, ensuring it has been previously defined."""
+        if self.current_scope_locals is not None and name in self.current_scope_locals:
+            self.current_scope_locals[name]['is_used'] = True
+            return self.current_scope_locals[name]['index'], True
         if name not in self.variables:
             print(f"Compilation Error: You are trying to use '{name}' before defining it.")
             sys.exit(1)
         self.variables[name]['is_used'] = True
-        return self.variables[name]['index']
+        return self.variables[name]['index'], False
 
     def get_variable_type(self, name):
         """Retrieves the declared type of a variable."""
+        if self.current_scope_locals is not None and name in self.current_scope_locals:
+            return self.current_scope_locals[name]['type']
         if name not in self.variables:
             print(f"Compilation Error: Variable '{name}' is undefined.")
             sys.exit(1)
@@ -75,6 +102,21 @@ class Compiler:
         if isinstance(node, ConditionNode):
             # Comparisons return boolean results (stored as int 0 or 1)
             return "int"
+        if isinstance(node, ArrayNode):
+            if not node.elements: return "arr int"
+            inner = self.infer_type(node.elements[0])
+            return f"arr {inner}"
+        if isinstance(node, ArrayAccessNode):
+            full_type = self.get_variable_type(node.name)
+            if " " in full_type: return full_type.split(" ", 1)[1]
+            return "int"
+        if isinstance(node, ArrayLenNode):
+            return "int"
+        if isinstance(node, FunctionCallNode):
+            if node.name not in self.functions:
+                print(f"Compilation Error: Function '{node.name}' is undefined.")
+                sys.exit(1)
+            return self.functions[node.name]['ret_type']
         return "unknown"
 
     def add_push(self, value):
@@ -88,13 +130,26 @@ class Compiler:
         index = self.string_pool.index(string_value)
         self.bytecode.append(f"{PUSH_STR} {index}")
 
-    def add_load(self, var_index):
-        """Emits a LOAD instruction for a specific memory address."""
-        self.bytecode.append(f"{LOAD} {var_index}")
+    def add_push_arr(self, array_elements):
+        """Adds an array template to the pool and emits PUSH_ARR with its index."""
+        if array_elements not in self.array_pool:
+            self.array_pool.append(array_elements)
+        index = self.array_pool.index(array_elements)
+        self.bytecode.append(f"{PUSH_ARR} {index}")
 
-    def add_store(self, var_index):
+    def add_load(self, var_index, is_local=False):
+        """Emits a LOAD instruction for a specific memory address."""
+        if is_local:
+            self.bytecode.append(f"{LOAD_LOCAL} {var_index}")
+        else:
+            self.bytecode.append(f"{LOAD} {var_index}")
+
+    def add_store(self, var_index, is_local=False):
         """Emits a STORE instruction for a specific memory address."""
-        self.bytecode.append(f"{STORE} {var_index}")
+        if is_local:
+            self.bytecode.append(f"{STORE_LOCAL} {var_index}")
+        else:
+            self.bytecode.append(f"{STORE} {var_index}")
 
     def add_operation(self, opcode):
         """Emits a raw opcode (add, sub, halt, etc.)."""
@@ -117,54 +172,49 @@ class Compiler:
                 sys.exit(1)
             
             # 2. Register variable and emit storage ops
-            index = self.register_variable(ast.name, ast.type_name)
+            index, is_local = self.register_variable(ast.name, ast.type_name)
             self.generate(ast.value)
-            self.add_store(index)
+            self.add_store(index, is_local)
+
+        elif isinstance(ast, ArrayAssignNode):
+            # 1. Load array ref
+            idx, is_local = self.lookup_variable_index(ast.name)
+            self.add_load(idx, is_local)
+            # 2. Gen index
+            self.generate(ast.index)
+            # 3. Gen value
+            self.generate(ast.value)
+            # 4. Emit SET
+            self.add_operation(ARR_SET)
 
         elif isinstance(ast, ReassignNode):
-            # 1. Ensure variable exists
-            if ast.name not in self.variables:
-                print(f"Compilation Error: Variable '{ast.name}' is undefined. Use 'let' to declare it.")
-                sys.exit(1)
-
             # 2. Check types
             val_type = self.infer_type(ast.value)
-            existing_type = self.variables[ast.name]['type']
+            existing_type = self.get_variable_type(ast.name)
             if val_type != existing_type:
                 print(f"Type Error: Cannot assign {val_type} to variable '{ast.name}' of type {existing_type}.")
                 sys.exit(1)
 
             # 3. Emit store ops
-            index = self.variables[ast.name]['index']
+            index, is_local = self.lookup_variable_index(ast.name)
             self.generate(ast.value)
-            self.add_store(index)
+            self.add_store(index, is_local)
 
         elif isinstance(ast, PrintNode):
-            # The VM's PRINT expects a memory index, so literals must be stored first
-            if isinstance(ast.value_node, NumberNode):
-                val = ast.value_node.value
-                temp_name = f"__literal_{val}"
-                idx = self.register_internal_variable(temp_name, "int")
-                self.add_push(val)
-                self.add_store(idx)
-                self.variables[temp_name]['is_used'] = True
-                self.bytecode.append(f"{PRINT} {idx}")
-            elif isinstance(ast.value_node, StringNode):
-                val = ast.value_node.value
-                temp_name = f"__literal_str_{val}"
-                idx = self.register_internal_variable(temp_name, "str")
-                self.add_push_str(val)
-                self.add_store(idx)
-                self.variables[temp_name]['is_used'] = True
+            # The VM's PRINT expects a memory index, so we generate the expression,
+            # store it in a temporary internal variable, and then print that index.
+            val_type = self.infer_type(ast.value_node)
+            self.generate(ast.value_node)
+            
+            temp_name = f"__print_temp_{val_type}"
+            idx, is_loc = self.register_internal_variable(temp_name, val_type)
+            self.add_store(idx, is_local=False)
+            self.variables[temp_name]['is_used'] = True
+            
+            if val_type == "str":
                 self.bytecode.append(f"{PRINT_STR} {idx}")
             else:
-                # Variable: use type info to decide which print opcode to emit
-                idx = self.lookup_variable_index(ast.value_node.name)
-                var_type = self.get_variable_type(ast.value_node.name)
-                if var_type == "str":
-                    self.bytecode.append(f"{PRINT_STR} {idx}")
-                else:
-                    self.bytecode.append(f"{PRINT} {idx}")
+                self.bytecode.append(f"{PRINT} {idx}")
 
         elif isinstance(ast, IfNode):
             self.generate(ast.condition)
@@ -209,8 +259,89 @@ class Compiler:
         elif isinstance(ast, StringNode):
             self.add_push_str(ast.value)
         elif isinstance(ast, VariableNode):
-            idx = self.lookup_variable_index(ast.name)
-            self.add_load(idx)
+            idx, is_local = self.lookup_variable_index(ast.name)
+            self.add_load(idx, is_local)
+        elif isinstance(ast, ArrayNode):
+            # If all elements are simple literals, we can pool it
+            all_literals = True
+            for e in ast.elements:
+                if not isinstance(e, (NumberNode, StringNode)):
+                    all_literals = False
+                    break
+            
+            if all_literals:
+                vals = []
+                for e in ast.elements:
+                    if isinstance(e, StringNode):
+                        # Ensure string is in pool and use its index
+                        if e.value not in self.string_pool:
+                            self.string_pool.append(e.value)
+                        vals.append(self.string_pool.index(e.value))
+                    else:
+                        vals.append(e.value)
+                self.add_push_arr(vals)
+            else:
+                for e in ast.elements:
+                    self.generate(e)
+                self.add_operation(f"{MAKE_ARR} {len(ast.elements)}")
+        elif isinstance(ast, ArrayAccessNode):
+            idx, is_local = self.lookup_variable_index(ast.name)
+            self.add_load(idx, is_local)
+            self.generate(ast.index)
+            self.add_operation(ARR_GET)
+        elif isinstance(ast, ArrayLenNode):
+            idx, is_local = self.lookup_variable_index(ast.name)
+            self.add_load(idx, is_local)
+            self.add_operation(ARR_LEN)
+        elif isinstance(ast, FunctionDefNode):
+            jz_index = len(self.bytecode)
+            self.bytecode.append("PLACEHOLDER_JMP")
+            
+            func_start = len(self.bytecode)
+            self.functions[ast.name] = {
+                'address': func_start,
+                'ret_type': ast.ret_type,
+                'argc': len(ast.params)
+            }
+            
+            # Setup local scope
+            self.current_scope_locals = {}
+            self.local_next_index = 0
+            
+            for p_type, p_name in ast.params:
+                self.current_scope_locals[p_name] = {'index': self.local_next_index, 'type': p_type, 'is_defined': True, 'is_used': True}
+                self.local_next_index += 1
+                
+            for stmt in ast.body:
+                self.generate(stmt)
+                
+            if not self.bytecode[-1].startswith(str(RET)):
+                self.add_push(0)
+                self.add_operation(RET)
+                
+            self.current_scope_locals = None
+            func_end = len(self.bytecode)
+            self.bytecode[jz_index] = f"{JMP} {func_end}"
+        elif isinstance(ast, FunctionCallNode):
+            if ast.name not in self.functions:
+                print(f"Compilation Error: Call to undefined function '{ast.name}'")
+                sys.exit(1)
+            
+            func_info = self.functions[ast.name]
+            if len(ast.args) != func_info['argc']:
+                print(f"Compilation Error: Function '{ast.name}' expects {func_info['argc']} arguments, but got {len(ast.args)}")
+                sys.exit(1)
+                
+            for arg in ast.args:
+                self.generate(arg)
+                
+            self.bytecode.append(f"{CALL} {func_info['address']} {func_info['argc']}")
+        elif isinstance(ast, ReturnNode):
+            if self.current_scope_locals is None:
+                print("Compilation Error: 'return' outside of function.")
+                sys.exit(1)
+            self.generate(ast.value)
+            self.add_operation(RET)
 
     def compile(self, source_code_string_or_lines):
         from lexer import lex
@@ -234,12 +365,19 @@ class Compiler:
         else:
             string_section = []
             
+        # Build Section: Array Pool
+        array_section = [f"ARR {i} {','.join(map(str, vals))}" for i, vals in enumerate(self.array_pool)]
+        if array_section:
+            array_section = ["# --- ARRAY POOL ---"] + array_section + ["# --- END ARRAYS ---", ""]
+        else:
+            array_section = []
+            
         header = [
             f"# Package: {self.package_name}",
             "# Generated by ELIN Compiler",
             "#"
         ]
-        return "\n".join(header + string_section + self.bytecode)
+        return "\n".join(header + string_section + array_section + self.bytecode)
         
     def verify_variables_were_used(self):
         """Simple linter to catch unused variables."""

@@ -6,8 +6,15 @@ typedef long long ll;
 vector<pair<int, string>>
     bytecode_program; // int stores index , string stores the instruction
 vector<ll> variables;
-vector<string> string_pool; // Store string literals from pool
-stack<ll> eval_stack;       // Use ll to store indices/values
+vector<string> string_pool;    // Store string literals from pool
+vector<vector<ll>> array_pool; // Store array literals/templates
+stack<ll> eval_stack;          // Use ll to store indices/values
+
+struct Frame {
+  int return_pc;
+  vector<ll> locals;
+};
+stack<Frame> call_stack;
 
 // defintion of all integers
 const int PUSH = 1;
@@ -30,6 +37,15 @@ const int JZ = 17;
 const int JNZ = 18;
 const int PUSH_STR = 20;
 const int PRINT_STR = 21;
+const int MAKE_ARR = 30;
+const int ARR_GET = 31;
+const int ARR_SET = 32;
+const int ARR_LEN = 33;
+const int PUSH_ARR = 34;
+const int CALL = 40;
+const int RET = 41;
+const int LOAD_LOCAL = 42;
+const int STORE_LOCAL = 43;
 
 class Printer {
 public:
@@ -257,6 +273,140 @@ void execute() {
       }
       break;
     }
+    case MAKE_ARR: {
+      int n = (int)tokens[1];
+      vector<ll> arr;
+      for (int i = 0; i < n; i++) {
+        if (!eval_stack.empty()) {
+          arr.push_back(eval_stack.top());
+          eval_stack.pop();
+        }
+      }
+      reverse(arr.begin(), arr.end());
+      array_pool.push_back(arr);
+      eval_stack.push((ll)array_pool.size() - 1);
+      break;
+    }
+    case ARR_GET: {
+      if (eval_stack.size() >= 2) {
+        ll idx = eval_stack.top();
+        eval_stack.pop();
+        ll arr_ref = eval_stack.top();
+        eval_stack.pop();
+        if (arr_ref >= 0 && arr_ref < (ll)array_pool.size()) {
+          if (idx >= 0 && idx < (ll)array_pool[arr_ref].size()) {
+            eval_stack.push(array_pool[arr_ref][idx]);
+          } else {
+            printer.print_str("Error: Array index out of bounds");
+            eval_stack.push(0);
+          }
+        } else {
+          printer.print_str("Error: Invalid array reference");
+          eval_stack.push(0);
+        }
+      }
+      break;
+    }
+    case ARR_SET: {
+      if (eval_stack.size() >= 3) {
+        ll val = eval_stack.top();
+        eval_stack.pop();
+        ll idx = eval_stack.top();
+        eval_stack.pop();
+        ll arr_ref = eval_stack.top();
+        eval_stack.pop();
+        if (arr_ref >= 0 && arr_ref < (ll)array_pool.size()) {
+          if (idx >= 0 && idx < (ll)array_pool[arr_ref].size()) {
+            array_pool[arr_ref][idx] = val;
+          } else {
+            printer.print_str("Error: Array index out of bounds");
+          }
+        } else {
+          printer.print_str("Error: Invalid array reference");
+        }
+      }
+      break;
+    }
+    case ARR_LEN: {
+      if (!eval_stack.empty()) {
+        ll arr_ref = eval_stack.top();
+        eval_stack.pop();
+        if (arr_ref >= 0 && arr_ref < (ll)array_pool.size()) {
+          eval_stack.push((ll)array_pool[arr_ref].size());
+        } else {
+          eval_stack.push(0);
+        }
+      }
+      break;
+    }
+    case PUSH_ARR: {
+      eval_stack.push(tokens[1]);
+      break;
+    }
+    case CALL: {
+      int addr = (int)tokens[1];
+      int argc = (int)tokens[2];
+      Frame f;
+      f.return_pc = pc;
+      for (int i = 0; i < argc; i++) {
+        if (!eval_stack.empty()) {
+          f.locals.push_back(eval_stack.top());
+          eval_stack.pop();
+        }
+      }
+      reverse(f.locals.begin(), f.locals.end());
+      call_stack.push(f);
+      pc = addr;
+      pc--;
+      break;
+    }
+    case RET: {
+      ll ret_val = 0;
+      if (!eval_stack.empty()) {
+        ret_val = eval_stack.top();
+        eval_stack.pop();
+      }
+      if (!call_stack.empty()) {
+        Frame f = call_stack.top();
+        call_stack.pop();
+        pc = f.return_pc;
+        eval_stack.push(ret_val);
+      } else {
+        return; // Halt if returning from main scope
+      }
+      break;
+    }
+    case LOAD_LOCAL: {
+      int idx = (int)tokens[1];
+      if (!call_stack.empty()) {
+        Frame &f = call_stack.top();
+        if (idx < f.locals.size()) {
+          eval_stack.push(f.locals[idx]);
+        } else {
+          printer.print_debug("Local not found", idx);
+          eval_stack.push(0);
+        }
+      } else {
+        printer.print_str("Error: LOAD_LOCAL outside of function");
+      }
+      break;
+    }
+    case STORE_LOCAL: {
+      int idx = (int)tokens[1];
+      if (!call_stack.empty()) {
+        Frame &f = call_stack.top();
+        if (idx >= f.locals.size()) {
+          f.locals.resize(idx + 1, 0);
+        }
+        if (!eval_stack.empty()) {
+          f.locals[idx] = eval_stack.top();
+          eval_stack.pop();
+        }
+      } else {
+        printer.print_str("Error: STORE_LOCAL outside of function");
+      }
+      break;
+    }
     default:
       break;
     }
@@ -295,6 +445,30 @@ int main(int argc, char *argv[]) {
       if (s_idx >= string_pool.size())
         string_pool.resize(s_idx + 1);
       string_pool[s_idx] = s_val;
+      continue;
+    }
+
+    if (line.substr(0, 4) == "ARR ") {
+      istringstream iss(line);
+      string dummy;
+      int a_idx;
+      string a_vals_str;
+      iss >> dummy >> a_idx;
+      getline(iss, a_vals_str);
+      if (!a_vals_str.empty() && a_vals_str[0] == ' ')
+        a_vals_str = a_vals_str.substr(1);
+
+      vector<ll> vals;
+      stringstream ss(a_vals_str);
+      string v;
+      while (getline(ss, v, ',')) {
+        if (!v.empty()) {
+          vals.push_back(stoll(v));
+        }
+      }
+      if (a_idx >= (int)array_pool.size())
+        array_pool.resize(a_idx + 1);
+      array_pool[a_idx] = vals;
       continue;
     }
 

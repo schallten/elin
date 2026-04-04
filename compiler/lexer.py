@@ -55,6 +55,8 @@ def lex(code_string):
                 part = line[start:i]
                 
                 if part == "let": tokens.append(Token("LET"))
+                elif part == "func": tokens.append(Token("FUNC"))
+                elif part == "return": tokens.append(Token("RETURN"))
                 elif part == "print": tokens.append(Token("PRINT"))
                 elif part == "if": tokens.append(Token("IF"))
                 elif part == "else": tokens.append(Token("ELSE"))
@@ -62,6 +64,8 @@ def lex(code_string):
                 elif part == "while": tokens.append(Token("WHILE"))
                 elif part == "wend": tokens.append(Token("WEND"))
                 elif part == "halt": tokens.append(Token("HALT"))
+                elif part == "arr": tokens.append(Token("ARR"))
+                elif part == "len": tokens.append(Token("LEN"))
                 elif part in ["int", "str"]: tokens.append(Token("TYPE", part))
                 else: tokens.append(Token("IDENTIFIER", part))
                 continue
@@ -97,14 +101,42 @@ def lex(code_string):
                 i += 1
                 continue
                 
+            if char == "[":
+                tokens.append(Token("LBRACKET"))
+                i += 1
+                continue
+            if char == "]":
+                tokens.append(Token("RBRACKET"))
+                i += 1
+                continue
+            if char == ",":
+                tokens.append(Token("COMMA"))
+                i += 1
+                continue
+                
+            if char == ";":
+                tokens.append(Token("SEMI"))
+                i += 1
+                continue
+                
             if char in ["(", ")"]:
                 tokens.append(Token("OP", char))
                 i += 1
                 continue
                 
+            # Comments (Inline) - ignore the rest of the line
+            if line[i:i+2] == "//":
+                i = len(line)
+                continue
+                
+            if char == "#":
+                i = len(line)
+                continue
+                
             i += 1 # Catch-all for unknown chars
                 
-        # Signal the end of a line
+        # We will stop returning NEWLINE to enforce SEMI if desired, but 
+        # let's keep NEWLINE for backward compatibility and add SEMI explicitly.
         tokens.append(Token("NEWLINE"))
         
     return tokens
