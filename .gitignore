@@ -38,6 +38,7 @@ __pycache__/
 *.exe
 *.out
 *.app
+elin-hs/dist-newstyle
 
 # debug information files
 *.dwo
