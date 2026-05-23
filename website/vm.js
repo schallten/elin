@@ -1,3 +1,41 @@
+const examples = {
+    hello: `# Hello World in ELIN Bytecode
+STR 0 Hello, World!
+1 0 0 0 0
+3 0
+21 0
+9`,
+    fib: `# Fibonacci (Recursive Example)
+# Simplified bytecode representation
+1 0 0 0 10
+3 0
+# logic here...
+9`,
+    math: `# Math Operations
+1 0 0 0 10
+1 0 0 0 20
+4
+3 0
+8 0
+9`,
+    loop: `# Array Loop
+STR 0 Element: 
+1 0 0 0 5
+30 3
+3 0
+1 0 0 0 0
+3 1
+9`
+};
+
+function loadExample(key) {
+    if (!key || !examples[key]) return;
+    const input = document.getElementById('source-input');
+    input.value = examples[key];
+    if (typeof updateIntellisense === 'function') updateIntellisense();
+    loadFromInput();
+}
+
 let runInterval = null;
 let runSpeedMs = 600;
 

@@ -10,33 +10,36 @@
 
 <body>
     <aside class="sidebar">
-        <div style="padding: 10px; margin-bottom: 30px; border-bottom: 4px solid var(--text-primary);">
-            <h1 style="font-size: 1.2rem; margin: 0; font-family: var(--font-mono); font-weight: 700;">ELIN_SYSTEM</h1>
+        <div class="sidebar-header">
+            <h1>ELIN_SYSTEM</h1>
             <p>// v0.2.0</p>
         </div>
 
-        <h2>I. Fundamentals</h2>
+        <input type="text" class="search-box" placeholder="Search sections..." id="sidebar-search">
+
+        <div id="nav-container">
+            <h2>Fundamentals</h2>
         <ul class="sidebar-links">
             <li><a href="#intro" class="active">01 // Introduction</a></li>
             <li><a href="#logic">02 // The Stack Logic</a></li>
             <li><a href="#setup">03 // Environment Setup</a></li>
         </ul>
 
-        <h2 style="margin-top: 35px;">II. Language Spec</h2>
+        <h2>Language Spec</h2>
         <ul class="sidebar-links">
             <li><a href="#syntax">04 // Basic Syntax</a></li>
             <li><a href="#types">05 // Memory & Types</a></li>
             <li><a href="#math">06 // Mathematics</a></li>
         </ul>
 
-        <h2 style="margin-top: 35px;">III. Control & Logic</h2>
+        <h2>Control & Logic</h2>
         <ul class="sidebar-links">
             <li><a href="#conditionals">07 // Conditionals</a></li>
             <li><a href="#loops">08 // Loops (While)</a></li>
             <li><a href="#functions">09 // Functions & Scoping</a></li>
         </ul>
 
-        <h2 style="margin-top: 35px;">IV. Resources</h2>
+        <h2>Resources</h2>
         <ul class="sidebar-links">
             <li><a href="#opcodes">10 // Opcode Table</a></li>
             <li><a href="visualizer.html">11 // System Visualizer</a></li>
@@ -45,7 +48,7 @@
 
     <main class="main-content">
         <header>
-            <div class="lesson-meta">Section 01 // Overview</div>
+            <span class="lesson-meta">Section 01 // Overview</span>
             <h1>The ELIN Programming System</h1>
             <p style="font-style: italic; color: var(--text-secondary);">A high-performance bytecode language for
                 early-generation microcontrollers.</p>
@@ -57,7 +60,11 @@
                 bytecode, ELIN allows developers to run sophisticated programs on devices with as little as 32KB of
                 available RAM.</p>
 
-            <div class="box box-tutorial">
+            <div class="box box-warning">
+                <p><strong>Compatibility Notice:</strong> ELIN has only been tested and is confirmed working with <a href="https://schallten.github.io/system_operating" style="color: inherit; text-decoration: underline;">System Operating</a>. It is not supported on any other platform.</p>
+            </div>
+
+            <div class="box">
                 <p>If you are new to programming, ELIN is a great place to start understanding how computers actually
                     work at the hardware level. It strips away the "magic" of modern languages to show the raw flow of
                     data.</p>
@@ -65,10 +72,8 @@
         </section>
 
         <section id="logic">
-            <header>
-                <div class="lesson-meta">Section 02 // Core Concepts</div>
-                <h1>How ELIN Thinks: The Stack</h1>
-            </header>
+            <span class="lesson-meta">Section 02 // Core Concepts</span>
+            <h2>How ELIN Thinks: The Stack</h2>
             <p>Most modern languages (like Python) let you name every temporary value. ELIN is different. It uses a
                 <strong>Stack</strong>—a vertical pile of data where you can only interact with the very top item.
             </p>
@@ -82,17 +87,15 @@
                     plate with "15" back on the stack.</li>
             </ol>
 
-            <div class="box box-key">
+            <div class="box">
                 <p>This "Push/Pop" model is why ELIN is so fast. The CPU doesn't have to search for names in memory; it
                     always knows that the data it needs is at the very top of the stack.</p>
             </div>
         </section>
 
         <section id="setup">
-            <header>
-                <div class="lesson-meta">Section 03 // Environment Setup</div>
-                <h1>Getting Started with ELIN</h1>
-            </header>
+            <span class="lesson-meta">Section 03 // Environment Setup</span>
+            <h2>Getting Started with ELIN</h2>
             <p>To start programming in ELIN, you'll need the compiler and optionally the visualizer.</p>
 
             <h3>Requirements</h3>
@@ -111,15 +114,12 @@ python main.py your_program.elin</code></pre>
         </section>
 
         <section id="syntax">
-            <header>
-                <div class="lesson-meta">Section 04 // Implementation</div>
-                <h1>Basic Syntax</h1>
-            </header>
+            <span class="lesson-meta">Section 04 // Implementation</span>
+            <h2>Basic Syntax</h2>
             <p>ELIN combines the readability of modern code with the strictness of professional engineering. Every
                 statement is evaluated line-by-line.</p>
 
-            <pre>
-# This is a comment
+            <pre><code># This is a comment
 let int x = 10;
 let int y = 20;
 
@@ -127,18 +127,15 @@ let int result = x + y;
 print result;
 
 # Update existing variable
-x = 30;
-            </pre>
+x = 30;</code></pre>
 
             <p>Recent updates to ELIN (v0.2.0) allow for the optional use of <code>;</code> (semicolons) to clearly
                 terminate your thoughts, making the code more robust against whitespace errors.</p>
         </section>
 
         <section id="types">
-            <header>
-                <div class="lesson-meta">Section 05 // Memory</div>
-                <h1>Memory & Types</h1>
-            </header>
+            <span class="lesson-meta">Section 05 // Memory</span>
+            <h2>Memory & Types</h2>
             <p>In low-power systems, memory is a precious resource. ELIN uses fixed types to ensure the computer knows
                 exactly how many "slots" to reserve for your data.</p>
 
@@ -171,10 +168,8 @@ x = 30;
         </section>
 
         <section id="math">
-            <header>
-                <div class="lesson-meta">Section 06 // Mathematics</div>
-                <h1>Mathematical Operations</h1>
-            </header>
+            <span class="lesson-meta">Section 06 // Mathematics</span>
+            <h2>Mathematical Operations</h2>
             <p>ELIN supports standard arithmetic operations on integers: addition (+), subtraction (-), multiplication (*), and division (/). Operations follow stack-based evaluation.</p>
 
             <h3>Basic Math</h3>
@@ -189,45 +184,37 @@ let int quot = a / b; # 2</code></pre>
             <p>You can nest operations and function calls:</p>
             <pre><code>let int result = (a + b) * (a - b);  # 75</code></pre>
 
-            <div class="box box-key">
+            <div class="box">
                 <p>All math is performed on 64-bit integers. Division truncates towards zero.</p>
             </div>
         </section>
 
         <section id="conditionals">
-            <header>
-                <div class="lesson-meta">Section 07 // Conditionals</div>
-                <h1>Decision Making</h1>
-            </header>
+            <span class="lesson-meta">Section 07 // Conditionals</span>
+            <h2>Decision Making</h2>
             <p>ELIN supports basic branching via <code>if</code> blocks, allowing your script to make choices based on
                 program state.</p>
-            <pre>
-let int value = 5;
+            <pre><code>let int value = 5;
 if value > 0;
     print "Positive";
 else;
     print "Negative or Zero";
-end;
-            </pre>
+end;</code></pre>
             <p>Under the hood, these compile down to <code>JZ</code> (Jump if Zero) instructions, gracefully skipping
                 sections of bytecode when conditions aren't met.</p>
         </section>
 
         <section id="loops">
-            <header>
-                <div class="lesson-meta">Section 08 // Loops (While)</div>
-                <h1>Repetition</h1>
-            </header>
+            <span class="lesson-meta">Section 08 // Loops (While)</span>
+            <h2>Repetition</h2>
             <p>Use <code>while</code> loops to repeat actions until a condition fails. Combine with conditionals to
                 build complex state machines.</p>
-            <pre>
-let int limit = 3;
+            <pre><code>let int limit = 3;
 let int i = 0;
 while i < limit;
     print i;
     i = i + 1;
-wend;
-            </pre>
+wend;</code></pre>
             <div class="box box-warning">
                 <p>Because ELIN operates close to the hardware, infinite loops will stall the host CPU. Always make sure
                     your loop condition will eventually be false.</p>
@@ -235,22 +222,18 @@ wend;
         </section>
 
         <section id="functions">
-            <header>
-                <div class="lesson-meta">Section 09 // Functions & Scoping</div>
-                <h1>Functions & Scoping</h1>
-            </header>
+            <span class="lesson-meta">Section 09 // Functions & Scoping</span>
+            <h2>Functions & Scoping</h2>
             <p>Functions allow you to compartmentalize logic. In ELIN, every function has its own <strong>Private
                     Memory</strong> (a Local Frame). Variables defined inside <code>func</code> stay inside
                 <code>func</code>.
             </p>
-            <pre>
-func int double int value;
+            <pre><code>func int double int value;
     let int result = value * 2;
     return result;
 end;
 
-print double 5; # Outputs 10
-            </pre>
+print double 5; # Outputs 10</code></pre>
             <div class="box box-warning">
                 <p>Attempting to access a variable defined inside a function from the "Main" script will result in a
                     <strong>Compilation Error</strong>. This prevents "Side Effects" that can crash small hardware.
@@ -259,58 +242,71 @@ print double 5; # Outputs 10
         </section>
 
         <section id="opcodes">
-            <header>
-                <div class="lesson-meta">Section 10 // Opcode Table</div>
-                <h1>Opcode Specification</h1>
-            </header>
+            <span class="lesson-meta">Section 10 // Opcode Table</span>
+            <h2>Opcode Specification</h2>
             <p>The following instructions are the raw commands the ELIN Virtual Machine understands. Every high-level
-                command you write is translated into these numbers.</p>
+                command you write is translated into these decimal IDs.</p>
             <table>
                 <thead>
                     <tr>
-                        <th>Hex/ID</th>
+                        <th>ID</th>
                         <th>Mnemonic</th>
                         <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td>0x01</td>
+                        <td>1</td>
                         <td>PUSH</td>
                         <td>Push numeric literal to stack</td>
                     </tr>
                     <tr>
-                        <td>0x02</td>
+                        <td>2</td>
                         <td>LOAD</td>
                         <td>Load global variable to stack</td>
                     </tr>
                     <tr>
-                        <td>0x03</td>
+                        <td>3</td>
                         <td>STORE</td>
                         <td>Store stack top to global variable</td>
                     </tr>
                     <tr>
-                        <td>0x20</td>
+                        <td>8</td>
+                        <td>PRINT</td>
+                        <td>Output value of global variable to console</td>
+                    </tr>
+                    <tr>
+                        <td>16</td>
+                        <td>JMP</td>
+                        <td>Jump to instruction at specific index</td>
+                    </tr>
+                    <tr>
+                        <td>17</td>
+                        <td>JZ</td>
+                        <td>Jump if popped value is Zero</td>
+                    </tr>
+                    <tr>
+                        <td>20</td>
                         <td>PUSH_STR</td>
                         <td>Push string index reference</td>
                     </tr>
                     <tr>
-                        <td>0x21</td>
-                        <td>PRN_STR</td>
+                        <td>21</td>
+                        <td>PRINT_STR</td>
                         <td>Print string from pool reference</td>
                     </tr>
                     <tr>
-                        <td>0x31</td>
-                        <td>ARR_G</td>
-                        <td>Get array value at index</td>
+                        <td>30</td>
+                        <td>MAKE_ARR</td>
+                        <td>Create array from stack values</td>
                     </tr>
                     <tr>
-                        <td>0x40</td>
+                        <td>40</td>
                         <td>CALL</td>
                         <td>Shift to Local Frame & Jump</td>
                     </tr>
                     <tr>
-                        <td>0x41</td>
+                        <td>41</td>
                         <td>RET</td>
                         <td>Return value and pop Frame</td>
                     </tr>
@@ -322,36 +318,122 @@ print double 5; # Outputs 10
             <span>&nbsp;</span>
             <a href="visualizer.html" class="btn">Launch System Visualizer &rarr;</a>
         </div>
-
-        <footer>
-            <span>&copy; 2026 ELIN_CORE_PROJECT</span>
-            <span>REF: MANUAL_V0.2.0_FINAL</span>
-        </footer>
     </main>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.sidebar-links a');
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const sections = document.querySelectorAll('section');
-            const navLinks = document.querySelectorAll('.sidebar-links a');
+        // Sidebar Search
+        const searchInput = document.getElementById('sidebar-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                const sections = document.querySelectorAll('section');
+                
+                sections.forEach(section => {
+                    // Remove existing highlights
+                    const originalText = section.getAttribute('data-original-html') || section.innerHTML;
+                    if (!section.hasAttribute('data-original-html')) {
+                        section.setAttribute('data-original-html', originalText);
+                    }
+                    
+                    if (!term) {
+                        section.innerHTML = originalText;
+                        section.style.display = 'block';
+                        return;
+                    }
 
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        navLinks.forEach(link => {
-                            link.classList.remove('active');
-                            if (link.getAttribute('href').substring(1) === entry.target.id) {
-                                link.classList.add('active');
-                            }
+                    const visibleText = section.innerText.toLowerCase();
+                    const isMatch = visibleText.includes(term);
+                    section.style.display = isMatch ? 'block' : 'none';
+                    
+                    if (isMatch) {
+                        // Highlight term in HTML safely by only replacing text nodes or using a smarter approach
+                        // Simple approach: replace in innerHTML but avoid tags. 
+                        // Better: Regex that avoids tags.
+                        const regex = new RegExp(`(${term.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')})`, 'gi');
+                        
+                        // We need to be careful not to break HTML tags or our syntax highlighting spans.
+                        // A more robust way is to walk text nodes, but for this "Minimal" site:
+                        section.innerHTML = originalText.replace(/(<[^>]+>)|([^<]+)/g, (match, g1, g2) => {
+                            if (g1) return g1; // It's a tag, return unchanged
+                            return g2.replace(regex, '<mark style="background: var(--accent); color: #000; padding: 0 2px; border-radius: 2px;">$1</mark>');
                         });
                     }
-                });
-            }, {
-                rootMargin: '-20% 0px -80% 0px'
-            });
 
-            sections.forEach(section => observer.observe(section));
+                    // Update sidebar link
+                    const link = document.querySelector(`.sidebar-links a[href="#${section.id}"]`);
+                    if (link) {
+                        link.parentElement.style.display = isMatch ? 'block' : 'none';
+                    }
+                });
+
+                // Hide empty sidebar headers
+                document.querySelectorAll('.sidebar h2').forEach(h => {
+                    const nextUl = h.nextElementSibling;
+                    if (nextUl && nextUl.tagName === 'UL') {
+                        const hasVisible = Array.from(nextUl.children).some(li => li.style.display !== 'none');
+                        h.style.display = hasVisible ? 'block' : 'none';
+                    }
+                });
+            });
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href').substring(1) === entry.target.id) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, {
+            rootMargin: '-20% 0px -80% 0px'
         });
-    </script>
+
+        sections.forEach(section => observer.observe(section));
+
+        // Copy Code Buttons
+        document.querySelectorAll('pre').forEach(pre => {
+            const btn = document.createElement('button');
+            btn.className = 'copy-btn';
+            btn.textContent = 'Copy';
+            btn.onclick = () => {
+                const code = pre.querySelector('code').innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    btn.textContent = 'Copied!';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.textContent = 'Copy';
+                        btn.classList.remove('copied');
+                    }, 2000);
+                });
+            };
+            pre.appendChild(btn);
+        });
+
+        // Documentation Syntax Highlighting
+        const highlight = (code) => {
+            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
+            return code.replace(regex, (m, p1, p2, p3, p4, p5) => {
+                if (p1) return `<span class="hl-comment">${p1}</span>`;
+                if (p2) return `<span class="hl-string">${p2}</span>`;
+                if (p3) return `<span class="hl-keyword">${p3}</span>`;
+                if (p4) return `<span class="hl-type">${p4}</span>`;
+                if (p5) return `<span class="hl-number">${p5}</span>`;
+                return m;
+            });
+        };
+
+        document.querySelectorAll('pre code').forEach(codeBlock => {
+            codeBlock.innerHTML = highlight(codeBlock.innerHTML);
+        });
+    });
+</script>
 </body>
 
 </html>
