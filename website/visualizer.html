@@ -201,31 +201,28 @@
 </head>
 
 <body>
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <h1>ELIN_SYSTEM</h1>
-            <p style="font-size: 0.7rem; color: #666; font-family: monospace;">// VISUALIZER</p>
+    <nav class="global-nav">
+        <div class="logo">
+            <img src="logo.png" alt="ELIN Logo" class="nav-logo-img">
+            <span class="logo-text">ELIN_SYSTEM</span>
         </div>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="docs.html">Documentation</a></li>
+            <li><a href="visualizer.html" class="active">Visualizer</a></li>
+            <li><a href="https://github.com/schallten/elin">GitHub</a></li>
+        </ul>
+    </nav>
 
-        <input type="text" class="search-box" placeholder="Search sections..." id="sidebar-search">
-
-        <div id="nav-container">
-            <h2>Navigation</h2>
-            <ul class="sidebar-links">
-                <li><a href="index.html">← Back to Spec</a></li>
-            </ul>
-        </div>
-    </aside>
-
-    <main class="main-content">
+    <main class="landing-content" style="padding-top: 40px;">
         <header>
             <span class="lesson-meta">System Tool</span>
             <h1>ELIN VISUALIZER</h1>
-            <p style="font-style: italic; color: #666;">Bytecode Runtime Inspection Tool</p>
+            <p style="font-style: italic; color: var(--text-secondary);">Tool for seeing what the bytecode is doing.</p>
         </header>
 
         <section id="setup">
-            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
                 <h2>Load Program</h2>
                 <select id="example-select" onchange="loadExample(this.value)">
                     <option value="">Select Example...</option>
@@ -295,24 +292,6 @@
 
     <script src="vm.js"></script>
     <script>
-        // Sidebar Search
-        document.getElementById('sidebar-search').addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            const links = document.querySelectorAll('.sidebar-links li');
-            links.forEach(li => {
-                const text = li.textContent.toLowerCase();
-                li.style.display = text.includes(term) ? 'block' : 'none';
-            });
-            const headers = document.querySelectorAll('.sidebar h2');
-            headers.forEach(h => {
-                const nextUl = h.nextElementSibling;
-                if (nextUl && nextUl.tagName === 'UL') {
-                    const hasVisible = Array.from(nextUl.children).some(li => li.style.display !== 'none');
-                    h.style.display = hasVisible ? 'block' : 'none';
-                }
-            });
-        });
-
         function syncScroll() {
             const input = document.getElementById('source-input');
             const overlay = document.getElementById('intellisense-overlay');

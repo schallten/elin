@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ELIN Documentation - Technical Handbook and Specification.">
+    <title>ELIN | Documentation</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="docs-page">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="logo-link">
+                <img src="logo.png" alt="ELIN Logo" style="height: 30px; margin-bottom: 10px;">
+                <h1>ELIN_SYSTEM</h1>
+            </a>
+            <p>// v0.2.0</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <a href="index.html" style="font-size: 0.8rem; color: var(--text-secondary);">&larr; Back to Home</a>
+        </div>
+
+        <input type="text" class="search-box" placeholder="Search docs..." id="sidebar-search">
+
+        <div id="nav-container">
+            <h2>Fundamentals</h2>
+            <ul class="sidebar-links">
+                <li><a href="#intro" class="active">01 // Introduction</a></li>
+                <li><a href="#logic">02 // The Stack Logic</a></li>
+                <li><a href="#setup">03 // Environment Setup</a></li>
+            </ul>
+
+            <h2>Language Spec</h2>
+            <ul class="sidebar-links">
+                <li><a href="#syntax">04 // Basic Syntax</a></li>
+                <li><a href="#types">05 // Memory & Types</a></li>
+                <li><a href="#math">06 // Mathematics</a></li>
+            </ul>
+
+            <h2>Control & Logic</h2>
+            <ul class="sidebar-links">
+                <li><a href="#conditionals">07 // Conditionals</a></li>
+                <li><a href="#loops">08 // Loops (While)</a></li>
+                <li><a href="#functions">09 // Functions & Scoping</a></li>
+            </ul>
+
+            <h2>Resources</h2>
+            <ul class="sidebar-links">
+                <li><a href="#opcodes">10 // Opcode Table</a></li>
+                <li><a href="visualizer.html">11 // System Visualizer</a></li>
+            </ul>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header>
+            <span class="lesson-meta">Section 01 // Overview</span>
+            <h1>Handbook</h1>
+            <p style="font-style: italic; color: var(--text-secondary);">How to use the ELIN language thing.</p>
+        </header>
+
+        <section id="intro">
+            <p><strong>ELIN</strong> is a little stack-oriented language made for running things on very small, low-power hardware. It's not a fully serious language, mostly just an experiment. It compiles code into small bytecode so it can fit on stuff with only 32KB of RAM.</p>
+
+            <div class="box box-warning">
+                <p><strong>Note:</strong> ELIN is mainly tested and built for <a href="https://schallten.github.io/system_operating" style="color: inherit; text-decoration: underline;">System Operating</a>. It might not work elsewhere.</p>
+            </div>
+
+            <div class="box">
+                <p>If you're new to this, ELIN is a simple way to see how computers work without any of the fancy modern stuff. It's just raw data flow.</p>
+            </div>
+        </section>
+
+        <section id="logic">
+            <span class="lesson-meta">Section 02 // Core Concepts</span>
+            <h2>How ELIN Thinks: The Stack</h2>
+            <p>Most modern languages (like Python) let you name every temporary value. ELIN is different. It uses a
+                <strong>Stack</strong>—a vertical pile of data where you can only interact with the very top item.
+            </p>
+
+            <h3>The Plate Analogy</h3>
+            <p>Imagine a stack of dinner plates. To add two numbers (5 and 10):</p>
+            <ol style="margin-left: 40px; margin-bottom: 25px;">
+                <li>You <strong>PUSH</strong> 10 onto the stack.</li>
+                <li>You <strong>PUSH</strong> 5 onto the stack (it sits on top of 10).</li>
+                <li>You call <strong>ADD</strong>. The computer "pops" the top two plates, adds them, and places a new
+                    plate with "15" back on the stack.</li>
+            </ol>
+
+            <div class="box">
+                <p>This "Push/Pop" model is why ELIN is so fast. The CPU doesn't have to search for names in memory; it
+                    always knows that the data it needs is at the very top of the stack.</p>
+            </div>
+        </section>
+
+        <section id="setup">
+            <span class="lesson-meta">Section 03 // Environment Setup</span>
+            <h2>Getting Started with ELIN</h2>
+            <p>To start programming in ELIN, you'll need the compiler and optionally the visualizer.</p>
+
+            <h3>Requirements</h3>
+            <ul>
+                <li>Python 3.6+ for the compiler</li>
+                <li>A web browser for the visualizer</li>
+            </ul>
+
+            <h3>Installation</h3>
+            <p>Clone the repository and navigate to the compiler directory:</p>
+            <pre><code>git clone https://github.com/schallten/elin.git
+cd elin/compiler
+python main.py your_program.elin</code></pre>
+
+            <p>This will generate a <code>.outz</code> file that can be run on the VM or visualized.</p>
+        </section>
+
+        <section id="syntax">
+            <span class="lesson-meta">Section 04 // Implementation</span>
+            <h2>Basic Syntax</h2>
+            <p>ELIN combines the readability of modern code with the strictness of professional engineering. Every
+                statement is evaluated line-by-line.</p>
+
+            <pre><code># This is a comment
+let int x = 10;
+let int y = 20;
+
+let int result = x + y;
+print result;
+
+# Update existing variable
+x = 30;</code></pre>
+
+            <p>Recent updates to ELIN (v0.2.0) allow for the optional use of <code>;</code> (semicolons) to clearly
+                terminate your thoughts, making the code more robust against whitespace errors.</p>
+        </section>
+
+        <section id="types">
+            <span class="lesson-meta">Section 05 // Memory</span>
+            <h2>Memory & Types</h2>
+            <p>In low-power systems, memory is a precious resource. ELIN uses fixed types to ensure the computer knows
+                exactly how many "slots" to reserve for your data.</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Storage</th>
+                        <th>Use Case</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>int</code></td>
+                        <td>64-bit Integer</td>
+                        <td>Whole numbers, loop counters, math.</td>
+                    </tr>
+                    <tr>
+                        <td><code>str</code></td>
+                        <td>Pool Pointer</td>
+                        <td>Text display and logging prefixes.</td>
+                    </tr>
+                    <tr>
+                        <td><code>arr</code></td>
+                        <td>Fixed Buffer</td>
+                        <td>Lists of numbers (e.g. sensor history).</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="math">
+            <span class="lesson-meta">Section 06 // Mathematics</span>
+            <h2>Mathematical Operations</h2>
+            <p>ELIN supports standard arithmetic operations on integers: addition (+), subtraction (-), multiplication (*), and division (/). Operations follow stack-based evaluation.</p>
+
+            <h3>Basic Math</h3>
+            <pre><code>let int a = 10;
+let int b = 5;
+let int sum = a + b;  # 15
+let int diff = a - b; # 5
+let int prod = a * b; # 50
+let int quot = a / b; # 2</code></pre>
+
+            <h3>Complex Expressions</h3>
+            <p>You can nest operations and function calls:</p>
+            <pre><code>let int result = (a + b) * (a - b);  # 75</code></pre>
+
+            <div class="box">
+                <p>All math is performed on 64-bit integers. Division truncates towards zero.</p>
+            </div>
+        </section>
+
+        <section id="conditionals">
+            <span class="lesson-meta">Section 07 // Conditionals</span>
+            <h2>Decision Making</h2>
+            <p>ELIN supports basic branching via <code>if</code> blocks, allowing your script to make choices based on
+                program state.</p>
+            <pre><code>let int value = 5;
+if value > 0;
+    print "Positive";
+else;
+    print "Negative or Zero";
+end;</code></pre>
+            <p>Under the hood, these compile down to <code>JZ</code> (Jump if Zero) instructions, gracefully skipping
+                sections of bytecode when conditions aren't met.</p>
+        </section>
+
+        <section id="loops">
+            <span class="lesson-meta">Section 08 // Loops (While)</span>
+            <h2>Repetition</h2>
+            <p>Use <code>while</code> loops to repeat actions until a condition fails. Combine with conditionals to
+                build complex state machines.</p>
+            <pre><code>let int limit = 3;
+let int i = 0;
+while i < limit;
+    print i;
+    i = i + 1;
+wend;</code></pre>
+            <div class="box box-warning">
+                <p>Because ELIN operates close to the hardware, infinite loops will stall the host CPU. Always make sure
+                    your loop condition will eventually be false.</p>
+            </div>
+        </section>
+
+        <section id="functions">
+            <span class="lesson-meta">Section 09 // Functions & Scoping</span>
+            <h2>Functions & Scoping</h2>
+            <p>Functions allow you to compartmentalize logic. In ELIN, every function has its own <strong>Private
+                    Memory</strong> (a Local Frame). Variables defined inside <code>func</code> stay inside
+                <code>func</code>.
+            </p>
+            <pre><code>func int double int value;
+    let int result = value * 2;
+    return result;
+end;
+
+print double 5; # Outputs 10</code></pre>
+            <div class="box box-warning">
+                <p>Attempting to access a variable defined inside a function from the "Main" script will result in a
+                    <strong>Compilation Error</strong>. This prevents "Side Effects" that can crash small hardware.
+                </p>
+            </div>
+        </section>
+
+        <section id="opcodes">
+            <span class="lesson-meta">Section 10 // Opcode Table</span>
+            <h2>Opcode Specification</h2>
+            <p>The following instructions are the raw commands the ELIN Virtual Machine understands. Every high-level
+                command you write is translated into these decimal IDs.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Mnemonic</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>PUSH</td>
+                        <td>Push numeric literal to stack</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>LOAD</td>
+                        <td>Load global variable to stack</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>STORE</td>
+                        <td>Store stack top to global variable</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>PRINT</td>
+                        <td>Output value of global variable to console</td>
+                    </tr>
+                    <tr>
+                        <td>16</td>
+                        <td>JMP</td>
+                        <td>Jump to instruction at specific index</td>
+                    </tr>
+                    <tr>
+                        <td>17</td>
+                        <td>JZ</td>
+                        <td>Jump if popped value is Zero</td>
+                    </tr>
+                    <tr>
+                        <td>20</td>
+                        <td>PUSH_STR</td>
+                        <td>Push string index reference</td>
+                    </tr>
+                    <tr>
+                        <td>21</td>
+                        <td>PRINT_STR</td>
+                        <td>Print string from pool reference</td>
+                    </tr>
+                    <tr>
+                        <td>30</td>
+                        <td>MAKE_ARR</td>
+                        <td>Create array from stack values</td>
+                    </tr>
+                    <tr>
+                        <td>40</td>
+                        <td>CALL</td>
+                        <td>Shift to Local Frame & Jump</td>
+                    </tr>
+                    <tr>
+                        <td>41</td>
+                        <td>RET</td>
+                        <td>Return value and pop Frame</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <div class="nav-buttons">
+            <a href="index.html" class="btn">&larr; Back to Home</a>
+            <a href="visualizer.html" class="btn">Launch System Visualizer &rarr;</a>
+        </div>
+    </main>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.sidebar-links a');
+
+        // Sidebar Search
+        const searchInput = document.getElementById('sidebar-search');
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                const term = e.target.value.toLowerCase();
+                
+                sections.forEach(section => {
+                    const originalText = section.getAttribute('data-original-html') || section.innerHTML;
+                    if (!section.hasAttribute('data-original-html')) {
+                        section.setAttribute('data-original-html', originalText);
+                    }
+                    
+                    if (!term) {
+                        section.innerHTML = originalText;
+                        section.style.display = 'block';
+                        return;
+                    }
+
+                    const visibleText = section.innerText.toLowerCase();
+                    const isMatch = visibleText.includes(term);
+                    section.style.display = isMatch ? 'block' : 'none';
+                    
+                    if (isMatch) {
+                        const regex = new RegExp(`(${term.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')})`, 'gi');
+                        section.innerHTML = originalText.replace(/(<[^>]+>)|([^<]+)/g, (match, g1, g2) => {
+                            if (g1) return g1;
+                            return g2.replace(regex, '<mark style="background: var(--accent); color: #000; padding: 0 2px; border-radius: 2px;">$1</mark>');
+                        });
+                    }
+
+                    const link = document.querySelector(`.sidebar-links a[href="#${section.id}"]`);
+                    if (link) {
+                        link.parentElement.style.display = isMatch ? 'block' : 'none';
+                    }
+                });
+
+                document.querySelectorAll('.sidebar h2').forEach(h => {
+                    const nextUl = h.nextElementSibling;
+                    if (nextUl && nextUl.tagName === 'UL') {
+                        const hasVisible = Array.from(nextUl.children).some(li => li.style.display !== 'none');
+                        h.style.display = hasVisible ? 'block' : 'none';
+                    }
+                });
+            });
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href').substring(1) === entry.target.id) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, {
+            rootMargin: '-20% 0px -80% 0px'
+        });
+
+        sections.forEach(section => observer.observe(section));
+
+        // Copy Code Buttons
+        document.querySelectorAll('pre').forEach(pre => {
+            const btn = document.createElement('button');
+            btn.className = 'copy-btn';
+            btn.textContent = 'Copy';
+            btn.onclick = () => {
+                const code = pre.querySelector('code').innerText;
+                navigator.clipboard.writeText(code).then(() => {
+                    btn.textContent = 'Copied!';
+                    btn.classList.add('copied');
+                    setTimeout(() => {
+                        btn.textContent = 'Copy';
+                        btn.classList.remove('copied');
+                    }, 2000);
+                });
+            };
+            pre.appendChild(btn);
+        });
+
+        // Documentation Syntax Highlighting
+        const highlight = (code) => {
+            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
+            return code.replace(regex, (m, p1, p2, p3, p4, p5) => {
+                if (p1) return `<span class="hl-comment">${p1}</span>`;
+                if (p2) return `<span class="hl-string">${p2}</span>`;
+                if (p3) return `<span class="hl-keyword">${p3}</span>`;
+                if (p4) return `<span class="hl-type">${p4}</span>`;
+                if (p5) return `<span class="hl-number">${p5}</span>`;
+                return m;
+            });
+        };
+
+        document.querySelectorAll('pre code').forEach(codeBlock => {
+            codeBlock.innerHTML = highlight(codeBlock.innerHTML);
+        });
+    });
+</script>
+</body>
+
+</html>

@@ -1,4 +1,4 @@
-# ELIN Programming Language
+# <img src="website/logo.png" alt="ELIN Logo" width="40"> ELIN Programming Language
 
 ELIN is a simple, stack-based, strongly-typed programming language designed for resource-constrained environments (like microcontrollers). It features a Python-based compiler that generates lightweight bytecode for a custom Virtual Machine.
 
