@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ELIN Roadmap - Planned features and future direction.">
+    <title>ELIN | Roadmap</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="docs-page">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="index.html" class="logo-link">
+                <img src="logo.png" alt="ELIN Logo" style="height: 30px; margin-bottom: 10px;">
+                <h1>ELIN_SYSTEM</h1>
+            </a>
+            <p>// v0.2.0</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <a href="index.html" style="font-size: 0.8rem; color: var(--text-secondary);">&larr; Back to Home</a>
+        </div>
+
+        <h2>Core VM <span class="badge badge-030">v0.3.0</span></h2>
+        <ul class="sidebar-links">
+            <li><a href="#v1" class="active">01 // PRINT from stack</a></li>
+            <li><a href="#v2">02 // Constant pool</a></li>
+            <li><a href="#v3">03 // Stack ops</a></li>
+            <li><a href="#v4">04 // Unary ops</a></li>
+            <li><a href="#v5">05 // NOP</a></li>
+            <li><a href="#v6">06 // INC / DEC</a></li>
+            <li><a href="#v7">07 // DEBUG / TRACE</a></li>
+            <li><a href="#v8">08 // INPUT</a></li>
+            <li><a href="#v9">09 // MOD / ABS</a></li>
+            <li><a href="#v10">10 // Versioned format</a></li>
+        </ul>
+
+        <h2>Libraries <span class="badge badge-040">v0.4.0</span></h2>
+        <ul class="sidebar-links">
+            <li><a href="#v11">11 // Standard I/O</a></li>
+            <li><a href="#v12">12 // String ops</a></li>
+            <li><a href="#v13">13 // File I/O</a></li>
+            <li><a href="#v14">14 // Time</a></li>
+            <li><a href="#v15">15 // Random</a></li>
+            <li><a href="#v16">16 // FFI</a></li>
+        </ul>
+
+        <h2>Tooling <span class="badge badge-040">v0.4.0</span></h2>
+        <ul class="sidebar-links">
+            <li><a href="#v17">17 // Assembler</a></li>
+            <li><a href="#v18">18 // Debugger</a></li>
+            <li><a href="#v19">19 // REPL</a></li>
+            <li><a href="#v20">20 // Package manager</a></li>
+        </ul>
+
+        <h2>Self-Hosting <span class="badge badge-050">v0.5.0</span></h2>
+        <ul class="sidebar-links">
+            <li><a href="#v21">21 // Self-hosting</a></li>
+        </ul>
+    </aside>
+
+    <main class="main-content">
+        <header>
+            <span class="lesson-meta">Roadmap</span>
+            <h1>Where We're Taking ELIN</h1>
+            <p style="font-style: italic; color: var(--text-secondary);">Our wishlist. No deadlines. Subject to whims.</p>
+        </header>
+
+        <div class="version-header">
+            <span class="version-badge v030">v0.3.0</span>
+            <h2>Core VM — Foundation</h2>
+            <p>Our first ten items harden the instruction set and bytecode format. By the end of this release we want a VM that is capable, efficient, and pleasant to target.</p>
+        </div>
+
+        <section id="v1">
+            <span class="lesson-meta">Core VM // Item 01</span>
+            <h2>PRINT pops from eval_stack</h2>
+            <p>Right now <code>PRINT</code> reads from a global slot, forcing the compiler to emit a STORE/LOAD round-trip just to print a value. We're changing <strong>PRINT (8)</strong> to pop the top of eval_stack and print it directly. Then <code>print r;</code> becomes simply <code>LOAD 2; PRINT;</code> — no more temporary juggling. Same for <code>PRINT_STR</code>.</p>
+        </section>
+
+        <section id="v2">
+            <span class="lesson-meta">Core VM // Item 02</span>
+            <h2>Constant pool + PUSH_CONST</h2>
+            <p>Every <code>PUSH</code> costs us 5 bytes (<code>1 0 0 0 value</code>). For repeated constants — zeros, ones, common values — that adds up fast. We're adding a <strong>constant pool</strong> to the <code>.outz</code> format and a <code>PUSH_CONST &lt;idx&gt;</code> opcode that references pool entries with a single byte. Same expressiveness, much denser bytecode.</p>
+        </section>
+
+        <section id="v3">
+            <span class="lesson-meta">Core VM // Item 03</span>
+            <h2>DUP, DROP, SWAP</h2>
+            <p>We're reserving IDs <strong>60-62</strong> for the three fundamental stack operations every stack VM needs: <code>DUP</code> duplicates the top, <code>DROP</code> discards it, <code>SWAP</code> exchanges the top two. Without them we end up with STORE/LOAD hacks — more bytes, more globals, more noise.</p>
+        </section>
+
+        <section id="v4">
+            <span class="lesson-meta">Core VM // Item 04</span>
+            <h2>NEG and NOT</h2>
+            <p>Today <code>-x</code> compiles to <code>PUSH 0; LOAD x; SUB;</code> — three instructions for one operation. Logical not (<code>!x</code>) has no dedicated opcode at all. We're adding <strong>NEG (63)</strong> and <strong>NOT (64)</strong>. <code>NEG</code> pops <code>a</code> and pushes <code>-a</code>. <code>NOT</code> pushes <code>1</code> if <code>a == 0</code> and <code>0</code> otherwise — natural for our boolean-as-int model.</p>
+        </section>
+
+        <section id="v5">
+            <span class="lesson-meta">Core VM // Item 05</span>
+            <h2>NOP</h2>
+            <p>We're adding a no-operation instruction at ID <strong>0</strong> or <strong>65</strong>. It advances the program counter and does nothing else — useful for padding, alignment, and placeholder slots during optimization.</p>
+        </section>
+
+        <section id="v6">
+            <span class="lesson-meta">Core VM // Item 06</span>
+            <h2>INC and DEC</h2>
+            <p>Increment and decrement are the most common operations in almost every program. Right now <code>i = i + 1</code> compiles to <code>LOAD 5; PUSH 1; ADD; STORE 5;</code> — 4 instructions, 11 bytes. With IDs <strong>66-67</strong>, <code>INC 5</code> does the same in 2 bytes. A cheap win for a pattern we use constantly.</p>
+        </section>
+
+        <section id="v7">
+            <span class="lesson-meta">Core VM // Item 07</span>
+            <h2>DEBUG / TRACE mode</h2>
+            <p>We have zero visibility into VM execution today. Compiler bugs look the same as runtime bugs and we have no way to tell them apart. We're building a flag that prints every opcode, eval_stack state, and frame info — so we can finally see what's happening inside.</p>
+        </section>
+
+        <section id="v8">
+            <span class="lesson-meta">Core VM // Item 08</span>
+            <h2>INPUT opcode</h2>
+            <p>ELIN is output-only right now. We're adding <strong>INPUT (68)</strong>: it blocks until a number arrives (serial on ESP, stdin on PC), then pushes it onto eval_stack. This unlocks everything interactive — calculators, prompts, games.</p>
+        </section>
+
+        <section id="v9">
+            <span class="lesson-meta">Core VM // Item 09</span>
+            <h2>MOD and ABS</h2>
+            <p>We need <code>MOD</code> for array indexing, circular buffers, and clock arithmetic. We need <code>ABS</code> for distance calculations. IDs <strong>55-56</strong> slot right into our 64-bit integer model and we reach for both constantly in embedded code.</p>
+        </section>
+
+        <section id="v10">
+            <span class="lesson-meta">Core VM // Item 10</span>
+            <h2>Version the .outz format</h2>
+            <p>Our bytecode format has no header — raw opcodes from offset zero. We're fixing that with magic bytes (<code>0x45 0x4C 0x49 0x4E</code> = "ELIN"), a version byte, flags, and pool offsets. This lets us evolve the format over time, detect corruption, and reject unsupported files gracefully.</p>
+        </section>
+
+        <div class="version-header">
+            <span class="version-badge v040">v0.4.0</span>
+            <h2>Libraries &amp; Tooling — Ecosystem</h2>
+            <p>Items 11–20 are where we ship a standard library and developer toolchain. This is how we turn ELIN from a bare VM into a usable programming environment.</p>
+        </div>
+
+        <section id="v11">
+            <span class="lesson-meta">Libraries // Item 11</span>
+            <h2>Standard I/O library</h2>
+            <p>We're building three opcodes for interactive programs: <strong>READ (69)</strong> reads a line from stdin into a string pool slot and pushes the handle; <strong>WRITE (70)</strong> takes a handle and prints without a newline; <strong>FLUSH (71)</strong> forces pending output. Prompts, menus, dialogs — all compile identically for PC and ESP (where <code>READ</code> draws from a serial buffer).</p>
+        </section>
+
+        <section id="v12">
+            <span class="lesson-meta">Libraries // Item 12</span>
+            <h2>String operations library</h2>
+            <p>Four opcodes we need for real text handling: <strong>STRLEN (72)</strong>, <strong>STRCAT (73)</strong>, <strong>SUBSTR (74)</strong>, <strong>STRCMP (75)</strong>. They operate on string pool handles passed as 64-bit integers. On PC we delegate to C++; on ESP we use pre-allocated buffers. No dynamic allocation — <code>STRCAT</code> fails cleanly if the result exceeds our fixed max.</p>
+        </section>
+
+        <section id="v13">
+            <span class="lesson-meta">Libraries // Item 13</span>
+            <h2>File I/O library</h2>
+            <p>Four opcodes: <strong>FOPEN (76)</strong>, <strong>FREAD (77)</strong>, <strong>FWRITE (78)</strong>, <strong>FCLOSE (79)</strong>. On PC they wrap the C stdio API; on ESP they wrap LittleFS. Same API surface, different backend. File handles are integer descriptors into a fixed-size table we maintain inside the VM.</p>
+        </section>
+
+        <section id="v14">
+            <span class="lesson-meta">Libraries // Item 14</span>
+            <h2>Time library</h2>
+            <p>We need four opcodes for anything real-time: <strong>TIME (80)</strong> pushes milliseconds since boot (<code>std::chrono</code> on PC, <code>millis()</code> on ESP); <strong>DELAY (81)</strong> blocks for N ms; <strong>RTC_READ (82)</strong> and <strong>RTC_WRITE (83)</strong> access ESP RTC memory (no-op on PC). Every nontrivial program we write needs at least <code>TIME</code> and <code>DELAY</code>.</p>
+        </section>
+
+        <section id="v15">
+            <span class="lesson-meta">Libraries // Item 15</span>
+            <h2>Random number library</h2>
+            <p>Two opcodes: <strong>RAND (84)</strong> pushes a random 64-bit integer; <strong>SRAND (85)</strong> seeds the generator. On PC we use <code>std::mt19937_64</code>; on ESP we use the hardware <code>random()</code>. Same interface, platform-appropriate implementation underneath.</p>
+        </section>
+
+        <section id="v16">
+            <span class="lesson-meta">Libraries // Item 16</span>
+            <h2>FFI (CALL_EXTERN)</h2>
+            <p>This is how we bridge ELIN to the host system. A source declaration like <code>EXTERN "math" sin;</code> emits <strong>CALL_EXTERN (86)</strong>. We maintain a function registry per platform: C++ stdlib on PC, GPIO and WiFi on ESP. Same opcode, different registration tables.</p>
+        </section>
+
+        <section id="v17">
+            <span class="lesson-meta">Tooling // Item 17</span>
+            <h2>Bytecode assembler</h2>
+            <p>We're building <code>elin-asm</code> — a human-readable text format that assembles to <code>.outz</code>:</p>
+            <pre><code>PUSH 42
+STORE 0
+HALT</code></pre>
+            <p>We want to hand-write optimized bytecode, test individual opcodes, and bootstrap the compiler — all without hex-editing raw <code>.outz</code> files.</p>
+        </section>
+
+        <section id="v18">
+            <span class="lesson-meta">Tooling // Item 18</span>
+            <h2>Source-level debugger</h2>
+            <p>We're building <code>elin-debug</code>: set breakpoints, single-step through source lines, inspect state. The compiler will emit a line-number table in <code>.outz</code> that maps source lines to bytecode offsets. On PC it's an interactive terminal; on ESP it accepts serial commands (<code>s</code> = step, <code>c</code> = continue, <code>p</code> = print stack).</p>
+        </section>
+
+        <section id="v19">
+            <span class="lesson-meta">Tooling // Item 19</span>
+            <h2>REPL</h2>
+            <p>We're building <code>elin-repl</code>: read a line of ELIN source, compile it, run it, print the result, repeat. This requires making the compiler embeddable as a library (or building a separate JIT mode). On PC it gives us immediate feedback for learning; on ESP it lets us write interactive shell commands in ELIN instead of hardcoded C++.</p>
+        </section>
+
+        <section id="v20">
+            <span class="lesson-meta">Tooling // Item 20</span>
+            <h2>Package manager</h2>
+            <p>We're building <code>elin-pkg</code> to manage dependencies:</p>
+            <ul>
+                <li><code>elin-pkg init</code> — creates an <code>elin.json</code> manifest</li>
+                <li><code>elin-pkg add math</code> — pulls from a git repo or local path</li>
+                <li><code>elin-pkg build</code> — compiles everything together</li>
+            </ul>
+            <p>Dependencies are just <code>.elin</code> files with their own <code>elin.json</code>. No registry server — git URLs or local paths. This also serves as a prototype for Loom so we can figure out what it really needs before writing it in C++ for ESP.</p>
+        </section>
+
+        <div class="version-header">
+            <span class="version-badge v050">v0.5.0</span>
+            <h2>Self-Hosting — The Turning Point</h2>
+            <p>Item 21 is the whole release. Once ELIN can compile itself, it stops being a toy and becomes a self-sustaining system. This is the milestone everything else is building toward.</p>
+        </div>
+
+        <section id="v21">
+            <span class="lesson-meta">Self-Hosting // Item 21</span>
+            <h2>Write the ELIN compiler in ELIN</h2>
+            <p>Our endgame: write the ELIN compiler in ELIN itself. That's the proof that we've built something complete. We'll break it into three stages:</p>
+
+            <p><strong>Stage 1:</strong> Write a lexer in ELIN. It takes a string handle to source code and produces an array of token structs (type, value). We'll validate it against the output of our Python/Haskell lexer.</p>
+
+            <p><strong>Stage 2:</strong> Write a parser in ELIN. It consumes the token array and produces an AST using nested arrays or structs.</p>
+
+            <p><strong>Stage 3:</strong> Write a bytecode emitter in ELIN. It walks the AST and writes valid <code>.outz</code> bytes through the file I/O library (Item 13).</p>
+
+            <p>Prerequisite: we need structs or records first — or a convention of using arrays with fixed offsets:</p>
+
+            <pre><code>struct Token {
+    int type;
+    str value;
+};</code></pre>
+
+            <p>We'll start with Stage 1 only. The moment our ELIN lexer produces the same token stream as the reference implementation for a real program, we'll know the language is viable for self-hosting.</p>
+        </section>
+
+        <div class="version-summary">
+            <div class="version-summary-item">
+                <span class="version-badge v030">v0.3.0</span>
+                <span>Items 1–10 — Core VM foundation</span>
+            </div>
+            <div class="version-summary-item">
+                <span class="version-badge v040">v0.4.0</span>
+                <span>Items 11–20 — Libraries &amp; tooling</span>
+            </div>
+            <div class="version-summary-item">
+                <span class="version-badge v050">v0.5.0</span>
+                <span>Item 21 — Self-hosting</span>
+            </div>
+            <p class="version-summary-note">
+                Hit the end and ELIN becomes a self-sustaining system. These versions aren't about keeping up with other languages — they're our own milestones toward something complete.
+            </p>
+        </div>
+
+        <div class="nav-buttons" style="margin-top: 60px;">
+            <a href="index.html" class="btn">&larr; Back to Home</a>
+            <a href="docs.html" class="btn">Read the docs &rarr;</a>
+        </div>
+    </main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('.sidebar-links a');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => {
+                        link.classList.remove('active');
+                        if (link.getAttribute('href').substring(1) === entry.target.id) {
+                            link.classList.add('active');
+                        }
+                    });
+                }
+            });
+        }, {
+            rootMargin: '-20% 0px -80% 0px'
+        });
+
+        sections.forEach(section => observer.observe(section));
+    });
+</script>
+</body>
+
+</html>

@@ -356,7 +356,84 @@ th { color: #888; font-size: 0.8rem; text-transform: uppercase; }
 .hl-number  { color: #b5cea8; }
 .hl-type    { color: #4ec9b0; }
 
-/* Visualizer Specific (keep from original) */
+/* Badges (sidebar) */
+.sidebar h2 .badge {
+    display: inline-block;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 3px;
+    margin-left: 4px;
+    vertical-align: middle;
+    text-transform: none;
+    letter-spacing: normal;
+}
+.badge-030 { background: #1a3a2a; color: #4ade80; border: 1px solid #4ade80; }
+.badge-040 { background: #1a2a3a; color: #60a5fa; border: 1px solid #60a5fa; }
+.badge-050 { background: #2a1a3a; color: #c084fc; border: 1px solid #c084fc; }
+
+/* Version headers (main content) */
+.version-header {
+    margin: 4rem 0 2rem;
+    padding: 1.5rem 2rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--code-bg);
+}
+.version-header h2 {
+    margin-top: 0 !important;
+    border-bottom: none !important;
+    font-size: 1.4rem;
+}
+.version-header p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 0;
+}
+
+/* Version badges (main content) */
+.version-badge {
+    display: inline-block;
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+.v030 { background: #1a3a2a; color: #4ade80; border: 1px solid #4ade80; }
+.v040 { background: #1a2a3a; color: #60a5fa; border: 1px solid #60a5fa; }
+.v050 { background: #2a1a3a; color: #c084fc; border: 1px solid #c084fc; }
+
+/* Version summary box (bottom of roadmap) */
+.version-summary {
+    margin-top: 80px;
+    padding: 2rem 2.5rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--code-bg);
+}
+.version-summary-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+}
+.version-summary-item:last-of-type {
+    margin-bottom: 20px;
+}
+.version-summary-note {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-style: italic;
+    max-width: 600px;
+    margin: 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+}
+
+/* Visualizer Specific */
 .viz-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -379,5 +456,4 @@ th { color: #888; font-size: 0.8rem; text-transform: uppercase; }
     .docs-page .main-content { margin-left: 0; padding: 40px 20px; }
     .hero h1 { font-size: 2.5rem; }
     .global-nav { flex-direction: column; gap: 20px; }
-}n: column; gap: 20px; }
 }

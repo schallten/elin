@@ -1,63 +1,75 @@
-# Haskell Compiler Rewrite Plan
+# Compiler Cleanup Plan
 
-This plan guides you through rewriting the Python compiler into Haskell, focusing on minimizing lines of code (LOC) by using Haskell's powerful features like Algebraic Data Types (ADTs) and Parser Combinators.
+The compiler works, but it accumulated hacks as it grew. This plan cleans it up
+without changing languages or derailing the self-hosting goal.
 
-## Phase 1: Project Setup
-**Goal:** Initialize the Haskell environment.
-1. Run `stack new elin-compiler simple` or use `cabal init`.
-2. Add dependencies to your `package.yaml` or `.cabal` file:
-   - `megaparsec`: For parsing the source code without a separate lexer step.
-   - `mtl`: For the `State` monad to track compiler variables and generated instructions.
-   - `text`: For efficient string handling.
+## Phase 1: Fix Expression Parsing
 
-## Phase 2: Define the Unified AST (`AST.hs`)
-**Goal:** Replace Python's class hierarchy and visitor pattern with simple Haskell ADTs.
-1. Create `AST.hs`.
-2. Define a single `Expr` type that combines operations (`ops.py`) and expressions.
-   ```haskell
-   data Expr
-     = Number Int
-     | String Literal
-     | Add Expr Expr
-     | Var String
-     -- Add other nodes here
-     deriving (Show, Eq)
-   ```
-3. Define a `Stmt` type for statements (like variable declarations, loops, and function definitions).
-*Why this saves LOC:* Haskell's pattern matching will replace the verbose Python Visitor pattern.
+**Problem:** `parse_expression()` in `parser.py` slurps raw tokens until a stop
+token, then rebuilds them into "prepared tokens," then string-mangles nodes
+through `__NODE_i__` placeholders to reuse the old infix-to-postfix converter.
+There are also two separate tree builders (`build_expr_tree` and
+`build_expr_tree_from_nodes`) kept for "backwards compatibility."
 
-## Phase 3: The Scannerless Parser (`Parser.hs`)
-**Goal:** Skip the Lexer entirely and parse raw text directly into the AST.
-1. Create `Parser.hs` and import `Text.Megaparsec` and `Text.Megaparsec.Char`.
-2. Define basic parsers for whitespace and tokens (e.g., parsing a number or an identifier).
-3. Use `Control.Monad.Combinators.Expr.makeExprParser`. This automatically handles operator precedence (replaces `expression_parser.py` and the manual Pratt parsing).
-4. Write parsers for your `Stmt` types.
+**Goal:** Replace with a proper recursive-descent or Pratt parser that builds
+the AST directly — no token-slurping, no node-to-string round-trip, no dead
+code.
 
-## Phase 4: The Compiler Core (`Compiler.hs`)
-**Goal:** Traverse the AST and generate target code (or evaluate directly).
-1. Create `Compiler.hs` and import `Control.Monad.State`.
-2. Define your compiler state (e.g., current scope, generated instructions list).
-   ```haskell
-   type CompilerState = [Instruction]
-   ```
-3. Write a `compileExpr :: Expr -> State CompilerState ()` function.
-4. Use pattern matching to handle each AST node. Instead of overriding `visit_Add`, you just do:
-   ```haskell
-   compileExpr (Add left right) = do
-       compileExpr left
-       compileExpr right
-       emit OpAdd
-   ```
-*Why this saves LOC:* No class boilerplate. Code generation maps 1:1 with the AST structure.
+**Steps:**
+1. Delete `expression_parser.py` (the infix-to-postfix converter).
+2. Delete `build_expr_tree` and `build_expr_tree_from_nodes` from `parser.py`.
+3. Implement operator precedence directly in `parse_expression` using a
+   Pratt parser or simple precedence climbing.
+4. Handle array access (`name[idx]`) as part of the primary expression parser
+   instead of as a special case after token-slurping.
 
-## Phase 5: Main Entry Point (`Main.hs`)
-**Goal:** Tie the pipeline together.
-1. In `Main.hs`, read a file (e.g., `test.elin`).
-2. Pass the file content to your Megaparsec parser.
-3. If parsing succeeds, pass the AST to `execState` with your compiler function.
-4. Print or write the output.
+## Phase 2: Clean Up Code Generation
 
-## Phase 6: Testing
-**Goal:** Verify the Haskell rewrite.
-1. Run `stack run test.elin`.
-2. Ensure the output matches the behavior of your old Python compiler.
+**Problem:** `Compiler.generate()` in `compiler.py` mixes typechecking, code
+generation, and workarounds in one giant method. Hacks like
+`register_internal_variable` exist because `PRINT` reads from a global slot
+(roadmap item 1 fixes this).
+
+**Goal:** Separate concerns so each pass does one thing.
+
+**Steps:**
+1. Move type inference (`infer_type`) and type checking out of `generate()`
+   into a dedicated typecheck pass over the AST.
+2. Remove `register_internal_variable` — once roadmap item 1 lands, PRINT pops
+   from eval_stack directly and the temp variable hack is unnecessary.
+3. Pull the bytecode formatting (string sections, headers) out of `compile()`
+   into a dedicated `format_bytecode()` function. `compile()` should return
+   raw instructions, not a formatted string.
+
+## Phase 3: Delete Dead Code
+
+**Problem:** There are multiple vestigial code paths.
+
+**Steps:**
+1. Delete `expression_parser.py`.
+2. Remove the `stop_tokens` parameter from `parse_expression` — the new parser
+   should know where expressions end naturally.
+3. Remove the `# --- STRING POOL ---` / `# --- ARRAY POOL ---` section
+   formatting from `Compiler` and move it to the formatter pass.
+4. Clean up unused imports across all files.
+
+## Phase 4: Clean Up the Parser Entry Points
+
+**Problem:** `parse_condition()` is a separate method that handles simple
+`token OP token` patterns, while `parse_expression()` handles everything else.
+These should be unified.
+
+**Steps:**
+1. Remove `parse_condition()` — comparisons are just binary operators with
+   lower precedence than math operators. Handle them in `parse_expression`.
+2. Remove the comparison hack in `parse_expression` (lines checking
+   `CMP_OPERATORS` on prepared tokens) — no longer needed once expression
+   parsing is unified.
+
+## Phase 5: Verify
+
+**Goal:** Make sure nothing broke.
+
+1. Compile `test.elin` and compare the output bytecode before and after each
+   phase. The output should be identical (or functionally equivalent).
+2. Run the C++ VM on the output to verify correct execution.
