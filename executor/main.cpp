@@ -160,25 +160,22 @@ void execute() {
       break;
     }
     case PRINT: {
-      int var_index = (int)tokens[1];
-      if (var_index < (int)variables.size()) {
-        printer.print(variables[var_index]);
-      } else {
-        printer.print_debug("Variable not found", var_index);
+      if (!eval_stack.empty()) {
+        ll value = eval_stack.top();
+        eval_stack.pop();
+        printer.print(value);
       }
       break;
     }
     case PRINT_STR: {
-      int var_index = (int)tokens[1];
-      if (var_index < (int)variables.size()) {
-        ll str_idx = variables[var_index];
+      if (!eval_stack.empty()) {
+        ll str_idx = eval_stack.top();
+        eval_stack.pop();
         if (str_idx >= 0 && str_idx < (ll)string_pool.size()) {
           printer.print_str(string_pool[str_idx]);
         } else {
           printer.print_debug("Invalid string pool index", str_idx);
         }
-      } else {
-        printer.print_debug("Variable not found", var_index);
       }
       break;
     }

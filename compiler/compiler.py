@@ -49,20 +49,6 @@ class Compiler:
             self.next_available_index += 1
             return self.variables[name]['index'], False
 
-    def register_internal_variable(self, name, var_type):
-        """Assigns or retrieves an internal variable index (used for print literals).
-           MUST be a global variable since PRINT only reads globals."""
-        if name not in self.variables:
-            self.variables[name] = {
-                'index': self.next_available_index,
-                'type': var_type,
-                'is_defined': True,
-                'is_used': False
-            }
-            self.next_available_index += 1
-        return self.variables[name]['index'], False
-
-
     def lookup_variable_index(self, name):
         """Retrieves variable index, ensuring it has been previously defined."""
         if self.current_scope_locals is not None and name in self.current_scope_locals:
@@ -201,20 +187,12 @@ class Compiler:
             self.add_store(index, is_local)
 
         elif isinstance(ast, PrintNode):
-            # The VM's PRINT expects a memory index, so we generate the expression,
-            # store it in a temporary internal variable, and then print that index.
-            val_type = self.infer_type(ast.value_node)
             self.generate(ast.value_node)
-            
-            temp_name = f"__print_temp_{val_type}"
-            idx, is_loc = self.register_internal_variable(temp_name, val_type)
-            self.add_store(idx, is_local=False)
-            self.variables[temp_name]['is_used'] = True
-            
+            val_type = self.infer_type(ast.value_node)
             if val_type == "str":
-                self.bytecode.append(f"{PRINT_STR} {idx}")
+                self.add_operation(PRINT_STR)
             else:
-                self.bytecode.append(f"{PRINT} {idx}")
+                self.add_operation(PRINT)
 
         elif isinstance(ast, IfNode):
             self.generate(ast.condition)
