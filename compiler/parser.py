@@ -13,7 +13,7 @@ def get_precedence(op_type, op_val):
         return 1
     if op_val in ("+", "-"):
         return 2
-    if op_val in ("*", "/"):
+    if op_val in ("*", "/", "%"):
         return 3
     return 0
 
@@ -61,7 +61,7 @@ def parse_statements(tokens, pos, root=False):
               and peek(tokens, pos + 1).type == "EQUALS"):
             node, pos = parse_reassign(tokens, pos)
             stmts.append(node)
-        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN"):
+        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN", "ABS"):
             node, pos = parse_expression(tokens, pos)
             stmts.append(node)
         elif tok.type in ("COMMA", "RPAREN", "RBRACKET"):

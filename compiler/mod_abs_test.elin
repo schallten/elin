@@ -1,0 +1,13 @@
+# Test MOD (%) and ABS
+
+let int a = 17;
+let int b = 5;
+let int r = a % b;
+print r;
+
+let int neg = -42;
+let int pos = abs(neg);
+print pos;
+
+let int c = -1;
+print abs(c);

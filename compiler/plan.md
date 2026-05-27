@@ -39,3 +39,13 @@ Add INPUT (68): blocks until a number arrives (stdin), then pushes it onto eval_
 ### Core VM // Item 09 — DONE
 **MOD and ABS**  
 Add MOD (55) for `%` operator and ABS (56) for absolute value. MOD is needed for array indexing and circular buffers; ABS for distance calculations. Both slot into the 64-bit integer model.
+
+### Core VM // Item 10 — DONE
+**Version the .outz format**  
+Our bytecode format has no header — raw opcodes from offset zero. We're fixing that with magic bytes (0x45 0x4C 0x49 0x4E = "ELIN"), a version byte, flags, and pool offsets. This lets us evolve the format over time, detect corruption, and reject unsupported files gracefully.
+
+### Core VM // Item 11 — DONE
+**Compile-time constant evaluation**  
+If every operand in an expression is a compile-time constant, the compiler folds the result directly into the bytecode instead of emitting runtime instructions. `42 + 15` becomes a single `PUSH_CONST 57` rather than `PUSH 42; PUSH 15; ADD;`. Only pure operations (no function calls, no variables, no array accesses) will be folded in the first pass.
+
+

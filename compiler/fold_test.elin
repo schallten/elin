@@ -1,0 +1,23 @@
+# Test constant folding: all these should fold at compile time
+
+let int a = 42 + 15;
+let int b = 100 - 30;
+let int c = 7 * 6;
+let int d = 81 / 9;
+let int e = 17 % 5;
+let int f = -42;
+let int g = !0;
+let int h = 10 > 5;
+
+print a;
+print b;
+print c;
+print d;
+print e;
+print f;
+print g;
+print h;
+
+# Nested: (2 + 3) * (10 - 4) / 3 = 5 * 6 / 3 = 10
+let int i = (2 + 3) * (10 - 4) / 3;
+print i;

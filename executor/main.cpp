@@ -54,6 +54,8 @@ const int SWAP = 62;
 const int NEG = 63;
 const int NOT = 64;
 const int NOP = 65;
+const int INC = 66;
+const int DEC = 67;
 const int MOD = 55;
 const int ABS = 56;
 const int INPUT = 68;
@@ -564,9 +566,45 @@ int main(int argc, char *argv[]) {
 
   string line;
   int index = 0;
+  bool header_done = false;
   while (getline(file, line)) {
     if (line.empty() || line[0] == '#')
       continue;
+
+    if (!header_done) {
+      if (line.substr(0, 7) == "VERSION") {
+        int ver;
+        istringstream(line) >> std::skipws >> std::ws;
+        (istringstream(line) >> std::skipws >> std::ws >> std::hex).clear();
+        istringstream vss(line);
+        string _d;
+        vss >> _d >> ver;
+        if (ver != 1) {
+          cerr << "Error: Unsupported .outz version " << ver << " (expected 1)\n";
+          return 1;
+        }
+        continue;
+      }
+      if (line.substr(0, 11) == "CONST_COUNT") {
+        int cnt; istringstream(line) >> std::skipws >> std::ws;
+        string _d; istringstream(line) >> _d >> cnt;
+        constant_pool.resize(cnt);
+        continue;
+      }
+      if (line.substr(0, 9) == "STR_COUNT") {
+        int cnt; istringstream(line) >> std::skipws >> std::ws;
+        string _d; istringstream(line) >> _d >> cnt;
+        string_pool.resize(cnt);
+        continue;
+      }
+      if (line.substr(0, 9) == "ARR_COUNT") {
+        int cnt; istringstream(line) >> std::skipws >> std::ws;
+        string _d; istringstream(line) >> _d >> cnt;
+        array_pool.resize(cnt);
+        continue;
+      }
+      header_done = true;
+    }
 
     if (line.substr(0, 4) == "STR ") {
       // Format: STR index value (value can have spaces)
@@ -578,7 +616,7 @@ int main(int argc, char *argv[]) {
       getline(iss, s_val);
       if (!s_val.empty() && s_val[0] == ' ')
         s_val = s_val.substr(1);
-      if (s_idx >= string_pool.size())
+      if (s_idx >= (int)string_pool.size())
         string_pool.resize(s_idx + 1);
       string_pool[s_idx] = s_val;
       continue;
