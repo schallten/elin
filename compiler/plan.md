@@ -4,11 +4,11 @@ The compiler works, but it accumulated hacks as it grew. This plan cleans it up 
 
 ## Roadmap – Early Items
 
-### Core VM // Item 01
+### Core VM // Item 01 — DONE
 **PRINT pops from eval_stack**  
 We change PRINT (8) to pop the top of eval_stack and print it directly. Then `print r;` becomes simply `LOAD 2; PRINT;` — no more temporary juggling.
 
-### Core VM // Item 02
+### Core VM // Item 02 — DONE
 **Constant pool + PUSH_CONST**  
 Add a constant pool to the `.outz` format and a `PUSH_CONST <idx>` opcode that references pool entries with a single byte. Same expressiveness, much denser bytecode.
 
@@ -27,3 +27,15 @@ Add a no-op instruction at ID 65. Advances PC, does nothing else — useful for 
 ### Core VM // Item 06 — DONE
 **INC and DEC**  
 Add INC (66) and DEC (67). `INC 5` loads variable 5, increments it, and stores it back — 2 bytes instead of `LOAD 5; PUSH 1; ADD; STORE 5;` which takes 11.
+
+### Core VM // Item 07 — DONE
+**DEBUG / TRACE mode**  
+Add a `--debug` / `-d` flag to the VM that prints every opcode, eval_stack state, and frame info. Also add a `TRACE` opcode (69) that toggles debug mode at runtime.
+
+### Core VM // Item 08 — DONE
+**INPUT opcode**  
+Add INPUT (68): blocks until a number arrives (stdin), then pushes it onto eval_stack. Unlocks interactive programs — calculators, prompts, games.
+
+### Core VM // Item 09 — DONE
+**MOD and ABS**  
+Add MOD (55) for `%` operator and ABS (56) for absolute value. MOD is needed for array indexing and circular buffers; ABS for distance calculations. Both slot into the 64-bit integer model.

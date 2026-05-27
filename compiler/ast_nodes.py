@@ -1,125 +1,124 @@
-"""
-AST Node definitions for the ELIN compiler.
-Each class represents a unique structural element of the ELIN language.
-"""
+from dataclasses import dataclass, field
 
-class Node:
-    """Base class for all Abstract Syntax Tree nodes."""
+
+@dataclass
+class ProgramNode:
+    statements: list = field(default_factory=list)
+
+
+@dataclass
+class AssignNode:
+    type_name: str = ""
+    name: str = ""
+    value: object = None
+
+
+@dataclass
+class ReassignNode:
+    name: str = ""
+    value: object = None
+
+
+@dataclass
+class PrintNode:
+    value_node: object = None
+
+
+@dataclass
+class IfNode:
+    condition: object = None
+    body: list = field(default_factory=list)
+    else_body: list = field(default_factory=list)
+
+
+@dataclass
+class WhileNode:
+    condition: object = None
+    body: list = field(default_factory=list)
+
+
+@dataclass
+class HaltNode:
     pass
 
-class ProgramNode(Node):
-    """The root node of every ELIN program, containing a list of statements."""
-    def __init__(self, statements):
-        self.statements = statements
 
-class AssignNode(Node):
-    """Represents a 'let' assignment: let <type> <name> = <value>."""
-    def __init__(self, type_name, name, value):
-        self.type_name = type_name  # The declared type (e.g. 'int')
-        self.name = name  # The variable name (string)
-        self.value = value  # The expression node being assigned
+@dataclass
+class NumberNode:
+    value: str = ""
 
-class ReassignNode(Node):
-    """Represents updating an existing variable: <name> = <value>."""
-    def __init__(self, name, value):
-        self.name = name  # The variable name
-        self.value = value  # The new expression
 
-class PrintNode(Node):
-    """Represents a 'print' statement: print <value_node>."""
-    def __init__(self, value_node):
-        self.value_node = value_node  # The node (variable or literal) to print
+@dataclass
+class StringNode:
+    value: str = ""
 
-class IfNode(Node):
-    """Represents an 'if-else' block with conditions and nested bodies."""
-    def __init__(self, condition, body, else_body):
-        self.condition = condition  # ConditionNode
-        self.body = body  # List of statement nodes for 'if' block
-        self.else_body = else_body  # List of statement nodes for 'else' block (can be empty)
 
-class WhileNode(Node):
-    """Represents a 'while...wend' loop."""
-    def __init__(self, condition, body):
-        self.condition = condition  # ConditionNode
-        self.body = body  # List of statement nodes for the loop body
+@dataclass
+class VariableNode:
+    name: str = ""
 
-class HaltNode(Node):
-    """Represents the 'halt' instruction to stop execution."""
-    pass
 
-class NumberNode(Node):
-    """A literal numeric value in the source code."""
-    def __init__(self, value):
-        self.value = value  # The raw number string
+@dataclass
+class BinaryOpNode:
+    op: str = ""
+    left: object = None
+    right: object = None
 
-class StringNode(Node):
-    """A literal string value in the source code."""
-    def __init__(self, value):
-        self.value = value  # The raw string content
 
-class VariableNode(Node):
-    """A reference to a variable name."""
-    def __init__(self, name):
-        self.name = name  # The variable identifier string
+@dataclass
+class ConditionNode:
+    op: str = ""
+    left: object = None
+    right: object = None
 
-class BinaryOpNode(Node):
-    """A mathematical operation involving two nodes: <left> <op> <right>."""
-    def __init__(self, op, left, right):
-        self.op = op  # '+', '-', '*', or '/'
-        self.left = left  # Left operand node
-        self.right = right  # Right operand node
 
-class ConditionNode(Node):
-    """A comparison operation: <left> <op> <right>."""
-    def __init__(self, op, left, right):
-        self.op = op  # '==', '<', '>', etc.
-        self.left = left  # Left operand node
-        self.right = right  # Right operand node
+@dataclass
+class ArrayNode:
+    elements: list = field(default_factory=list)
 
-class ArrayNode(Node):
-    """Represents a literal array: [val1, val2, ...]."""
-    def __init__(self, elements):
-        self.elements = elements  # List of expression nodes
 
-class ArrayAccessNode(Node):
-    """Represents accessing an array element: name[index]."""
-    def __init__(self, name, index):
-        self.name = name  # The array variable name
-        self.index = index  # The expression node for the index
+@dataclass
+class ArrayAccessNode:
+    name: str = ""
+    index: object = None
 
-class ArrayAssignNode(Node):
-    """Represents setting an array element: name[index] = value."""
-    def __init__(self, name, index, value):
-        self.name = name
-        self.index = index
-        self.value = value
 
-class ArrayLenNode(Node):
-    """Represents the length of an array: len(name)."""
-    def __init__(self, name):
-        self.name = name
+@dataclass
+class ArrayAssignNode:
+    name: str = ""
+    index: object = None
+    value: object = None
 
-class FunctionDefNode(Node):
-    """Represents a function definition: func <ret_type> <name> <params...> ... end."""
-    def __init__(self, ret_type, name, params, body):
-        self.ret_type = ret_type
-        self.name = name
-        self.params = params  # List of tuples (type, name)
-        self.body = body  # List of statements
 
-class FunctionCallNode(Node):
-    """Represents calling a function: name(arg1, arg2...)"""
-    def __init__(self, name, args):
-        self.name = name
-        self.args = args
+@dataclass
+class ArrayLenNode:
+    name: str = ""
 
-class UnaryOpNode(Node):
-    """A unary operation: <op> <operand> (e.g. -x, !x)."""
-    def __init__(self, op, operand):
-        self.op = op  # '-', '!'
-        self.operand = operand  # The operand node
 
-class ReturnNode(Node):
-    """Represents a return statement: return <val>."""
-    def __init__(self, value):
-        self.value = value
+@dataclass
+class FunctionDefNode:
+    ret_type: str = ""
+    name: str = ""
+    params: list = field(default_factory=list)
+    body: list = field(default_factory=list)
+
+
+@dataclass
+class FunctionCallNode:
+    name: str = ""
+    args: list = field(default_factory=list)
+
+
+@dataclass
+class UnaryOpNode:
+    op: str = ""
+    operand: object = None
+
+
+@dataclass
+class AbsNode:
+    value: object = None
+
+
+@dataclass
+class ReturnNode:
+    value: object = None

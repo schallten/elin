@@ -41,6 +41,10 @@ PRINT_STR = 21 # Prints a string variable (looks up string pool by stored index)
 # --- Constant Pool Instruction ---
 PUSH_CONST = 22 # Pushes a constant pool entry onto the stack
 
+# --- Math Extension Instructions ---
+MOD = 55 # Modulo: pops b, pops a, pushes a % b
+ABS = 56 # Absolute value: pops a, pushes |a|
+
 # --- Array Instructions ---
 MAKE_ARR = 30 # Creates array of size n from top n stack values
 ARR_GET  = 31 # Pops index and array ref, pushes value at that index
@@ -70,6 +74,10 @@ NOP = 65 # No operation
 INC = 66 # Load, increment, and store variable
 DEC = 67 # Load, decrement, and store variable
 
+# --- I/O Instructions ---
+INPUT = 68 # Blocking read from stdin, push result onto eval_stack
+TRACE = 69 # Toggle debug trace mode (prints each opcode + stack state)
+
 # --- Mappings ---
 # These dictionaries help the compiler convert text like '+' or '==' into the numbers above.
 
@@ -78,7 +86,8 @@ OP_MAP = {
     '+': ADD,
     '-': SUB,
     '*': MUL,
-    '/': DIV
+    '/': DIV,
+    '%': MOD,
 }
 
 # Map symbols to comparison opcodes

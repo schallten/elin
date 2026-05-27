@@ -54,8 +54,12 @@ const int SWAP = 62;
 const int NEG = 63;
 const int NOT = 64;
 const int NOP = 65;
-const int INC = 66;
-const int DEC = 67;
+const int MOD = 55;
+const int ABS = 56;
+const int INPUT = 68;
+const int TRACE = 69;
+
+bool debug_mode = false;
 
 class Printer {
 public:
@@ -95,6 +99,23 @@ void execute() {
     }
 
     int opcode = (int)tokens[0];
+
+    if (debug_mode && opcode != TRACE) {
+      cerr << "[TRACE] PC=" << pc << " OP=" << instruction_line;
+      cerr << " | STACK=[";
+      stack<ll> tmp = eval_stack;
+      vector<ll> sv;
+      while (!tmp.empty()) { sv.push_back(tmp.top()); tmp.pop(); }
+      reverse(sv.begin(), sv.end());
+      for (size_t i = 0; i < sv.size(); i++) {
+        if (i) cerr << ",";
+        cerr << sv[i];
+      }
+      cerr << "]";
+      if (!call_stack.empty())
+        cerr << " FRAME_DEPTH=" << call_stack.size();
+      cerr << "\n";
+    }
 
     switch (opcode) {
     case PUSH: {
@@ -169,6 +190,27 @@ void execute() {
       }
       break;
     }
+    case MOD: {
+      if (eval_stack.size() >= 2) {
+        ll b = eval_stack.top();
+        eval_stack.pop();
+        ll a = eval_stack.top();
+        eval_stack.pop();
+        if (b != 0)
+          eval_stack.push(a % b);
+        else
+          printer.print_str("Error: Modulo by zero");
+      }
+      break;
+    }
+    case ABS: {
+      if (!eval_stack.empty()) {
+        ll a = eval_stack.top();
+        eval_stack.pop();
+        eval_stack.push(a < 0 ? -a : a);
+      }
+      break;
+    }
     case PRINT: {
       if (!eval_stack.empty()) {
         ll value = eval_stack.top();
@@ -187,6 +229,17 @@ void execute() {
           printer.print_debug("Invalid string pool index", str_idx);
         }
       }
+      break;
+    }
+    case INPUT: {
+      ll val;
+      cin >> val;
+      eval_stack.push(val);
+      break;
+    }
+    case TRACE: {
+      debug_mode = !debug_mode;
+      printer.print_str(debug_mode ? "[TRACE] Enabled" : "[TRACE] Disabled");
       break;
     }
     case HALT:
@@ -494,8 +547,13 @@ void execute() {
 
 int main(int argc, char *argv[]) {
   string filename = "test.outz";
-  if (argc > 1) {
-    filename = argv[1];
+  for (int i = 1; i < argc; i++) {
+    string arg = argv[i];
+    if (arg == "--debug" || arg == "-d") {
+      debug_mode = true;
+    } else if (arg[0] != '-') {
+      filename = arg;
+    }
   }
 
   ifstream file(filename);

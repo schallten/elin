@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from compiler import Compiler
+from compiler import compile, format_bytecode
 
 def main():
     """
@@ -30,9 +30,8 @@ def main():
         source_code_lines = source_file_path.read_text().splitlines()
         
         # 2. Compile it to bytecode
-        elin_compiler = Compiler(package_name=program_base_name)
-        elin_compiler.compile(source_code_lines)
-        compiled_bytecode = elin_compiler.format_bytecode()
+        state = compile(source_code_lines, program_base_name)
+        compiled_bytecode = format_bytecode(state)
         
         # 3. Write the compiled bytecode to a file
         output_file_path.write_text(compiled_bytecode)

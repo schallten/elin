@@ -3,15 +3,9 @@ Lexer for ELIN source code.
 Responsible for converting a string of raw code into a stream of usable Tokens.
 """
 
-class Token:
-    """Represents a single meaningful unit of code (like a keyword or number)."""
-    def __init__(self, type, value=None):
-        self.type = type  # "LET", "WHILE", "NUMBER", etc.
-        self.value = value  # The raw string value if applicable (e.g. for identifiers)
-        
-    def __repr__(self):
-        """String representation for easier debugging during development."""
-        return f"Token({self.type}, {repr(self.value)})" if self.value else f"Token({self.type})"
+from collections import namedtuple
+
+Token = namedtuple("Token", ["type", "value"], defaults=[None])
 
 def lex(code_string):
     """
@@ -66,6 +60,7 @@ def lex(code_string):
                 elif part == "halt": tokens.append(Token("HALT"))
                 elif part == "arr": tokens.append(Token("ARR"))
                 elif part == "len": tokens.append(Token("LEN"))
+                elif part == "abs": tokens.append(Token("ABS"))
                 elif part in ["int", "str"]: tokens.append(Token("TYPE", part))
                 else: tokens.append(Token("IDENTIFIER", part))
                 continue
@@ -96,7 +91,7 @@ def lex(code_string):
                 i += 1
                 continue
                 
-            if char in ["+", "-", "*", "/"]:
+            if char in ["+", "-", "*", "/", "%"]:
                 tokens.append(Token("OP", char))
                 i += 1
                 continue
