@@ -5,7 +5,8 @@ from ops import (
     MAKE_ARR, ARR_GET, ARR_SET, ARR_LEN, PUSH_ARR,
     CALL, RET, LOAD_LOCAL, STORE_LOCAL,
     PUSH_CONST,
-    DUP, DROP, SWAP
+    DUP, DROP, SWAP,
+    NEG, NOT, NOP, INC, DEC
 )
 from ast_nodes import *
 
@@ -27,6 +28,11 @@ class TypeChecker:
             if node.name in self.variables:
                 return self.variables[node.name]
             raise Exception(f"Type Error: Variable '{node.name}' undefined.")
+        if isinstance(node, UnaryOpNode):
+            t = self.infer_type(node.operand)
+            if t != "int":
+                raise Exception(f"Type Error: Unary needs int, got {t}")
+            return "int"
         if isinstance(node, BinaryOpNode):
             l, r = self.infer_type(node.left), self.infer_type(node.right)
             if l != "int" or r != "int":
@@ -100,6 +106,8 @@ class TypeChecker:
                 at = self.infer_type(arg)
                 if at != info['params'][i]:
                     raise Exception(f"Type Error: Arg {i} {at} -> {info['params'][i]}")
+        elif isinstance(ast, UnaryOpNode):
+            self.check(ast.operand)
         elif isinstance(ast, BinaryOpNode):
             self.check(ast.left)
             self.check(ast.right)
@@ -183,6 +191,17 @@ class Compiler:
             self.generate(ast.value)
             self.add_operation(ARR_SET)
         elif isinstance(ast, ReassignNode):
+            # Optimize x = x + 1 -> INC and x = x - 1 -> DEC
+            if isinstance(ast.value, BinaryOpNode):
+                v = ast.value
+                if (isinstance(v.left, VariableNode) and v.left.name == ast.name and
+                    isinstance(v.right, NumberNode) and v.right.value == "1"):
+                    idx, local = self.lookup_variable_index(ast.name)
+                    if v.op == "+":
+                        self.add_operation(f"{INC} {idx}")
+                    elif v.op == "-":
+                        self.add_operation(f"{DEC} {idx}")
+                    return
             idx, local = self.lookup_variable_index(ast.name)
             self.generate(ast.value)
             self.add_store(idx, local)
@@ -213,6 +232,9 @@ class Compiler:
             self.add_operation(f"{JMP} {start}")
             self.bytecode[jz_idx] = f"{JZ} {len(self.bytecode)}"
         elif isinstance(ast, HaltNode): self.add_operation(HALT)
+        elif isinstance(ast, UnaryOpNode):
+            self.generate(ast.operand)
+            self.add_operation(NEG if ast.op == "-" else NOT)
         elif isinstance(ast, ConditionNode):
             self.generate(ast.left); self.generate(ast.right)
             self.add_operation(CMP_OP_MAP[ast.op])

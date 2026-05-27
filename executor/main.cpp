@@ -51,6 +51,11 @@ const int STORE_LOCAL = 43;
 const int DUP = 60;
 const int DROP = 61;
 const int SWAP = 62;
+const int NEG = 63;
+const int NOT = 64;
+const int NOP = 65;
+const int INC = 66;
+const int DEC = 67;
 
 class Printer {
 public:
@@ -436,6 +441,47 @@ void execute() {
         ll b = eval_stack.top(); eval_stack.pop();
         eval_stack.push(a);
         eval_stack.push(b);
+      }
+      break;
+    }
+    case NEG: {
+      if (!eval_stack.empty()) {
+        ll a = eval_stack.top(); eval_stack.pop();
+        eval_stack.push(-a);
+      }
+      break;
+    }
+    case NOT: {
+      if (!eval_stack.empty()) {
+        ll a = eval_stack.top(); eval_stack.pop();
+        eval_stack.push(a == 0 ? 1 : 0);
+      }
+      break;
+    }
+    case NOP: {
+      break;
+    }
+    case INC: {
+      int idx = (int)tokens[1];
+      if (!call_stack.empty()) {
+        Frame &f = call_stack.top();
+        if (idx >= (int)f.locals.size()) f.locals.resize(idx + 1, 0);
+        f.locals[idx]++;
+      } else {
+        if (idx >= (int)variables.size()) variables.resize(idx + 1, 0);
+        variables[idx]++;
+      }
+      break;
+    }
+    case DEC: {
+      int idx = (int)tokens[1];
+      if (!call_stack.empty()) {
+        Frame &f = call_stack.top();
+        if (idx >= (int)f.locals.size()) f.locals.resize(idx + 1, 0);
+        f.locals[idx]--;
+      } else {
+        if (idx >= (int)variables.size()) variables.resize(idx + 1, 0);
+        variables[idx]--;
       }
       break;
     }

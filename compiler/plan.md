@@ -16,14 +16,14 @@ Add a constant pool to the `.outz` format and a `PUSH_CONST <idx>` opcode that r
 **DUP, DROP, SWAP**  
 Reserve IDs 60‑62 for the three fundamental stack operations every stack VM needs: `DUP` duplicates the top, `DROP` discards it, `SWAP` exchanges the top two. Without them we end up with STORE/LOAD hacks — more bytes, more globals, more noise.
 
-### Core VM // Item 04
+### Core VM // Item 04 — DONE
 **NEG and NOT**  
 Add NEG (63) and NOT (64). `NEG` pops `a` and pushes `-a`. `NOT` pushes `1` if `a == 0` and `0` otherwise.
 
-### Core VM // Item 05
+### Core VM // Item 05 — DONE
 **NOP**  
 Add a no-op instruction at ID 65. Advances PC, does nothing else — useful for padding and placeholder slots during optimization.
 
-### Core VM // Item 06
+### Core VM // Item 06 — DONE
 **INC and DEC**  
 Add INC (66) and DEC (67). `INC 5` loads variable 5, increments it, and stores it back — 2 bytes instead of `LOAD 5; PUSH 1; ADD; STORE 5;` which takes 11.

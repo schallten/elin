@@ -101,6 +101,11 @@ def lex(code_string):
                 i += 1
                 continue
                 
+            if char == "!":
+                tokens.append(Token("OP", "!"))
+                i += 1
+                continue
+
             if char == "[":
                 tokens.append(Token("LBRACKET"))
                 i += 1

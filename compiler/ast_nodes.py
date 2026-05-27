@@ -113,6 +113,12 @@ class FunctionCallNode(Node):
         self.name = name
         self.args = args
 
+class UnaryOpNode(Node):
+    """A unary operation: <op> <operand> (e.g. -x, !x)."""
+    def __init__(self, op, operand):
+        self.op = op  # '-', '!'
+        self.operand = operand  # The operand node
+
 class ReturnNode(Node):
     """Represents a return statement: return <val>."""
     def __init__(self, value):

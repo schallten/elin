@@ -262,11 +262,16 @@ class Parser:
         return left
 
     def parse_primary(self):
-        """Parses literal values, variables, and grouped expressions."""
+        """Parses literal values, variables, unary ops, and grouped expressions."""
         tok = self.current()
         if not tok:
             raise Exception("Unexpected end of input")
             
+        if tok.type == "OP" and tok.value in ["-", "!"]:
+            self.advance()
+            operand = self.parse_primary()
+            return UnaryOpNode(tok.value, operand)
+
         if tok.type == "NUMBER":
             self.advance()
             return NumberNode(tok.value)

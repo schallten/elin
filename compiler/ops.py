@@ -59,6 +59,17 @@ DUP  = 60 # Duplicates the top of the stack
 DROP = 61 # Discards the top of the stack
 SWAP = 62 # Exchanges the top two stack values
 
+# --- Unary Instructions ---
+NEG = 63 # Negate top of stack (a -> -a)
+NOT = 64 # Logical not (a -> 1 if a==0 else 0)
+
+# --- Misc Instructions ---
+NOP = 65 # No operation
+
+# --- Increment / Decrement Instructions ---
+INC = 66 # Load, increment, and store variable
+DEC = 67 # Load, decrement, and store variable
+
 # --- Mappings ---
 # These dictionaries help the compiler convert text like '+' or '==' into the numbers above.
 

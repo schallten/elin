@@ -1,0 +1,26 @@
+# Test NEG, NOT, INC, DEC
+
+let int a = 10;
+let int b = -a;
+
+print b;
+
+if !b;
+    print "nonzero";
+else;
+    print "zero";
+end;
+
+let int i = 0;
+while i < 5;
+    print i;
+    i = i + 1;
+wend;
+
+print i;
+
+let int j = 10;
+while j > 0;
+    print j;
+    j = j - 1;
+wend;
