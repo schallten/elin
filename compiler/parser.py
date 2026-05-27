@@ -1,6 +1,6 @@
 from ast_nodes import *
 # We temporarily refer to a helper to convert infix expressions or handle it natively
-from ops import OP_MAP, CMP_OPERATORS
+from ops import CMP_OPERATORS
 
 class Parser:
     """
@@ -62,6 +62,10 @@ class Parser:
                 stmts.append(self.parse_array_assign())
             elif tok.type == "IDENTIFIER" and self.pos + 1 < len(self.tokens) and self.tokens[self.pos + 1].type == "EQUALS":
                 stmts.append(self.parse_reassign())
+            elif tok.type in ["IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN"]:
+                stmts.append(self.parse_expression())
+            elif tok.type in ["COMMA", "RPAREN", "RBRACKET"]:
+                self.advance()
             else:
                 raise Exception(f"Syntax error at {tok.type}: unexpected token")
         return stmts
@@ -79,7 +83,7 @@ class Parser:
         name_tok = self.current()
         self.advance() # identifier
         self.advance() # [
-        index_expr = self.parse_expression(stop_tokens=["RBRACKET"])
+        index_expr = self.parse_expression()
         if self.current().type == "RBRACKET":
             self.advance()
         if self.current().type == "EQUALS":
@@ -116,7 +120,7 @@ class Parser:
     def parse_if(self):
         """Parses: if <condition> ... [else ...] end."""
         self.advance()  # Consumes 'IF'
-        cond = self.parse_condition()
+        cond = self.parse_expression()
         
         # Recursively parse the 'then' body
         body = self.parse_statements()
@@ -140,7 +144,7 @@ class Parser:
     def parse_while(self):
         """Parses: while <condition> ... wend."""
         self.advance()  # Consumes 'WHILE'
-        cond = self.parse_condition()
+        cond = self.parse_expression()
         
         # Recursively parse the loop body
         body = self.parse_statements()
@@ -152,7 +156,7 @@ class Parser:
         return WhileNode(cond, body)
 
     def parse_func(self):
-        """Parses: func <ret_type> <name> <type1> <arg1> ..."""
+        """Parses: func <ret_type> <name> [arr] <type1> <arg1> ..."""
         self.advance() # func
         ret_type = self.current().value
         self.advance()
@@ -161,11 +165,18 @@ class Parser:
         
         params = []
         while self.current() and self.current().type not in ["NEWLINE", "SEMI"]:
+            p_is_arr = False
+            if self.current().type == "ARR":
+                p_is_arr = True
+                self.advance()
+                
             p_type = self.current().value
             self.advance()
             p_name = self.current().value
             self.advance()
-            params.append((p_type, p_name))
+            
+            full_type = f"arr {p_type}" if p_is_arr else p_type
+            params.append((full_type, p_name))
             
         body = self.parse_statements()
         
@@ -176,166 +187,130 @@ class Parser:
 
     def parse_return(self):
         self.advance() # return
-        expr = self.parse_expression(stop_tokens=["NEWLINE", "SEMI"])
+        expr = self.parse_expression()
         return ReturnNode(expr)
 
-    def parse_condition(self):
-        """Parses a simple comparison: <expr> <op> <expr>."""
-        left_tok = self.current()
-        self.advance()
-        op_tok = self.current()
-        self.advance()
-        right_tok = self.current()
-        self.advance()
-        
-        left_node = NumberNode(left_tok.value) if left_tok.type == "NUMBER" else VariableNode(left_tok.value)
-        right_node = NumberNode(right_tok.value) if right_tok.type == "NUMBER" else VariableNode(right_tok.value)
-        return ConditionNode(op_tok.value, left_node, right_node)
+    def get_precedence(self, op_type, op_val):
+        if op_type in ["COMMA", "RPAREN", "RBRACKET", "SEMI", "NEWLINE"]:
+            return -1
+        if op_val in CMP_OPERATORS:
+            return 1
+        if op_val in ["+", "-"]:
+            return 2
+        if op_val in ["*", "/"]:
+            return 3
+        return 0
 
-    def parse_expression(self, stop_tokens=["NEWLINE", "SEMI"]):
+    def parse_expression(self, precedence=0):
         """
-        Encapsulates array access (name[idx]) and then builds a BinaryOp tree.
+        Direct AST-building Pratt parser for expressions.
+        Handles math, comparisons, and function calls.
         """
-        if self.current().type == "LBRACKET":
-            return self.parse_array_literal()
+        left = self.parse_primary()
+        
+        while True:
+            curr = self.current()
+            if not curr: break
             
-        if self.current().type == "LEN":
+            # Use get_precedence to check if we should continue
+            op_prec = self.get_precedence(curr.type, curr.value)
+            if op_prec < 0: # Explicit stop tokens
+                break
+                
+            # 1. Infix operators (math, comparison)
+            if curr.type in ["OP", "CMP"]:
+                if op_prec <= precedence:
+                    break
+                
+                self.advance()
+                right = self.parse_expression(op_prec)
+                if curr.value in CMP_OPERATORS:
+                    left = ConditionNode(curr.value, left, right)
+                else:
+                    left = BinaryOpNode(curr.value, left, right)
+                continue
+            
+            # 2. Function calls (comma-separated with parens, or space-separated)
+            if curr.type == "LPAREN":
+                if isinstance(left, VariableNode):
+                    func_name = left.name
+                    self.advance() # (
+                    args = []
+                    while self.current() and self.current().type != "RPAREN":
+                        args.append(self.parse_expression())
+                        if self.current() and self.current().type == "COMMA":
+                            self.advance()
+                    if self.current() and self.current().type == "RPAREN":
+                        self.advance() # )
+                    left = FunctionCallNode(func_name, args)
+                    continue
+            
+            # Legacy/Alternative space-separated function calls
+            if precedence == 0 and curr.type in ["NUMBER", "STRING", "IDENTIFIER", "LPAREN", "LBRACKET", "LEN"]:
+                # Convert VariableNode to FunctionCallNode if it's the first argument
+                if isinstance(left, VariableNode):
+                    left = FunctionCallNode(left.name, [])
+                
+                if isinstance(left, FunctionCallNode):
+                    # Parse next argument with higher precedence so it doesn't slurp the rest of the call
+                    arg = self.parse_expression(precedence=10) 
+                    left.args.append(arg)
+                    continue
+            
+            break
+            
+        return left
+
+    def parse_primary(self):
+        """Parses literal values, variables, and grouped expressions."""
+        tok = self.current()
+        if not tok:
+            raise Exception("Unexpected end of input")
+            
+        if tok.type == "NUMBER":
+            self.advance()
+            return NumberNode(tok.value)
+        elif tok.type == "STRING":
+            self.advance()
+            return StringNode(tok.value)
+        elif tok.type == "IDENTIFIER":
+            name = tok.value
+            self.advance()
+            # Array access check
+            if self.current() and self.current().type == "LBRACKET":
+                self.advance() # [
+                idx = self.parse_expression()
+                if self.current() and self.current().type == "RBRACKET":
+                    self.advance() # ]
+                return ArrayAccessNode(name, idx)
+            return VariableNode(name)
+        elif tok.type == "LBRACKET":
+            return self.parse_array_literal()
+        elif tok.type == "LPAREN":
+            self.advance() # (
+            expr = self.parse_expression()
+            if self.current() and self.current().type == "RPAREN":
+                self.advance() # )
+            return expr
+        elif tok.type == "LEN":
             self.advance() # len
             self.advance() # (
             name_tok = self.current()
-            self.advance() # name
+            self.advance() # identifier
             self.advance() # )
             return ArrayLenNode(name_tok.value)
-
-        # Slurp tokens until a stop token
-        raw_tokens = []
-        while self.current() and self.current().type not in stop_tokens:
-            raw_tokens.append(self.current())
-            self.advance()
-            
-        if not raw_tokens:
-            return None
-
-        # Build a list of 'nodes' (NumberNode, VariableNode, ArrayAccessNode) and 'operator strings'
-        prepared_tokens = []
-        i = 0
-        while i < len(raw_tokens):
-            tok = raw_tokens[i]
-            # Check for array access: name [ index ]
-            if tok.type == "IDENTIFIER" and i + 1 < len(raw_tokens) and raw_tokens[i + 1].type == "LBRACKET":
-                # Find the closing RBRACKET
-                name = tok.value
-                i += 2 # Consume identifier and [
-                # For simplicity, we assume index is a single token here for now
-                index_tok = raw_tokens[i]
-                i += 1 
-                if i < len(raw_tokens) and raw_tokens[i].type == "RBRACKET":
-                    i += 1
-                
-                idx_node = NumberNode(index_tok.value) if index_tok.type == "NUMBER" else VariableNode(index_tok.value)
-                prepared_tokens.append(ArrayAccessNode(name, idx_node))
-            elif tok.type == "NUMBER":
-                prepared_tokens.append(NumberNode(tok.value))
-                i += 1
-            elif tok.type == "STRING":
-                prepared_tokens.append(StringNode(tok.value))
-                i += 1
-            elif tok.type == "IDENTIFIER":
-                prepared_tokens.append(VariableNode(tok.value))
-                i += 1
-            elif tok.type in ["OP", "CMP"]:
-                prepared_tokens.append(tok.value)
-                i += 1
-            else:
-                prepared_tokens.append(tok.value)
-                i += 1
-
-        # Check for simple comparisons (hack to maintain lookandfeel of original parser)
-        for idx, item in enumerate(prepared_tokens):
-            if isinstance(item, str) and item in CMP_OPERATORS:
-                return ConditionNode(item, prepared_tokens[0], prepared_tokens[2])
-                
-        # Handle single values
-        if len(prepared_tokens) == 1:
-            return prepared_tokens[0]
-            
-        # Use our updated tree builder that handles nodes
-        return build_expr_tree_from_nodes(prepared_tokens)
+        
+        raise Exception(f"Unexpected token in expression: {tok.type}")
 
     def parse_array_literal(self):
         """Parses: [val1, val2, ...]."""
         self.advance() # [
         elements = []
         while self.current() and self.current().type != "RBRACKET":
-            # For now, only simple literals or variables in arrays
-            tok = self.current()
-            if tok.type == "NUMBER":
-                elements.append(NumberNode(tok.value))
-            elif tok.type == "STRING":
-                elements.append(StringNode(tok.value))
-            elif tok.type == "IDENTIFIER":
-                elements.append(VariableNode(tok.value))
-            self.advance()
+            elements.append(self.parse_expression())
             if self.current() and self.current().type == "COMMA":
                 self.advance()
         if self.current() and self.current().type == "RBRACKET":
             self.advance()
         return ArrayNode(elements)
 
-# Helper function moved here to keep Parser class clean
-def build_expr_tree(tokens):
-    """Temporary tree builder for math expressions (backwards compatibility)."""
-    from expression_parser import infix_to_postfix
-    raw = [t.value for t in tokens]
-    postfix = infix_to_postfix(raw)
-    
-    stack = []
-    supported_operators = ["+", "-", "*", "/"]
-    for t in postfix:
-        if t in supported_operators:
-            right = stack.pop()
-            left = stack.pop()
-            stack.append(BinaryOpNode(t, left, right))
-        else:
-            if isinstance(t, str) and (t.isdigit() or (t.startswith("-") and t[1:].isdigit())):
-                stack.append(NumberNode(t))
-            else:
-                stack.append(VariableNode(t))
-    return stack[0]
-
-def build_expr_tree_from_nodes(nodes_and_ops):
-    """Better tree builder that works with already parsed nodes."""
-    from expression_parser import infix_to_postfix
-    # Convert nodes to a unique string mapping so the postfix converter can handle them
-    raw = []
-    node_map = {}
-    for i, item in enumerate(nodes_and_ops):
-        if isinstance(item, str):
-            raw.append(item)
-        else:
-            key = f"__NODE_{i}__"
-            node_map[key] = item
-            raw.append(key)
-            
-    postfix = infix_to_postfix(raw)
-    
-    stack = []
-    supported_operators = ["+", "-", "*", "/"]
-    for t in postfix:
-        if t in supported_operators:
-            right = stack.pop()
-            left = stack.pop()
-            stack.append(BinaryOpNode(t, left, right))
-        else:
-            if t in node_map:
-                stack.append(node_map[t])
-            elif isinstance(t, str) and (t.isdigit() or (t.startswith("-") and t[1:].isdigit())):
-                stack.append(NumberNode(t))
-            else:
-                stack.append(VariableNode(t))
-                
-    # If the stack has multiple items left, it is likely a function call
-    if len(stack) > 1 and isinstance(stack[0], VariableNode):
-        return FunctionCallNode(stack[0].name, stack[1:])
-        
-    return stack[0]

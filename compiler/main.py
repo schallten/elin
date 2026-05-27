@@ -31,7 +31,8 @@ def main():
         
         # 2. Compile it to bytecode
         elin_compiler = Compiler(package_name=program_base_name)
-        compiled_bytecode = elin_compiler.compile(source_code_lines)
+        elin_compiler.compile(source_code_lines)
+        compiled_bytecode = elin_compiler.format_bytecode()
         
         # 3. Write the compiled bytecode to a file
         output_file_path.write_text(compiled_bytecode)

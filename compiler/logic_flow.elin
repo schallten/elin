@@ -1,0 +1,26 @@
+# Test 2: Logic Flow
+# Focus: Nested conditionals and loops
+
+let int x = 10;
+let int y = 20;
+
+if x < y;
+    print "x is smaller";
+    if x > 5;
+        print "x is also greater than 5";
+    end;
+else;
+    print "x is not smaller";
+end;
+
+let int count = 0;
+while count < 3;
+    let int sub = 0;
+    print "Loop:";
+    print count;
+    while sub < 2;
+        print sub;
+        sub = sub + 1;
+    wend;
+    count = count + 1;
+wend;

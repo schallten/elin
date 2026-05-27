@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Changes | ELIN</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="global-nav">
+        <div class="logo">
+            <img src="logo.png" alt="ELIN Logo" class="nav-logo-img">
+            <span class="logo-text">ELIN_SYSTEM</span>
+        </div>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="docs.html">Documentation</a></li>
+            <li><a href="roadmap.html">Roadmap</a></li>
+            <li><a href="changes.html" class="active">Changes</a></li>
+            <li><a href="visualizer.html">Visualizer</a></li>
+            <li><a href="https://github.com/schallten/elin">GitHub</a></li>
+        </ul>
+    </nav>
+
+    <main class="landing-content">
+        <header style="margin-bottom: 60px; text-align: center;">
+            <span class="lesson-meta">Update Log // v0.2.1</span>
+            <h1 style="font-size: 3rem; letter-spacing: -1px;">A Smarter Brain for ELIN</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem; max-width: 700px; margin: 20px auto;">
+                We've rebuilt the core of the ELIN compiler to be more organized, efficient, and easier to grow.
+            </p>
+        </header>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>Thinking in Blueprints</h3>
+            <p>
+                When you write code, the computer doesn't just read it like a book. It needs to build a "mental map" of what you're trying to do. In technical terms, this map is called an <strong>AST</strong> (Abstract Syntax Tree), but you can think of it as a <strong>blueprint</strong>.
+            </p>
+            <p style="margin-top: 15px;">
+                Previously, ELIN was "mashing" your code together into a messy string to understand it. In v0.2.1, it now builds a perfect, clean blueprint directly. This means fewer errors and a system that truly understands the structure of your logic.
+            </p>
+        </section>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>Better Math & Logic</h3>
+            <p>
+                Reading math is hard for computers. They need to know that <code>2 + 3 * 4</code> is 14, not 20. We've given ELIN a new "logic engine" (known as a <em>Pratt Parser</em>) that allows it to handle complex math and nested instructions with ease.
+            </p>
+            <div class="code-preview" style="margin-top: 20px; padding: 20px;">
+                <pre><code># v0.2.1 handles deep math effortlessly
+let int result = (10 + 5) * (20 - 5);</code></pre>
+            </div>
+        </section>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>Clean House, Fast System</h3>
+            <p>
+                As projects grow, they collect "dust"—old code that isn't used anymore but still takes up space. We've gone through the system and deleted all the old, hacky workarounds. 
+            </p>
+            <p style="margin-top: 15px;">
+                By separating the "reading," "checking," and "running" phases of the compiler, we've made ELIN lighter and much faster. It's a solid foundation for the future.
+            </p>
+        </section>
+
+        <section class="code-preview" style="margin-top: 100px; padding: 40px; border-color: var(--accent);">
+            <h2 style="text-align: left; font-family: monospace; color: var(--accent);">[ TECHNICAL_DEEP_DIVE ]</h2>
+            
+            <div style="margin-top: 30px;">
+                <h4 style="color: #fff; font-family: monospace;">// Pratt Parser Implementation</h4>
+                <p style="font-size: 0.9rem; color: var(--fg);">
+                    We replaced the legacy infix-to-postfix converter with a top-down operator precedence (Pratt) parser. This allows the parser to handle <strong>recursive descent</strong> for expressions without a separate shunting-yard phase. It maps token types to precedence levels, enabling direct construction of <code>BinaryOpNode</code> and <code>FunctionCallNode</code> trees.
+                </p>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h4 style="color: #fff; font-family: monospace;">// Architectural Decoupling</h4>
+                <p style="font-size: 0.9rem; color: var(--fg);">
+                    The compiler has been refactored from a single-pass monolith into a multi-pass pipeline:
+                </p>
+                <ul style="font-size: 0.9rem; color: var(--fg); margin: 15px 0 0 20px;">
+                    <li><strong>Pass 1 (Lexer/Parser):</strong> Generates a high-fidelity AST.</li>
+                    <li><strong>Pass 2 (TypeChecker):</strong> Performs recursive type inference and validation, populating the symbol table with verified type metadata.</li>
+                    <li><strong>Pass 3 (CodeGenerator):</strong> Translates the verified AST into linear bytecode, managing string and array pool serialization.</li>
+                </ul>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h4 style="color: #fff; font-family: monospace;">// Optimization & Cleanup</h4>
+                <p style="font-size: 0.9rem; color: var(--fg);">
+                    The removal of <code>expression_parser.py</code> eliminates the O(N) overhead of the node-to-string-to-postfix round-trip. Bytecode formatting is now isolated in <code>format_bytecode()</code>, allowing <code>compile()</code> to return a pure instruction list suitable for future optimization passes.
+                </p>
+            </div>
+        </section>
+
+        <div style="text-align: center; margin-top: 100px; border-top: 1px solid var(--border); padding-top: 40px;">
+            <a href="docs.html" class="btn">Learn how to use v0.2.1</a>
+        </div>
+    </main>
+
+    <footer style="padding: 60px 10%; border-top: 1px solid var(--border); margin-top: 100px; font-family: monospace; font-size: 0.8rem; color: #666;">
+        <div style="display: flex; justify-content: space-between;">
+            <div>ELIN_CORE // 2026</div>
+            <div>STABLE v0.2.1</div>
+        </div>
+    </footer>
+
+    <script>
+        // Syntax Highlighting for the preview
+        const highlight = (code) => {
+            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
+            return code.replace(regex, (m, p1, p2, p3, p4, p5) => {
+                if (p1) return `<span class="hl-comment">${p1}</span>`;
+                if (p2) return `<span class="hl-string">${p2}</span>`;
+                if (p3) return `<span class="hl-keyword">${p3}</span>`;
+                if (p4) return `<span class="hl-type">${p4}</span>`;
+                if (p5) return `<span class="hl-number">${p5}</span>`;
+                return m;
+            });
+        };
+        document.querySelectorAll('pre code').forEach(block => {
+            block.innerHTML = highlight(block.innerHTML);
+        });
+    </script>
+</body>
+
+</html>

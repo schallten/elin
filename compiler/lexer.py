@@ -119,8 +119,12 @@ def lex(code_string):
                 i += 1
                 continue
                 
-            if char in ["(", ")"]:
-                tokens.append(Token("OP", char))
+            if char == "(":
+                tokens.append(Token("LPAREN"))
+                i += 1
+                continue
+            if char == ")":
+                tokens.append(Token("RPAREN"))
                 i += 1
                 continue
                 

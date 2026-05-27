@@ -1,0 +1,22 @@
+# Test 1: Math Stress
+# Focus: Operator precedence and nested expressions
+
+let int a = 10;
+let int b = 5;
+let int c = 2;
+
+# (10 + 5) * 2 = 30
+let int res1 = (a + b) * c;
+print res1;
+
+# 10 + 5 * 2 = 20
+let int res2 = a + b * c;
+print res2;
+
+# (100 / 10) / 2 = 5
+let int res3 = (100 / 10) / c;
+print res3;
+
+# Complex nesting: 50 - (10 * (2 + 3)) = 0
+let int res4 = 50 - (a * (b - 2)); # a is 10, b is 5 -> 10 * 3 = 30. 50 - 30 = 20.
+print res4;

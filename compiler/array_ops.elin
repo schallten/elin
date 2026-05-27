@@ -1,0 +1,21 @@
+# Test 3: Array Ops
+# Focus: Array literals, access, and length
+
+let arr int data = [5, 10, 15];
+print "Length:";
+print len(data);
+
+print "Items:";
+print data[0];
+print data[1];
+print data[2];
+
+print "Updating data[1] to 99";
+data[1] = 99;
+print data[1];
+
+let int i = 0;
+while i < len(data);
+    print data[i];
+    i = i + 1;
+wend;
