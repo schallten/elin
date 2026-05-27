@@ -6,8 +6,9 @@ typedef long long ll;
 vector<pair<int, string>>
     bytecode_program; // int stores index , string stores the instruction
 vector<ll> variables;
-vector<string> string_pool;    // Store string literals from pool
-vector<vector<ll>> array_pool; // Store array literals/templates
+vector<string> string_pool;      // Store string literals from pool
+vector<ll> constant_pool;        // Store integer constants
+vector<vector<ll>> array_pool;   // Store array literals/templates
 stack<ll> eval_stack;          // Use ll to store indices/values
 
 struct Frame {
@@ -37,6 +38,7 @@ const int JZ = 17;
 const int JNZ = 18;
 const int PUSH_STR = 20;
 const int PRINT_STR = 21;
+const int PUSH_CONST = 22;
 const int MAKE_ARR = 30;
 const int ARR_GET = 31;
 const int ARR_SET = 32;
@@ -46,6 +48,9 @@ const int CALL = 40;
 const int RET = 41;
 const int LOAD_LOCAL = 42;
 const int STORE_LOCAL = 43;
+const int DUP = 60;
+const int DROP = 61;
+const int SWAP = 62;
 
 class Printer {
 public:
@@ -404,6 +409,36 @@ void execute() {
       }
       break;
     }
+    case PUSH_CONST: {
+      int idx = (int)tokens[1];
+      if (idx >= 0 && idx < (int)constant_pool.size()) {
+        eval_stack.push(constant_pool[idx]);
+      } else {
+        printer.print_debug("Invalid constant pool index", idx);
+      }
+      break;
+    }
+    case DUP: {
+      if (!eval_stack.empty()) {
+        eval_stack.push(eval_stack.top());
+      }
+      break;
+    }
+    case DROP: {
+      if (!eval_stack.empty()) {
+        eval_stack.pop();
+      }
+      break;
+    }
+    case SWAP: {
+      if (eval_stack.size() >= 2) {
+        ll a = eval_stack.top(); eval_stack.pop();
+        ll b = eval_stack.top(); eval_stack.pop();
+        eval_stack.push(a);
+        eval_stack.push(b);
+      }
+      break;
+    }
     default:
       break;
     }
@@ -442,6 +477,18 @@ int main(int argc, char *argv[]) {
       if (s_idx >= string_pool.size())
         string_pool.resize(s_idx + 1);
       string_pool[s_idx] = s_val;
+      continue;
+    }
+
+    if (line.substr(0, 6) == "CONST ") {
+      istringstream iss(line);
+      string dummy;
+      int c_idx;
+      ll c_val;
+      iss >> dummy >> c_idx >> c_val;
+      if (c_idx >= (int)constant_pool.size())
+        constant_pool.resize(c_idx + 1);
+      constant_pool[c_idx] = c_val;
       continue;
     }
 

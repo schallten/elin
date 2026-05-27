@@ -1,0 +1,30 @@
+# Test: constant pool reuse and diverse values
+# Exercise constant pool: repeated values, many distinct values,
+# and arithmetic with pooled constants.
+
+let int a = 42;
+let int b = 0;
+let int c = 1000;
+let int d = 42;
+let int e = 0;
+let int f = 7;
+let int g = 99;
+
+print a;
+print b;
+print c;
+print d;
+print e;
+print f;
+print g;
+
+let int x = 1;
+let int y = 2;
+let int z = 3;
+
+print x;
+print y;
+print z;
+
+z = z + 1;
+print z;

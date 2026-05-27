@@ -38,6 +38,9 @@ JNZ = 18  # Jump only if the last value was Not Zero (True)
 PUSH_STR  = 20 # Pushes a string pool index onto the stack
 PRINT_STR = 21 # Prints a string variable (looks up string pool by stored index)
 
+# --- Constant Pool Instruction ---
+PUSH_CONST = 22 # Pushes a constant pool entry onto the stack
+
 # --- Array Instructions ---
 MAKE_ARR = 30 # Creates array of size n from top n stack values
 ARR_GET  = 31 # Pops index and array ref, pushes value at that index
@@ -50,6 +53,11 @@ CALL = 40 # Push frame, jump to address, pop argc
 RET = 41 # Pop frame, jump to return address
 LOAD_LOCAL = 42 # Load local variable from current frame
 STORE_LOCAL = 43 # Store local variable to current frame
+
+# --- Stack Manipulation Instructions ---
+DUP  = 60 # Duplicates the top of the stack
+DROP = 61 # Discards the top of the stack
+SWAP = 62 # Exchanges the top two stack values
 
 # --- Mappings ---
 # These dictionaries help the compiler convert text like '+' or '==' into the numbers above.
