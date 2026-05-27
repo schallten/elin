@@ -61,6 +61,8 @@ def tc_infer_type(node, env):
             return "int"
         case AbsNode():
             return "int"
+        case InputNode():
+            return "int"
         case FunctionCallNode(name=n):
             funcs = env["functions"]
             if n not in funcs:
@@ -150,6 +152,8 @@ def check(ast, env):
             return check(v, env)
         case AbsNode(value=v):
             return check(v, env)
+        case InputNode():
+            return env
         case ReturnNode(value=v):
             return check(v, env)
         case _:
@@ -419,6 +423,10 @@ def generate(ast, state):
         case AbsNode(value=v):
             state = generate(v, state)
             cg_add_operation(ABS, state)
+            return state
+
+        case InputNode():
+            cg_add_operation(INPUT, state)
             return state
 
         case FunctionDefNode(ret_type=rt, name=n, params=params, body=body):

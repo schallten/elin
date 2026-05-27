@@ -1,51 +1,131 @@
-# Compiler Cleanup Plan
+# v0.4.0 — Libraries & Tooling
 
-The compiler works, but it accumulated hacks as it grew. This plan cleans it up without changing languages or derailing the self‑hosting goal.
+All Core VM items (01–11) are complete in v0.3.0. This plan covers the next
+phase: a standard library and developer toolchain.
 
-## Roadmap – Early Items
+---
 
-### Core VM // Item 01 — DONE
-**PRINT pops from eval_stack**  
-We change PRINT (8) to pop the top of eval_stack and print it directly. Then `print r;` becomes simply `LOAD 2; PRINT;` — no more temporary juggling.
+## Libraries
 
-### Core VM // Item 02 — DONE
-**Constant pool + PUSH_CONST**  
-Add a constant pool to the `.outz` format and a `PUSH_CONST <idx>` opcode that references pool entries with a single byte. Same expressiveness, much denser bytecode.
+### Item 12 — Standard I/O
+Three opcodes for interactive programs:
+- **READ (69)** — read a line from stdin into a string pool slot, push handle
+- **WRITE (70)** — print string handle without newline
+- **FLUSH (71)** — force pending output
 
-### Core VM // Item 03 — DONE
-**DUP, DROP, SWAP**  
-Reserve IDs 60‑62 for the three fundamental stack operations every stack VM needs: `DUP` duplicates the top, `DROP` discards it, `SWAP` exchanges the top two. Without them we end up with STORE/LOAD hacks — more bytes, more globals, more noise.
+Same opcodes on PC (C++ stdio) and ESP (serial buffer).
 
-### Core VM // Item 04 — DONE
-**NEG and NOT**  
-Add NEG (63) and NOT (64). `NEG` pops `a` and pushes `-a`. `NOT` pushes `1` if `a == 0` and `0` otherwise.
+---
 
-### Core VM // Item 05 — DONE
-**NOP**  
-Add a no-op instruction at ID 65. Advances PC, does nothing else — useful for padding and placeholder slots during optimization.
+### Item 13 — String operations
+Four opcodes for text handling:
+- **STRLEN (72)** — push length of string handle
+- **STRCAT (73)** — concatenate two handles into a third (fail if over max)
+- **SUBSTR (74)** — extract substring by handle, offset, length
+- **STRCMP (75)** — compare two handles, push -1/0/1
 
-### Core VM // Item 06 — DONE
-**INC and DEC**  
-Add INC (66) and DEC (67). `INC 5` loads variable 5, increments it, and stores it back — 2 bytes instead of `LOAD 5; PUSH 1; ADD; STORE 5;` which takes 11.
+No dynamic allocation — fixed max buffer, fail cleanly on overflow.
 
-### Core VM // Item 07 — DONE
-**DEBUG / TRACE mode**  
-Add a `--debug` / `-d` flag to the VM that prints every opcode, eval_stack state, and frame info. Also add a `TRACE` opcode (69) that toggles debug mode at runtime.
+---
 
-### Core VM // Item 08 — DONE
-**INPUT opcode**  
-Add INPUT (68): blocks until a number arrives (stdin), then pushes it onto eval_stack. Unlocks interactive programs — calculators, prompts, games.
+### Item 14 — File I/O
+Four opcodes wrapping C stdio / LittleFS:
+- **FOPEN (76)** — open file by path string, push fd
+- **FREAD (77)** — read from fd into string handle
+- **FWRITE (78)** — write string handle to fd
+- **FCLOSE (79)** — close fd
 
-### Core VM // Item 09 — DONE
-**MOD and ABS**  
-Add MOD (55) for `%` operator and ABS (56) for absolute value. MOD is needed for array indexing and circular buffers; ABS for distance calculations. Both slot into the 64-bit integer model.
+File handles are integer descriptors into a VM-internal table.
 
-### Core VM // Item 10 — DONE
-**Version the .outz format**  
-Our bytecode format has no header — raw opcodes from offset zero. We're fixing that with magic bytes (0x45 0x4C 0x49 0x4E = "ELIN"), a version byte, flags, and pool offsets. This lets us evolve the format over time, detect corruption, and reject unsupported files gracefully.
+---
 
-### Core VM // Item 11 — DONE
-**Compile-time constant evaluation**  
-If every operand in an expression is a compile-time constant, the compiler folds the result directly into the bytecode instead of emitting runtime instructions. `42 + 15` becomes a single `PUSH_CONST 57` rather than `PUSH 42; PUSH 15; ADD;`. Only pure operations (no function calls, no variables, no array accesses) will be folded in the first pass.
+### Item 15 — Time
+Four opcodes for real-time programs:
+- **TIME (80)** — push ms since boot
+- **DELAY (81)** — block for N ms
+- **RTC_READ (82)** — read ESP RTC memory (no-op on PC)
+- **RTC_WRITE (83)** — write ESP RTC memory (no-op on PC)
 
+---
 
+### Item 16 — Random
+Two opcodes:
+- **RAND (84)** — push random 64-bit integer
+- **SRAND (85)** — seed the RNG
+
+PC: `std::mt19937_64`. ESP: hardware `random()`.
+
+---
+
+### Item 17 — FFI (CALL_EXTERN)
+Bridge ELIN to the host system:
+- **CALL_EXTERN (86)** — call registered external function by ID
+- Source declaration: `EXTERN "math" sin;`
+- Per-platform function registry (C++ stdlib on PC, GPIO/WiFi on ESP)
+
+---
+
+## Tooling
+
+### Item 18 — Bytecode assembler (elin-asm)
+Human-readable text format that assembles to `.outz`:
+
+```
+PUSH 42
+STORE 0
+HALT
+```
+
+For hand-writing optimized bytecode, testing individual opcodes, and
+bootstrapping the compiler.
+
+---
+
+### Item 19 — Source-level debugger (elin-debug)
+Set breakpoints, single-step, inspect state.
+- Compiler emits line-number table (source line → bytecode offset)
+- Interactive terminal on PC
+- Serial commands on ESP: `s` (step), `c` (continue), `p` (print stack)
+
+---
+
+### Item 20 — REPL (elin-repl)
+Read a line of ELIN source, compile, run, print result, repeat.
+- Requires making the compiler embeddable as a library
+- On PC: immediate feedback for learning
+- On ESP: interactive shell commands in ELIN
+
+---
+
+### Item 21 — Package manager (elin-pkg)
+Manage dependencies:
+- `elin-pkg init` — create `elin.json` manifest
+- `elin-pkg add math` — pull from git URL or local path
+- `elin-pkg build` — compile everything together
+
+No registry server — just git URLs and local paths.
+
+---
+
+## Opcode allocations (v0.4.0)
+
+| ID | Mnemonic   | Library       |
+|----|------------|---------------|
+| 69 | READ       | Standard I/O  |
+| 70 | WRITE      | Standard I/O  |
+| 71 | FLUSH      | Standard I/O  |
+| 72 | STRLEN     | String ops    |
+| 73 | STRCAT     | String ops    |
+| 74 | SUBSTR     | String ops    |
+| 75 | STRCMP     | String ops    |
+| 76 | FOPEN      | File I/O      |
+| 77 | FREAD      | File I/O      |
+| 78 | FWRITE     | File I/O      |
+| 79 | FCLOSE     | File I/O      |
+| 80 | TIME       | Time          |
+| 81 | DELAY      | Time          |
+| 82 | RTC_READ   | Time          |
+| 83 | RTC_WRITE  | Time          |
+| 84 | RAND       | Random        |
+| 85 | SRAND      | Random        |
+| 86 | CALL_EXTERN| FFI           |

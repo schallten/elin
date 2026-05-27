@@ -38,20 +38,27 @@
                 <li><a href="#syntax">04 // Basic Syntax</a></li>
                 <li><a href="#types">05 // Memory & Types</a></li>
                 <li><a href="#math">06 // Mathematics</a></li>
+                <li><a href="#stack-ops">07 // Stack Operations</a></li>
             </ul>
 
             <h2>Control & Logic</h2>
             <ul class="sidebar-links">
-                <li><a href="#conditionals">07 // Conditionals</a></li>
-                <li><a href="#loops">08 // Loops (While)</a></li>
-                <li><a href="#functions">09 // Functions & Scoping</a></li>
+                <li><a href="#conditionals">08 // Conditionals</a></li>
+                <li><a href="#loops">09 // Loops (While)</a></li>
+                <li><a href="#functions">10 // Functions & Scoping</a></li>
+            </ul>
+
+            <h2>I/O & Debugging</h2>
+            <ul class="sidebar-links">
+                <li><a href="#io">11 // Input & Output</a></li>
+                <li><a href="#debug">12 // Debug Mode</a></li>
             </ul>
 
             <h2>Resources</h2>
             <ul class="sidebar-links">
-                <li><a href="#opcodes">10 // Opcode Table</a></li>
-                <li><a href="visualizer.html">11 // System Visualizer</a></li>
-                <li><a href="roadmap.html">12 // Roadmap</a></li>
+                <li><a href="#opcodes">13 // Opcode Table</a></li>
+                <li><a href="visualizer.html">14 // System Visualizer</a></li>
+                <li><a href="roadmap.html">15 // Roadmap</a></li>
             </ul>
         </div>
     </aside>
@@ -191,10 +198,54 @@ let int quot = a / b; # 2</code></pre>
             <div class="box">
                 <p>All math is performed on 64-bit integers. Division truncates towards zero.</p>
             </div>
+
+            <h3>Modulo</h3>
+            <p>The <code>%</code> operator gives you the remainder after division:</p>
+            <pre><code>let int a = 17;
+let int b = 5;
+let int r = a % b;  # 2  (17 / 5 = 3 remainder 2)</code></pre>
+
+            <h3>Absolute Value</h3>
+            <p><code>abs(x)</code> strips the sign off a number, always returning a non-negative result:</p>
+            <pre><code>let int x = -42;
+let int y = abs(x);  # 42
+let int z = abs(5);   # 5</code></pre>
+        </section>
+
+        <section id="stack-ops">
+            <span class="lesson-meta">Section 07 // Stack Manipulation</span>
+            <h2>Stack Operations</h2>
+            <p>ELIN gives you direct control over the stack with a handful of low-level instructions. These let you rearrange values without going through variables.</p>
+
+            <h3>Duplicate & Drop</h3>
+            <p><code>dup</code> copies the top value and pushes the copy. <code>drop</code> removes the top value entirely:</p>
+            <pre><code># Stack: [10]
+dup;       # Stack: [10, 10]  — top value doubled
+drop;      # Stack: [10]      — back to one</code></pre>
+
+            <h3>Swap</h3>
+            <p><code>swap</code> exchanges the top two values on the stack:</p>
+            <pre><code># Stack: [10, 20]
+swap;      # Stack: [20, 10]  — positions flipped</code></pre>
+
+            <h3>Negation & Logical Not</h3>
+            <p><code>neg</code> flips the sign of the top value. <code>not</code> turns zero into one, and anything else into zero:</p>
+            <pre><code># Stack: [42]
+neg;       # Stack: [-42]
+not;       # Stack: [0]       — -42 is non-zero, so NOT gives 0
+
+# Stack: [0]
+not;       # Stack: [1]       — zero becomes 1</code></pre>
+
+            <h3>Increment & Decrement</h3>
+            <p><code>inc</code> and <code>dec</code> add or subtract 1 from a variable in a single instruction:</p>
+            <pre><code>let int count = 5;
+inc count;  # count is now 6
+dec count;  # count is now 5</code></pre>
         </section>
 
         <section id="conditionals">
-            <span class="lesson-meta">Section 07 // Conditionals</span>
+            <span class="lesson-meta">Section 08 // Conditionals</span>
             <h2>Decision Making</h2>
             <p>ELIN supports basic branching via <code>if</code> blocks, allowing your script to make choices based on
                 program state.</p>
@@ -209,7 +260,7 @@ end;</code></pre>
         </section>
 
         <section id="loops">
-            <span class="lesson-meta">Section 08 // Loops (While)</span>
+            <span class="lesson-meta">Section 09 // Loops (While)</span>
             <h2>Repetition</h2>
             <p>Use <code>while</code> loops to repeat actions until a condition fails. Combine with conditionals to
                 build complex state machines.</p>
@@ -226,7 +277,7 @@ wend;</code></pre>
         </section>
 
         <section id="functions">
-            <span class="lesson-meta">Section 09 // Functions & Scoping</span>
+            <span class="lesson-meta">Section 10 // Functions & Scoping</span>
             <h2>Functions & Scoping</h2>
             <p>Functions allow you to compartmentalize logic. In ELIN, every function has its own <strong>Private
                     Memory</strong> (a Local Frame). Variables defined inside <code>func</code> stay inside
@@ -245,8 +296,38 @@ print double 5; # Outputs 10</code></pre>
             </div>
         </section>
 
+        <section id="io">
+            <span class="lesson-meta">Section 11 // Input & Output</span>
+            <h2>Reading Input</h2>
+            <p><code>input()</code> reads a number from the keyboard while the program is running and pushes it onto the stack. Use it to make interactive programs:</p>
+            <pre><code>print "Enter a number:";
+let int x = input();
+print "You typed:";
+print x;</code></pre>
+
+            <div class="box box-warning">
+                <p><code>input()</code> blocks until you type a number and press Enter. The VM expects a valid integer — any non-numeric input will cause a runtime error.</p>
+            </div>
+        </section>
+
+        <section id="debug">
+            <span class="lesson-meta">Section 12 // Debugging</span>
+            <h2>Tracing Execution</h2>
+            <p>The VM has a debug mode that prints every instruction as it runs — opcode, stack contents, and call depth. Launch it with the <code>--debug</code> flag:</p>
+            <pre><code>./elin_vm --debug program.outz</code></pre>
+            <p>You can also toggle tracing from inside an ELIN program with <code>trace</code>:</p>
+            <pre><code>trace;    # Turn debug output ON
+let int x = 42;
+print x;
+trace;    # Turn debug output OFF</code></pre>
+
+            <div class="box">
+                <p>This is invaluable when you're trying to understand why the VM produced a wrong result — it's like lifting the hood and watching every gear turn.</p>
+            </div>
+        </section>
+
         <section id="opcodes">
-            <span class="lesson-meta">Section 10 // Opcode Table</span>
+            <span class="lesson-meta">Section 13 // Opcode Table</span>
             <h2>Opcode Specification</h2>
             <p>The following instructions are the raw commands the ELIN Virtual Machine understands. Every high-level
                 command you write is translated into these decimal IDs.</p>
@@ -262,7 +343,7 @@ print double 5; # Outputs 10</code></pre>
                     <tr>
                         <td>1</td>
                         <td>PUSH</td>
-                        <td>Push numeric literal to stack</td>
+                        <td>Push numeric literal to stack (deprecated, use PUSH_CONST)</td>
                     </tr>
                     <tr>
                         <td>2</td>
@@ -275,9 +356,64 @@ print double 5; # Outputs 10</code></pre>
                         <td>Store stack top to global variable</td>
                     </tr>
                     <tr>
+                        <td>4</td>
+                        <td>ADD</td>
+                        <td>Pop two values, push sum</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>SUB</td>
+                        <td>Pop two values, push difference</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>MUL</td>
+                        <td>Pop two values, push product</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>DIV</td>
+                        <td>Pop two values, push quotient</td>
+                    </tr>
+                    <tr>
                         <td>8</td>
                         <td>PRINT</td>
-                        <td>Output value of global variable to console</td>
+                        <td>Pop top of stack and print to console</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>HALT</td>
+                        <td>Stop program execution</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>GT</td>
+                        <td>Pop two values, push 1 if first > second else 0</td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>LT</td>
+                        <td>Pop two values, push 1 if first < second else 0</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>EQ</td>
+                        <td>Pop two values, push 1 if equal else 0</td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>NEQ</td>
+                        <td>Pop two values, push 1 if not equal else 0</td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td>GTE</td>
+                        <td>Pop two values, push 1 if first >= second else 0</td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>LTE</td>
+                        <td>Pop two values, push 1 if first <= second else 0</td>
                     </tr>
                     <tr>
                         <td>16</td>
@@ -300,9 +436,34 @@ print double 5; # Outputs 10</code></pre>
                         <td>Print string from pool reference</td>
                     </tr>
                     <tr>
+                        <td>22</td>
+                        <td>PUSH_CONST</td>
+                        <td>Push constant from pool by index</td>
+                    </tr>
+                    <tr>
                         <td>30</td>
                         <td>MAKE_ARR</td>
                         <td>Create array from stack values</td>
+                    </tr>
+                    <tr>
+                        <td>31</td>
+                        <td>LOAD_ARR</td>
+                        <td>Load element from array by index</td>
+                    </tr>
+                    <tr>
+                        <td>32</td>
+                        <td>STORE_ARR</td>
+                        <td>Store value into array at index</td>
+                    </tr>
+                    <tr>
+                        <td>33</td>
+                        <td>ARR_LEN</td>
+                        <td>Push length of array</td>
+                    </tr>
+                    <tr>
+                        <td>34</td>
+                        <td>PUSH_ARR</td>
+                        <td>Push array from pool by index</td>
                     </tr>
                     <tr>
                         <td>40</td>
@@ -313,6 +474,76 @@ print double 5; # Outputs 10</code></pre>
                         <td>41</td>
                         <td>RET</td>
                         <td>Return value and pop Frame</td>
+                    </tr>
+                    <tr>
+                        <td>42</td>
+                        <td>PUSH_LOCAL</td>
+                        <td>Push local variable from current frame</td>
+                    </tr>
+                    <tr>
+                        <td>43</td>
+                        <td>STORE_LOCAL</td>
+                        <td>Store to local variable in current frame</td>
+                    </tr>
+                    <tr>
+                        <td>55</td>
+                        <td>MOD</td>
+                        <td>Pop two values, push remainder of division</td>
+                    </tr>
+                    <tr>
+                        <td>56</td>
+                        <td>ABS</td>
+                        <td>Pop one value, push its absolute value</td>
+                    </tr>
+                    <tr>
+                        <td>60</td>
+                        <td>DUP</td>
+                        <td>Duplicate the top value on the stack</td>
+                    </tr>
+                    <tr>
+                        <td>61</td>
+                        <td>DROP</td>
+                        <td>Remove the top value from the stack</td>
+                    </tr>
+                    <tr>
+                        <td>62</td>
+                        <td>SWAP</td>
+                        <td>Swap the top two values on the stack</td>
+                    </tr>
+                    <tr>
+                        <td>63</td>
+                        <td>NEG</td>
+                        <td>Negate the top value (flip sign)</td>
+                    </tr>
+                    <tr>
+                        <td>64</td>
+                        <td>NOT</td>
+                        <td>Logical NOT: 1 if top is 0, else 0</td>
+                    </tr>
+                    <tr>
+                        <td>65</td>
+                        <td>NOP</td>
+                        <td>No operation (padding)</td>
+                    </tr>
+                    <tr>
+                        <td>66</td>
+                        <td>INC</td>
+                        <td>Increment variable by 1</td>
+                    </tr>
+                    <tr>
+                        <td>67</td>
+                        <td>DEC</td>
+                        <td>Decrement variable by 1</td>
+                    </tr>
+                    <tr>
+                        <td>68</td>
+                        <td>INPUT</td>
+                        <td>Read integer from stdin and push to stack</td>
+                    </tr>
+                    <tr>
+                        <td>69</td>
+                        <td>TRACE</td>
+                        <td>Toggle debug output on/off</td>
                     </tr>
                 </tbody>
             </table>
@@ -412,7 +643,7 @@ print double 5; # Outputs 10</code></pre>
 
         // Documentation Syntax Highlighting
         const highlight = (code) => {
-            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
+            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print|abs|input|trace|dup|drop|swap|neg|not|inc|dec)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
             return code.replace(regex, (m, p1, p2, p3, p4, p5) => {
                 if (p1) return `<span class="hl-comment">${p1}</span>`;
                 if (p2) return `<span class="hl-string">${p2}</span>`;

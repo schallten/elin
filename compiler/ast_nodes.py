@@ -120,5 +120,10 @@ class AbsNode:
 
 
 @dataclass
+class InputNode:
+    pass
+
+
+@dataclass
 class ReturnNode:
     value: object = None

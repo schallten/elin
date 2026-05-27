@@ -88,7 +88,7 @@ print area radius; # Should output 300</code></pre>
     <script>
         // Syntax Highlighting for the preview
         const highlight = (code) => {
-            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
+            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print|abs|input|trace|dup|drop|swap|neg|not|inc|dec)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
             return code.replace(regex, (m, p1, p2, p3, p4, p5) => {
                 if (p1) return `<span class="hl-comment">${p1}</span>`;
                 if (p2) return `<span class="hl-string">${p2}</span>`;

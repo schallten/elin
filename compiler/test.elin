@@ -1,23 +1,91 @@
-# Minimal ELIN test
+# Comprehensive ELIN v0.3.0 test — all features
+# Tests: MOD, ABS, NEG, NOT, INC, DEC, INPUT, constant folding,
+#        functions, arrays, conditionals, loops, strings
 
-let int a = 6;
-let int b = 3;
+# --- Constant folding (compile-time arithmetic) ---
+let int cf_fold = (2 + 3) * (10 - 4) / 3;    # 5*6/3 = 10
+let int cf_add = 42 + 15;                      # 57
+let int cf_sub = 100 - 30;                     # 70
+let int cf_mul = 7 * 6;                        # 42
+let int cf_div = 81 / 9;                       # 9
+let int cf_mod = 17 % 5;                       # 2
+let int cf_neg = -42;                           # -42
+let int cf_not = !0;                            # 1
+let int cf_cmp = 10 > 5;                        # 1
+print cf_fold;
+print cf_add;
+print cf_sub;
+print cf_mul;
+print cf_div;
+print cf_mod;
+print cf_neg;
+print cf_not;
+print cf_cmp;
 
-func int add int x int y;
-    return x + y;
-end;
-
-let int r = add a b;
+# --- MOD (%) ---
+let int a = 17;
+let int b = 5;
+let int r = a % b;
 print r;
 
-if r > 5;
-    print "big";
+# --- ABS ---
+let int neg = -42;
+let int pos = abs(neg);
+print pos;
+print abs(-1);
+
+# --- NEG (unary -) ---
+let int x = 10;
+let int y = -x;
+print y;
+
+# --- NOT (!) ---
+let int z = 0;
+if !z;
+    print "nonzero";
 else;
-    print "small";
+    print "zero";
 end;
 
-let int i = 0;
-while i < 2;
-    print i;
-    i = i + 1;
+# --- INC (x = x + 1) ---
+let int cnt = 0;
+while cnt < 3;
+    print cnt;
+    cnt = cnt + 1;
 wend;
+
+# --- DEC (x = x - 1) ---
+let int down = 3;
+while down > 0;
+    print down;
+    down = down - 1;
+wend;
+
+# --- Functions ---
+func int double int val;
+    return val * 2;
+end;
+
+print double 21;
+
+# --- Conditionals ---
+let int score = 75;
+if score >= 50;
+    print "pass";
+else;
+    print "fail";
+end;
+
+# --- Arrays ---
+let arr int data = [10, 20, 30];
+print data;
+let int first = data[0];
+print first;
+
+# --- INPUT ---
+print "enter 99:";
+let int val = input();
+print val;
+
+# --- Strings ---
+print "done";

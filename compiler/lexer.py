@@ -61,6 +61,7 @@ def lex(code_string):
                 elif part == "arr": tokens.append(Token("ARR"))
                 elif part == "len": tokens.append(Token("LEN"))
                 elif part == "abs": tokens.append(Token("ABS"))
+                elif part == "input": tokens.append(Token("INPUT"))
                 elif part in ["int", "str"]: tokens.append(Token("TYPE", part))
                 else: tokens.append(Token("IDENTIFIER", part))
                 continue

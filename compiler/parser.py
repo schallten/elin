@@ -61,7 +61,7 @@ def parse_statements(tokens, pos, root=False):
               and peek(tokens, pos + 1).type == "EQUALS"):
             node, pos = parse_reassign(tokens, pos)
             stmts.append(node)
-        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN", "ABS"):
+        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN", "ABS", "INPUT"):
             node, pos = parse_expression(tokens, pos)
             stmts.append(node)
         elif tok.type in ("COMMA", "RPAREN", "RBRACKET"):
@@ -258,6 +258,13 @@ def parse_primary(tokens, pos):
         if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
             pos += 1
         return AbsNode(value=expr), pos
+    if tok.type == "INPUT":
+        pos += 1
+        if peek(tokens, pos) and peek(tokens, pos).type == "LPAREN":
+            pos += 1
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return InputNode(), pos
     raise Exception(f"Unexpected token in expression: {tok.type}")
 
 

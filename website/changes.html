@@ -26,6 +26,123 @@
 
     <main class="landing-content">
         <header style="margin-bottom: 60px; text-align: center;">
+            <span class="lesson-meta">Update Log // v0.3.0</span>
+            <h1 style="font-size: 3rem; letter-spacing: -1px;">Core VM Complete</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem; max-width: 700px; margin: 20px auto;">
+                ELIN's brain got a lot smarter. Every piece of the plan for the core virtual machine is done — more instructions, leaner files, a cleaner compiler, and a debug mode so you can finally see what's happening inside.
+            </p>
+        </header>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <p>
+                When v0.2.0 came out, ELIN worked — but it was rough. The instruction set had gaps, the bytecode was chunky, and the compiler's code was tangled up in hard-to-follow class structures. Over the last few versions we chipped away at all of it. Here's the full picture of what changed.
+            </p>
+        </section>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>More tools for the VM</h3>
+            <p>
+                Think of the VM as a tiny factory with a conveyor belt (the stack). When v0.2.0 shipped, the factory could only do basic math, load and store values, and jump around. Now it can do much more:
+            </p>
+            <p>
+                <strong>Stack tools</strong> — <code>DUP</code> copies the top item, <code>DROP</code> throws it away, <code>SWAP</code> switches the top two. These let you rearrange values without going through memory. <strong>Negation and logic</strong> — <code>NEG</code> flips a number's sign, <code>NOT</code> turns zero into one and anything else into zero. <strong>Compact counters</strong> — <code>INC</code> and <code>DEC</code> add or subtract one from a variable in a single instruction. <strong>Input</strong> — <code>INPUT</code> reads a number you type and puts it on the stack. <strong>Modulo and absolute value</strong> — <code>MOD</code> gives you the remainder of a division, <code>ABS</code> strips the sign off a number. <strong>Debug mode</strong> — <code>TRACE</code> makes the VM print every single step it takes.
+            </p>
+        </section>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>Bytecode files got a header</h3>
+            <p>
+                Every <code>.outz</code> file now starts with a header that says which version of the format it uses and how many items are in each pool. The VM checks this header before running anything — so if the format changes in the future, it will give you a clear error instead of crashing on garbage. We also shrank the bytecode by storing each number only once in a <strong>constant pool</strong> and referencing it by index, rather than writing out the full number every time.
+            </p>
+        </section>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>A cleaner compiler</h3>
+            <p>
+                The compiler used to be built with classes — groups of related data and functions glued together by <code>self</code>. This made the code hard to follow because you never knew which function was changing which piece of data. Every class was torn out and replaced with plain functions that take their inputs as parameters and return their outputs directly. Now <code>parse(tokens, position)</code> gives you back a syntax tree and a new position. <code>check(tree, environment)</code> gives you back an updated environment. <code>generate(tree, state)</code> gives you back updated state. Every step is a simple <em>data in → data out</em> transformation, which makes the compiler easier to read, easier to test, and straightforward to rewrite in another language if we ever want to.
+            </p>
+            <p>
+                The compiler also learned to do math <em>at compile time</em>. If you write <code>42 + 15</code>, it works out the answer (57) while building the bytecode and just writes <code>PUSH_CONST 57</code>. The same goes for nested expressions like <code>(2 + 3) * (10 - 4) / 3</code> — the whole thing folds down to a single number. The VM never has to do arithmetic it doesn't need to.
+            </p>
+        </section>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>You can watch the VM work</h3>
+            <p>
+                Run the VM with <code>--debug</code> and it prints every instruction it runs, the current stack contents, and how deep it is in function calls. It's like lifting the hood and watching the engine run. You can also toggle this at runtime with the <code>TRACE</code> instruction from within an ELIN program. Finally — no more blind debugging.
+            </p>
+        </section>
+
+        <div style="text-align: center; margin-top: 100px; border-top: 1px solid var(--border); padding-top: 40px;">
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">— End of v0.3.0 changelog —</span>
+        </div>
+
+        <header style="margin-top: 100px; margin-bottom: 60px; text-align: center;">
+            <span class="lesson-meta">Update Log // v0.2.2 – v0.2.6</span>
+            <h1 style="font-size: 3rem; letter-spacing: -1px;">Fleshing Out the VM</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem; max-width: 700px; margin: 20px auto;">
+                A handful of smaller releases that filled in the gaps — more instructions, a versioned file format, a smarter output, and a compiler that's both cleaner and faster.
+            </p>
+        </header>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>New operations (v0.2.2 – v0.2.4)</h3>
+            <p>
+                We rounded out the VM's vocabulary. You can now use <code>%</code> to get the remainder of a division, <code>abs(x)</code> to strip the sign off a number, and <code>input()</code> to read values from the keyboard while a program is running. Stack manipulation got three new friends: <code>DUP</code> (copy the top value), <code>DROP</code> (discard the top value), and <code>SWAP</code> (swap the top two). Unary operators <code>NEG</code> (negate) and <code>NOT</code> (logical not) were added alongside compact increment and decrement instructions. A <code>TRACE</code> instruction toggles debug output at runtime — every opcode, stack state, and frame depth gets printed so you can see exactly what the VM is doing.
+            </p>
+        </section>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>Versioned bytecode (v0.2.5)</h3>
+            <p>
+                The <code>.outz</code> format now starts with a <code>VERSION 1</code> header followed by counts for each pool (constants, strings, arrays). The VM checks this header on load and pre-allocates space. If the format ever changes, the VM will tell you instead of crashing on garbage data. We also introduced a <strong>constant pool</strong> — each unique number is stored once and referenced by index, which cut bytecode size by about 60% on constant-heavy programs.
+            </p>
+        </section>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>Compiler overhaul (v0.2.6)</h3>
+            <p>
+                The compiler was rewritten from the ground up. Every class (TypeChecker, Compiler, etc.) was replaced with plain functions that take inputs and return outputs — no hidden state, no tangled <code>self</code>. Dozens of <code>isinstance</code> checks became clean <code>match/case</code> patterns. The compiler also learned <strong>constant folding</strong>: <code>42 + 15</code> is computed at compile time and emits <code>PUSH_CONST 57</code> instead of three separate instructions.
+            </p>
+        </section>
+
+        <section class="code-preview" style="margin-top: 100px; padding: 40px; border-color: var(--accent);">
+            <h2 style="text-align: left; font-family: monospace; color: var(--accent);">[ TECHNICAL_DEEP_DIVE ]</h2>
+            
+            <div style="margin-top: 30px;">
+                <h4 style="color: #fff; font-family: monospace;">// Opcode assignments</h4>
+                <p style="font-size: 0.9rem; color: var(--fg);">
+                    MOD=55, ABS=56 (math slot), DUP=60, DROP=61, SWAP=62 (stack slot), NEG=63, NOT=64 (unary slot), NOP=65 (padding), INC=66, DEC=67 (counter slot), INPUT=68, TRACE=69 (I/O slot). Every opcode has a handler in <code>main.cpp</code> and a constant in <code>ops.py</code>.
+                </p>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h4 style="color: #fff; font-family: monospace;">// Versioned .outz format</h4>
+                <p style="font-size: 0.9rem; color: var(--fg);">
+                    Header: <code>VERSION 1</code>, <code>CONST_COUNT N</code>, <code>STR_COUNT N</code>, <code>ARR_COUNT N</code>. The VM parser reads these lines, validates the version, reserves vector capacity, then loads pool entries. Backward-incompatible changes in future versions will be caught before bytecode execution begins.
+                </p>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h4 style="color: #fff; font-family: monospace;">// Class-to-function refactor</h4>
+                <p style="font-size: 0.9rem; color: var(--fg);">
+                    60+ methods across <code>TypeChecker</code> and <code>Compiler</code> classes → 20 module-level functions. All state (env dict, compilation dict) is threaded explicitly. <code>isinstance</code> dispatch replaced with Python 3.10 <code>match/case</code> (~50 branches across <code>infer_type</code>, <code>check</code>, <code>generate</code>). The <code>Node</code> base class was deleted; every node is a plain <code>@dataclass</code> with zero methods.
+                </p>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h4 style="color: #fff; font-family: monospace;">// Constant folding</h4>
+                <p style="font-size: 0.9rem; color: var(--fg);">
+                    <code>generate</code> folds <code>BinaryOpNode</code>, <code>UnaryOpNode</code>, and <code>ConditionNode</code> when both operands are <code>ConstNode</code>. Nested trees are folded recursively via post-order traversal. The <code>fold_test.elin</code> suite verifies arithmetic, comparison, unary, and deep-nest folding.
+                </p>
+            </div>
+        </section>
+
+        <div style="text-align: center; margin-top: 100px; border-top: 1px solid var(--border); padding-top: 40px;">
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">— End of v0.2.2 – v0.2.6 changelog —</span>
+        </div>
+
+        <header style="margin-top: 100px; margin-bottom: 60px; text-align: center;">
             <span class="lesson-meta">Update Log // v0.2.1</span>
             <h1 style="font-size: 3rem; letter-spacing: -1px;">A Smarter Brain for ELIN</h1>
             <p style="color: var(--text-secondary); font-size: 1.1rem; max-width: 700px; margin: 20px auto;">
@@ -95,21 +212,21 @@ let int result = (10 + 5) * (20 - 5);</code></pre>
         </section>
 
         <div style="text-align: center; margin-top: 100px; border-top: 1px solid var(--border); padding-top: 40px;">
-            <a href="docs.html" class="btn">Learn how to use v0.2.1</a>
+            <a href="docs.html" class="btn">Learn how to use v0.3.0</a>
         </div>
     </main>
 
     <footer style="padding: 60px 10%; border-top: 1px solid var(--border); margin-top: 100px; font-family: monospace; font-size: 0.8rem; color: #666;">
         <div style="display: flex; justify-content: space-between;">
             <div>ELIN_CORE // 2026</div>
-            <div>STABLE v0.2.1</div>
+            <div>STABLE v0.3.0</div>
         </div>
     </footer>
 
     <script>
         // Syntax Highlighting for the preview
         const highlight = (code) => {
-            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
+            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print|abs|input|trace|dup|drop|swap|neg|not|inc|dec)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
             return code.replace(regex, (m, p1, p2, p3, p4, p5) => {
                 if (p1) return `<span class="hl-comment">${p1}</span>`;
                 if (p2) return `<span class="hl-string">${p2}</span>`;
