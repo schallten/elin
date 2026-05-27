@@ -219,6 +219,20 @@ HALT</code></pre>
             <p>Dependencies are just <code>.elin</code> files with their own <code>elin.json</code>. No registry server — git URLs or local paths. This also serves as a prototype for Loom so we can figure out what it really needs before writing it in C++ for ESP.</p>
         </section>
 
+        <section id="gleam-port">
+            <span class="lesson-meta">Compiler // Item —</span>
+            <h2>Port the compiler to Gleam</h2>
+            <p>
+                The Python compiler was deliberately written without classes — just pure functions taking data in and returning data out — so it could be ported to another language. We're moving it to <strong>Gleam</strong>, a type-safe functional language with algebraic data types and exhaustive pattern matching.
+            </p>
+            <p>
+                This isn't just cosmetic. Our 17 <code>@dataclass</code> AST nodes become a single <code>type Expr</code> with variants. Every <code>isinstance</code> check in Python becomes a compile-time exhaustiveness check in Gleam — if we add a new AST node and forget to handle it in a <code>case</code>, the compiler refuses to build. Our manual state threading (<code>state = generate(x, state); state = generate(y, state)</code>) collapses into clean pipelines (<code>state |&gt; generate(x) |&gt; generate(y)</code>). The whole codebase shrinks by roughly 40%.
+            </p>
+            <p>
+                More importantly, a cleaner compiler is easier to port to ELIN itself for v0.5.0. If the Python compiler was already a stepping stone to self-hosting, the Gleam version is a sturdier one — fewer bugs, smaller surface area, and a type system that catches mismatches before runtime.
+            </p>
+        </section>
+
         <div class="version-header">
             <span class="version-badge v050">v0.5.0</span>
             <h2>Self-Hosting — The Turning Point</h2>
