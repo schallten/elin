@@ -67,7 +67,7 @@ def parse_statements(tokens, pos, root=False):
               and peek(tokens, pos + 1).type == "EQUALS"):
             node, pos = parse_reassign(tokens, pos)
             stmts.append(node)
-        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN", "ABS", "INPUT", "READ", "STRLEN", "STRCAT", "SUBSTR", "STRCMP"):
+        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN", "ABS", "INPUT", "READ", "STRLEN", "STRCAT", "SUBSTR", "STRCMP", "TIME", "DELAY", "RTC_READ", "RTC_WRITE", "FOPEN", "FREAD", "FWRITE", "FCLOSE"):
             node, pos = parse_expression(tokens, pos)
             stmts.append(node)
         elif tok.type in ("COMMA", "RPAREN", "RBRACKET"):
@@ -329,6 +329,65 @@ def parse_primary(tokens, pos):
         if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
             pos += 1
         return StrCmpNode(left=left, right=right), pos
+    if tok.type == "TIME":
+        pos += 1
+        if peek(tokens, pos) and peek(tokens, pos).type == "LPAREN":
+            pos += 1
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return TimeNode(), pos
+    if tok.type == "DELAY":
+        pos += 1
+        pos += 1 # LPAREN
+        expr, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return DelayNode(value=expr), pos
+    if tok.type == "RTC_READ":
+        pos += 1
+        if peek(tokens, pos) and peek(tokens, pos).type == "LPAREN":
+            pos += 1
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return RtcReadNode(), pos
+    if tok.type == "RTC_WRITE":
+        pos += 1
+        pos += 1 # LPAREN
+        expr, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return RtcWriteNode(value=expr), pos
+    if tok.type == "FOPEN":
+        pos += 1
+        pos += 1
+        path, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return FopenNode(path=path), pos
+    if tok.type == "FREAD":
+        pos += 1
+        pos += 1
+        fd, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return FreadNode(fd=fd), pos
+    if tok.type == "FWRITE":
+        pos += 1
+        pos += 1
+        fd, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
+            pos += 1
+        string_expr, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return FwriteNode(fd=fd, string=string_expr), pos
+    if tok.type == "FCLOSE":
+        pos += 1
+        pos += 1
+        fd, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return FcloseNode(fd=fd), pos
     raise Exception(f"Unexpected token in expression: {tok.type}")
 
 

@@ -28,7 +28,7 @@ Accessible via `strlen()`, `strcat()`, `substr()`, `strcmp()` in source. String 
 
 ---
 
-### Item 14 — File I/O
+### Item 14 — File I/O ✅
 Four opcodes wrapping C stdio / LittleFS:
 - **FOPEN (76)** — open file by path string, push fd
 - **FREAD (77)** — read from fd into string handle
@@ -39,7 +39,7 @@ File handles are integer descriptors into a VM-internal table.
 
 ---
 
-### Item 15 — Time
+### Item 15 — Time ✅
 Four opcodes for real-time programs:
 - **TIME (80)** — push ms since boot
 - **DELAY (81)** — block for N ms

@@ -86,13 +86,13 @@
         </section>
 
         <section id="v14">
-            <span class="lesson-meta">Libraries // Item 14</span>
+            <span class="lesson-meta">Libraries // Item 14 <span style="color: #4ade80;">✓ Done</span></span>
             <h2>File I/O library</h2>
             <p>Four opcodes: <strong>FOPEN (76)</strong>, <strong>FREAD (77)</strong>, <strong>FWRITE (78)</strong>, <strong>FCLOSE (79)</strong>. On PC they wrap the C stdio API; on ESP they wrap LittleFS. Same API surface, different backend. File handles are integer descriptors into a fixed-size table we maintain inside the VM.</p>
         </section>
 
         <section id="v15">
-            <span class="lesson-meta">Libraries // Item 15</span>
+            <span class="lesson-meta">Libraries // Item 15 <span style="color: #4ade80;">✓ Done</span></span>
             <h2>Time library</h2>
             <p>We need four opcodes for anything real-time: <strong>TIME (80)</strong> pushes milliseconds since boot (<code>std::chrono</code> on PC, <code>millis()</code> on ESP); <strong>DELAY (81)</strong> blocks for N ms; <strong>RTC_READ (82)</strong> and <strong>RTC_WRITE (83)</strong> access ESP RTC memory (no-op on PC). Every nontrivial program we write needs at least <code>TIME</code> and <code>DELAY</code>.</p>
         </section>
@@ -235,6 +235,12 @@ HALT</code></pre>
         <div id="syntax" style="margin-top: 80px; padding-top: 40px; border-top: 1px solid var(--border);">
             <span class="lesson-meta">Future // Language Design</span>
             <h2>Syntax Evolution — Toward Professional Readability</h2>
+            
+            <div style="background: var(--surface); padding: 15px 20px; border-radius: 6px; border-left: 4px solid var(--accent); margin-bottom: 30px;">
+                <strong>TL;DR:</strong> We are transitioning ELIN into a "calm systems language"—procedural, data-oriented, and non-OOP. The upcoming syntax revision will replace keyword-heavy noise with minimal, C-style braces, enforcing explicit control flow, flat architectures, and a single unified declaration style. The goal is code that is readable at a glance, easy to parse, and simple to debug.
+            </div>
+
+            <h3>The Motivation</h3>
             <p>
                 The current syntax was built incrementally as the VM grew, and it shows. Semicolons as statement terminators,
                 <code>wend</code> to close <code>while</code>, <code>end</code> to close every block — these were expedient
@@ -247,43 +253,93 @@ HALT</code></pre>
                 their head.
             </p>
 
-            <h3>What that means in practice</h3>
+            <h3>What Will Need to Change</h3>
+            <p>To achieve our goals, we will fundamentally restructure how programs are written in ELIN:</p>
             <ul style="margin-left: 20px; margin-top: 15px; line-height: 2;">
                 <li>
-                    <strong>Braces over keywords.</strong> Replacing <code>if ... end</code> and <code>while ... wend</code>
-                    with <code>{ }</code> blocks. Keyword-delimited blocks require the reader to match an opening
-                    keyword against a closing one that may be dozens of lines away — a cognitive tax that grows with
-                    nesting depth. Braces give an immediate visual boundary anchored at both ends, letting the eye see
-                    the shape of control flow in a single glance. This is the difference between prose and blueprint.
+                    <strong>No Classes or Methods.</strong> We separate data and behavior entirely. We will use structs, enums, unions, procedures, and modules. Instead of calling methods like <code>player.move(dir)</code>, we will write procedures like <code>player_move(player, dir)</code>. This keeps logic isolated, APIs flat, and architecture simpler.
                 </li>
                 <li>
-                    <strong>Explicit error paths.</strong> If a function can fail, the caller must acknowledge it at the
-                    call site — no silently ignored error codes, no exceptions unwinding through frames the caller
-                    never inspected. The failure mode is part of the function's signature, not a footnote. This keeps
-                    error handling linear and local: you see it where it happens, not three function calls up the stack
-                    in a catch block that might as well be in another file.
+                    <strong>Unified Declaration Style.</strong> We will adopt one consistent style everywhere: <code>name: Type</code> for declarations and <code>value := expression</code> for inference.
                 </li>
                 <li>
-                    <strong>Signature-sufficient semantics.</strong> A function declaration should tell you everything
-                    you need to know about what goes in, what comes out, and what side effects to expect — no implicit
-                    references, no hidden mutation, no surprising ownership transfers. The caller should be able to
-                    reason about a function's behaviour from its type alone, without consulting its implementation.
-                    This is especially important as the codebase grows beyond a handful of files.
+                    <strong>Visually Calm Syntax.</strong> We will replace semicolon spam, keyword-delimited blocks (<code>if ... end</code>, <code>while ... wend</code>), and excessive punctuation with clean <code>{ }</code> blocks. Conditions will be written without unnecessary parentheses (e.g., <code>if x > 10 { }</code>).
                 </li>
                 <li>
-                    <strong>Minimal implicit behaviour.</strong> No automatic type coercion, no implicit truthiness
-                    beyond integer-as-boolean, and no operators that secretly invoke user-defined logic. What you
-                    read is what the compiler sees; there is no hidden dispatch layer translating ordinary-looking
-                    expressions into something the programmer did not write.
+                    <strong>Explicitness over Cleverness.</strong> Control flow and error paths must be obvious and readable top-to-bottom. We will avoid hidden allocations, magic iterators, implicit type coercion, decorators, and chained calls. 
+                </li>
+                <li>
+                    <strong>Tagged Unions + Match.</strong> Instead of inheritance, subclass hierarchies, or virtual methods, we will use explicit tagged unions and <code>match</code> statements to handle variants safely.
                 </li>
             </ul>
 
-            <p style="margin-top: 20px;">
-                This revision is not yet scheduled to a specific version. It will be informed by the self-hosting
-                compiler effort — nothing reveals syntax friction faster than writing a compiler in the language
-                itself. The immediate focus remains items 14–21 (libraries and tooling), but the syntax redesign
-                is the next major language-level project after the ecosystem stabilises.
+            <h3>How We Will Achieve This</h3>
+            <p>
+                This revision will be informed directly by our self-hosting compiler effort (Item 22). Nothing reveals syntax friction faster than writing a compiler in the language itself. We will incrementally introduce the new parser alongside the old one, migrating the standard library and existing tools (like <code>elin-asm</code> and <code>elin-pkg</code>) to the new syntax. 
             </p>
+            <p>
+                The immediate focus remains items 14–21 (libraries and tooling), but the syntax redesign is the next major language-level project after the ecosystem stabilises.
+            </p>
+
+            <h3>Code Comparison: Binary Search</h3>
+            <p>To illustrate the difference, here is what a standard binary search looks like in our current syntax compared to our target future syntax.</p>
+            
+            <h4>Current Syntax</h4>
+            <pre><code>func int binary_search arr int data int size int target;
+    let int low = 0;
+    let int high = size - 1;
+    
+    while low <= high;
+        let int mid = (low + high) / 2;
+        let int val = data[mid];
+        
+        if val == target;
+            return mid;
+        end;
+        
+        if val < target;
+            low = mid + 1;
+        else;
+            high = mid - 1;
+        end;
+    wend;
+    
+    return -1;
+end;</code></pre>
+
+            <h4 style="margin-top: 30px;">Future Syntax</h4>
+            <p style="margin-bottom: 10px;">Notice how the code shape is recognizable, readable top-to-bottom, and mentally easy to parse:</p>
+            <pre><code>package main
+
+import "core:io"
+
+binary_search :: proc(arr: []int, target: int) -> int {
+    left := 0
+    right := len(arr) - 1
+
+    for left <= right {
+        mid := (left + right) / 2
+        value := arr[mid]
+
+        if value == target {
+            return mid
+        }
+
+        if value < target {
+            left = mid + 1
+        } else {
+            right = mid - 1
+        }
+    }
+
+    return -1
+}
+
+main :: proc() {
+    nums := []int{1, 3, 5, 7, 9, 11, 13}
+    index := binary_search(nums, 7)
+    io.println(index)
+}</code></pre>
         </div>
 
         <div class="nav-buttons" style="margin-top: 60px;">

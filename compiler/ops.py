@@ -89,6 +89,18 @@ STRCAT = 73 # Concatenate two string handles, push new handle
 SUBSTR = 74 # Extract substring by handle, offset, length, push new handle
 STRCMP = 75 # Compare two string handles, push -1/0/1
 
+# --- File I/O Operations Library (Item 14) ---
+FOPEN = 76  # Open file by path string, push fd
+FREAD = 77  # Read from fd into string handle
+FWRITE = 78 # Write string handle to fd
+FCLOSE = 79 # Close fd
+
+# --- Time Operations Library (Item 15) ---
+TIME = 80 # Push ms since boot
+DELAY = 81 # Block for N ms
+RTC_READ = 82 # Read ESP RTC memory (no-op on PC)
+RTC_WRITE = 83 # Write ESP RTC memory (no-op on PC)
+
 # --- Mappings ---
 # These dictionaries help the compiler convert text like '+' or '==' into the numbers above.
 

@@ -27,9 +27,9 @@
     <main class="landing-content">
         <header style="margin-bottom: 60px; text-align: center;">
             <span class="lesson-meta">Update Log // v0.4.0</span>
-            <h1 style="font-size: 3rem; letter-spacing: -1px;">Standard Library Arrives</h1>
+            <h1 style="font-size: 3rem; letter-spacing: -1px;">Standard Library & OS Features</h1>
             <p style="color: var(--text-secondary); font-size: 1.1rem; max-width: 700px; margin: 20px auto;">
-                ELIN grows its standard library. Items 12 and 13 from the roadmap are now implemented: Standard I/O and String Operations. You can read input, write output without newlines, and manipulate strings at runtime.
+                ELIN grows its standard library. Items 12, 13, 14, and 15 from the roadmap are now implemented: Standard I/O, String Operations, File I/O, and Time. You can read input, write files, manipulate strings at runtime, and handle millisecond-precision timing.
             </p>
         </header>
 
@@ -60,9 +60,30 @@ print strlen(msg);       " 11
 print substr(msg, 0, 5); " hello
 print strcmp("a", "b");  " -1</code></pre>
             </div>
-            <p style="margin-top: 15px;">
-                The string pool grows at runtime to accommodate <code>strcat</code> and <code>substr</code> results. Bounds checking prevents out-of-range reads in <code>substr</code>.
+        </section>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>File I/O — fopen, fread, fwrite, fclose</h3>
+            <p>
+                Four opcodes for persistent storage: <strong>FOPEN (76)</strong> opens a file and pushes a handle; <strong>FREAD (77)</strong> reads a line into a string handle; <strong>FWRITE (78)</strong> writes a string handle to a file; <strong>FCLOSE (79)</strong> closes the file.
             </p>
+            <div class="code-preview" style="margin-top: 15px; padding: 15px;">
+                <pre><code>let int fd = fopen("data.txt");
+fwrite(fd, "hello file");
+fclose(fd);</code></pre>
+            </div>
+        </section>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>Time & RTC — time, delay, rtc_read/write</h3>
+            <p>
+                Four opcodes for timing: <strong>TIME (80)</strong> pushes ms since boot; <strong>DELAY (81)</strong> blocks for N ms; <strong>RTC_READ (82)</strong> and <strong>RTC_WRITE (83)</strong> for non-volatile storage on ESP (no-op on PC).
+            </p>
+            <div class="code-preview" style="margin-top: 15px; padding: 15px;">
+                <pre><code>let int now = time();
+delay(500);
+print time() - now; # ~500</code></pre>
+            </div>
         </section>
 
         <section class="code-preview" style="margin-top: 60px; margin-bottom: 80px; padding: 40px; border-color: var(--accent);">
@@ -71,7 +92,7 @@ print strcmp("a", "b");  " -1</code></pre>
             <div style="margin-top: 30px;">
                 <h4 style="color: #fff; font-family: monospace;">// Opcode allocations</h4>
                 <p style="font-size: 0.9rem; color: var(--fg);">
-                    READ=69, WRITE=70, FLUSH=71 (Standard I/O slot), STRLEN=72, STRCAT=73, SUBSTR=74, STRCMP=75 (String ops slot). TRACE was moved to 90 to make room. String pool uses <code>push_back</code> for runtime growth; <code>substr</code> clamps offset and length to string bounds. The compiler adds <code>read()</code>, <code>write</code>, <code>flush</code>, <code>strlen()</code>, <code>strcat()</code>, <code>substr()</code>, <code>strcmp()</code> as keyword primaries in the parser.
+                    READ=69, WRITE=70, FLUSH=71 (Standard I/O), STRLEN=72, STRCAT=73, SUBSTR=74, STRCMP=75 (String ops), FOPEN=76, FREAD=77, FWRITE=78, FCLOSE=79 (File I/O), TIME=80, DELAY=81, RTC_READ=82, RTC_WRITE=83 (Time). TRACE was moved to 90.
                 </p>
             </div>
         </section>

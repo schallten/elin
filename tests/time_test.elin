@@ -1,0 +1,17 @@
+let int start = time();
+print start;
+
+print "Delaying for 200ms...";
+delay(200);
+
+let int end_time = time();
+print end_time;
+
+let int elapsed = end_time - start;
+print "Elapsed ms:";
+print elapsed;
+
+print "Testing RTC (should do nothing on PC):";
+rtc_write(42);
+let int val = rtc_read();
+print val;

@@ -136,8 +136,8 @@ function parseSource(source) {
 
         if (opcode === 1) { // PUSH
             instruction.args = [tokens.length >= 5 ? BigInt(tokens[4]) : 0n];
-        } else if ([2, 3, 8, 16, 17, 18, 20, 21, 30, 31, 32, 33, 34, 40, 41, 42, 43].includes(opcode)) {
-            // Updated to handle all new opcodes
+        } else if ([2, 3, 8, 16, 17, 18, 20, 21, 30, 31, 32, 33, 34, 40, 41, 42, 43, 66, 67].includes(opcode)) {
+            // Updated to handle all opcodes with operands
             instruction.args = tokens.slice(1).map(t => parseInt(t, 10));
         }
 
@@ -218,6 +218,32 @@ function getExplanation(instr) {
         case 41: return `<strong>RET</strong> Pop frame and return with top stack value.`;
         case 42: return `<strong>LOAD_LOCAL</strong> Retrieve local variable Index ${instr.args[0]}.`;
         case 43: return `<strong>STORE_LOCAL</strong> Save value to local variable Index ${instr.args[0]}.`;
+        case 55: return `<strong>MOD</strong> Pop b, pop a, push a % b.`;
+        case 56: return `<strong>ABS</strong> Pop value, push its absolute value.`;
+        case 60: return `<strong>DUP</strong> Duplicate the top value on the stack.`;
+        case 61: return `<strong>DROP</strong> Discard the top value on the stack.`;
+        case 62: return `<strong>SWAP</strong> Exchange the top two stack values.`;
+        case 63: return `<strong>NEG</strong> Negate the top value (a -> -a).`;
+        case 64: return `<strong>NOT</strong> Logical NOT (0 -> 1, else 0).`;
+        case 66: return `<strong>INC</strong> Increment variable Index ${instr.args[0]} by 1.`;
+        case 67: return `<strong>DEC</strong> Decrement variable Index ${instr.args[0]} by 1.`;
+        case 68: return `<strong>INPUT</strong> Read integer from stdin.`;
+        case 69: return `<strong>READ</strong> Read line to string pool.`;
+        case 70: return `<strong>WRITE</strong> Print string handle without newline.`;
+        case 71: return `<strong>FLUSH</strong> Flush stdout.`;
+        case 72: return `<strong>STRLEN</strong> Push length of string handle.`;
+        case 73: return `<strong>STRCAT</strong> Concatenate two string handles.`;
+        case 74: return `<strong>SUBSTR</strong> Extract substring from handle.`;
+        case 75: return `<strong>STRCMP</strong> Compare two string handles.`;
+        case 76: return `<strong>FOPEN</strong> Open file, push fd.`;
+        case 77: return `<strong>FREAD</strong> Read line from fd.`;
+        case 78: return `<strong>FWRITE</strong> Write string to fd.`;
+        case 79: return `<strong>FCLOSE</strong> Close fd.`;
+        case 80: return `<strong>TIME</strong> Push ms since boot.`;
+        case 81: return `<strong>DELAY</strong> Sleep for N ms.`;
+        case 82: return `<strong>RTC_READ</strong> Read RTC memory.`;
+        case 83: return `<strong>RTC_WRITE</strong> Write RTC memory.`;
+        case 90: return `<strong>TRACE</strong> Toggle debug trace mode.`;
         default: return `<strong>OP ${instr.op}</strong> Executing internal instruction.`;
     }
 }
@@ -340,6 +366,156 @@ function step() {
                 const valSt = state.stack.pop();
                 state.callStack[curFrameIdxSt].locals[instr.args[0]] = valSt;
             }
+            break;
+        case 55: { // MOD
+            const b = state.stack.pop();
+            const a = state.stack.pop();
+            state.stack.push(b !== 0n ? a % b : 0n);
+            highlightStack = true;
+            break;
+        }
+        case 56: { // ABS
+            const a = state.stack.pop();
+            state.stack.push(a < 0n ? -a : a);
+            highlightStack = true;
+            break;
+        }
+        case 60: { // DUP
+            const val = state.stack[state.stack.length - 1];
+            state.stack.push(val !== undefined ? val : 0n);
+            highlightStack = true;
+            break;
+        }
+        case 61: // DROP
+            state.stack.pop();
+            break;
+        case 62: { // SWAP
+            const a = state.stack.pop();
+            const b = state.stack.pop();
+            state.stack.push(a);
+            state.stack.push(b);
+            highlightStack = true;
+            break;
+        }
+        case 63: { // NEG
+            const a = state.stack.pop();
+            state.stack.push(-a);
+            highlightStack = true;
+            break;
+        }
+        case 64: { // NOT
+            const a = state.stack.pop();
+            state.stack.push(a === 0n ? 1n : 0n);
+            highlightStack = true;
+            break;
+        }
+        case 66: { // INC
+            const idx = instr.args[0];
+            const v = state.vars[idx];
+            state.vars[idx] = { value: (v ? v.value : 0n) + 1n, isString: false };
+            break;
+        }
+        case 67: { // DEC
+            const idx = instr.args[0];
+            const v = state.vars[idx];
+            state.vars[idx] = { value: (v ? v.value : 0n) - 1n, isString: false };
+            break;
+        }
+        case 68: { // INPUT
+            const val = prompt("Enter an integer:");
+            state.stack.push(BigInt(val || 0));
+            highlightStack = true;
+            break;
+        }
+        case 69: { // READ
+            const val = prompt("Enter a string:");
+            const idx = Object.keys(state.stringPool).length;
+            state.stringPool[idx] = val || "";
+            state.stack.push(BigInt(idx));
+            highlightStack = true;
+            break;
+        }
+        case 70: { // WRITE
+            const sIdx = Number(state.stack.pop());
+            state.output.push(state.stringPool[sIdx] || "");
+            break;
+        }
+        case 71: // FLUSH (no-op in browser console output usually)
+            break;
+        case 72: { // STRLEN
+            const sIdx = Number(state.stack.pop());
+            const s = state.stringPool[sIdx] || "";
+            state.stack.push(BigInt(s.length));
+            highlightStack = true;
+            break;
+        }
+        case 73: { // STRCAT
+            const bIdx = Number(state.stack.pop());
+            const aIdx = Number(state.stack.pop());
+            const sA = state.stringPool[aIdx] || "";
+            const sB = state.stringPool[bIdx] || "";
+            const newIdx = Object.keys(state.stringPool).length;
+            state.stringPool[newIdx] = sA + sB;
+            state.stack.push(BigInt(newIdx));
+            highlightStack = true;
+            break;
+        }
+        case 74: { // SUBSTR
+            const len = Number(state.stack.pop());
+            const off = Number(state.stack.pop());
+            const sIdx = Number(state.stack.pop());
+            const s = state.stringPool[sIdx] || "";
+            const sub = s.substring(off, off + len);
+            const newIdx = Object.keys(state.stringPool).length;
+            state.stringPool[newIdx] = sub;
+            state.stack.push(BigInt(newIdx));
+            highlightStack = true;
+            break;
+        }
+        case 75: { // STRCMP
+            const bIdx = Number(state.stack.pop());
+            const aIdx = Number(state.stack.pop());
+            const sA = state.stringPool[aIdx] || "";
+            const sB = state.stringPool[bIdx] || "";
+            let res = 0n;
+            if (sA < sB) res = -1n;
+            else if (sA > sB) res = 1n;
+            state.stack.push(res);
+            highlightStack = true;
+            break;
+        }
+        case 76: // FOPEN (stub)
+            state.stack.pop(); // pop path
+            state.stack.push(0n); // push fd 0
+            highlightStack = true;
+            break;
+        case 77: // FREAD (stub)
+            state.stack.pop(); // pop fd
+            state.stack.push(0n); // push empty handle
+            highlightStack = true;
+            break;
+        case 78: // FWRITE (stub)
+            state.stack.pop(); // pop fd
+            state.stack.pop(); // pop string
+            break;
+        case 79: // FCLOSE (stub)
+            state.stack.pop(); // pop fd
+            break;
+        case 80: // TIME
+            state.stack.push(BigInt(Date.now()));
+            highlightStack = true;
+            break;
+        case 81: // DELAY (stub - use visualizer speed instead)
+            state.stack.pop();
+            break;
+        case 82: // RTC_READ (stub)
+            state.stack.push(0n);
+            highlightStack = true;
+            break;
+        case 83: // RTC_WRITE (stub)
+            state.stack.pop();
+            break;
+        case 90: // TRACE (no-op in visualizer as it's always tracing)
             break;
     }
     state.pc++;

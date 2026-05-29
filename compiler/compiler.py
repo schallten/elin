@@ -10,6 +10,8 @@ from ops import (
     MOD, ABS, INPUT, TRACE,
     READ, WRITE, FLUSH,
     STRLEN, STRCAT, SUBSTR, STRCMP,
+    TIME, DELAY, RTC_READ, RTC_WRITE,
+    FOPEN, FREAD, FWRITE, FCLOSE
 )
 from ast_nodes import *
 from lexer import lex
@@ -78,6 +80,22 @@ def tc_infer_type(node, env):
         case SubstrNode():
             return "str"
         case StrCmpNode():
+            return "int"
+        case TimeNode():
+            return "int"
+        case DelayNode():
+            return "int"
+        case RtcReadNode():
+            return "int"
+        case RtcWriteNode():
+            return "int"
+        case FopenNode():
+            return "int"
+        case FreadNode():
+            return "str"
+        case FwriteNode():
+            return "int"
+        case FcloseNode():
             return "int"
         case FunctionCallNode(name=n):
             funcs = env["functions"]
@@ -188,6 +206,23 @@ def check(ast, env):
         case StrCmpNode(left=l, right=r):
             check(l, env)
             return check(r, env)
+        case TimeNode():
+            return env
+        case DelayNode(value=v):
+            return check(v, env)
+        case RtcReadNode():
+            return env
+        case RtcWriteNode(value=v):
+            return check(v, env)
+        case FopenNode(path=p):
+            return check(p, env)
+        case FreadNode(fd=f):
+            return check(f, env)
+        case FwriteNode(fd=f, string=s):
+            check(f, env)
+            return check(s, env)
+        case FcloseNode(fd=f):
+            return check(f, env)
         case ReturnNode(value=v):
             return check(v, env)
         case _:
@@ -498,6 +533,45 @@ def generate(ast, state):
             state = generate(l, state)
             state = generate(r, state)
             cg_add_operation(STRCMP, state)
+            return state
+
+        case TimeNode():
+            cg_add_operation(TIME, state)
+            return state
+
+        case DelayNode(value=v):
+            state = generate(v, state)
+            cg_add_operation(DELAY, state)
+            return state
+
+        case RtcReadNode():
+            cg_add_operation(RTC_READ, state)
+            return state
+
+        case RtcWriteNode(value=v):
+            state = generate(v, state)
+            cg_add_operation(RTC_WRITE, state)
+            return state
+
+        case FopenNode(path=p):
+            state = generate(p, state)
+            cg_add_operation(FOPEN, state)
+            return state
+
+        case FreadNode(fd=f):
+            state = generate(f, state)
+            cg_add_operation(FREAD, state)
+            return state
+
+        case FwriteNode(fd=f, string=s):
+            state = generate(f, state)
+            state = generate(s, state)
+            cg_add_operation(FWRITE, state)
+            return state
+
+        case FcloseNode(fd=f):
+            state = generate(f, state)
+            cg_add_operation(FCLOSE, state)
             return state
 
         case FunctionDefNode(ret_type=rt, name=n, params=params, body=body):

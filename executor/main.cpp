@@ -1,5 +1,7 @@
 #include <bits/stdc++.h>
 #include <sstream>
+#include <fstream>
+#include <unordered_map>
 using namespace std;
 typedef long long ll;
 
@@ -66,9 +68,22 @@ const int STRLEN = 72;
 const int STRCAT = 73;
 const int SUBSTR = 74;
 const int STRCMP = 75;
+const int FOPEN = 76;
+const int FREAD = 77;
+const int FWRITE = 78;
+const int FCLOSE = 79;
+const int TIME = 80;
+const int DELAY = 81;
+const int RTC_READ = 82;
+const int RTC_WRITE = 83;
 const int TRACE = 90;
 
 bool debug_mode = false;
+auto vm_boot_time = chrono::steady_clock::now();
+
+// --- File I/O state ---
+static unordered_map<ll, fstream*> open_files;
+static ll next_fd = 1;
 
 class Printer {
 public:
@@ -328,6 +343,107 @@ void execute() {
         } else {
           eval_stack.push(0);
         }
+      }
+      break;
+    }
+    case TIME: {
+      auto now = chrono::steady_clock::now();
+      ll ms = chrono::duration_cast<chrono::milliseconds>(now - vm_boot_time).count();
+      eval_stack.push(ms);
+      break;
+    }
+    case DELAY: {
+      if (!eval_stack.empty()) {
+        ll ms = eval_stack.top();
+        eval_stack.pop();
+        if (ms > 0) {
+          this_thread::sleep_for(chrono::milliseconds(ms));
+        }
+      }
+      break;
+    }
+    case RTC_READ: {
+      eval_stack.push(0); // PC no-op
+      break;
+    }
+    case RTC_WRITE: {
+      if (!eval_stack.empty()) {
+        eval_stack.pop(); // PC no-op
+      }
+      break;
+    }
+    case FOPEN: {
+      if (eval_stack.empty()) { printer.print_str("Error: FOPEN requires path handle"); break; }
+      ll path_idx = eval_stack.top(); eval_stack.pop();
+      if (path_idx < 0 || path_idx >= (ll)string_pool.size()) {
+        printer.print_str("Error: Invalid string index for FOPEN");
+        eval_stack.push(0);
+        break;
+      }
+      string path = string_pool[path_idx];
+      fstream* fs = new fstream();
+      fs->open(path, ios::in | ios::out | ios::app);
+      if (!fs->is_open()) {
+        // Try creating the file first
+        ofstream create_f(path);
+        create_f.close();
+        fs->open(path, ios::in | ios::out | ios::app);
+      }
+      if (!fs->is_open()) {
+        printer.print_str("Error: Unable to open file");
+        delete fs;
+        eval_stack.push(0);
+        break;
+      }
+      ll fd = next_fd++;
+      open_files[fd] = fs;
+      eval_stack.push(fd);
+      break;
+    }
+    case FREAD: {
+      if (eval_stack.empty()) { printer.print_str("Error: FREAD requires fd"); break; }
+      ll fd = eval_stack.top(); eval_stack.pop();
+      auto it = open_files.find(fd);
+      if (it == open_files.end()) {
+        printer.print_str("Error: Invalid fd for FREAD");
+        eval_stack.push(0);
+        break;
+      }
+      fstream* fs = it->second;
+      fs->clear();
+      fs->seekg(0);
+      string content((istreambuf_iterator<char>(*fs)), istreambuf_iterator<char>());
+      string_pool.push_back(content);
+      eval_stack.push((ll)string_pool.size() - 1);
+      break;
+    }
+    case FWRITE: {
+      if (eval_stack.size() < 2) { printer.print_str("Error: FWRITE requires fd and string handle"); break; }
+      ll str_idx = eval_stack.top(); eval_stack.pop();
+      ll fd = eval_stack.top(); eval_stack.pop();
+      auto it = open_files.find(fd);
+      if (it == open_files.end()) {
+        printer.print_str("Error: Invalid fd for FWRITE");
+        break;
+      }
+      if (str_idx < 0 || str_idx >= (ll)string_pool.size()) {
+        printer.print_str("Error: Invalid string index for FWRITE");
+        break;
+      }
+      *(it->second) << string_pool[str_idx];
+      it->second->flush();
+      break;
+    }
+    case FCLOSE: {
+      if (eval_stack.empty()) { printer.print_str("Error: FCLOSE requires fd"); break; }
+      ll fd = eval_stack.top(); eval_stack.pop();
+      auto it = open_files.find(fd);
+      if (it != open_files.end()) {
+        it->second->close();
+        delete it->second;
+        open_files.erase(it);
+      } else {
+        printer.print_str("Error: Invalid fd for FCLOSE");
       }
       break;
     }

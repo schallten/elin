@@ -52,18 +52,20 @@
             <ul class="sidebar-links">
                 <li><a href="#io">11 // Input & Output</a></li>
                 <li><a href="#string-ops">12 // String Operations</a></li>
+                <li><a href="#file-io">13 // File I/O</a></li>
+                <li><a href="#time-ops">14 // Time & RTC</a></li>
             </ul>
 
             <h2>Debugging</h2>
             <ul class="sidebar-links">
-                <li><a href="#debug">13 // Debug Mode</a></li>
+                <li><a href="#debug">15 // Debug Mode</a></li>
             </ul>
 
             <h2>Resources</h2>
             <ul class="sidebar-links">
-                <li><a href="#opcodes">14 // Opcode Table</a></li>
-                <li><a href="visualizer.html">15 // System Visualizer</a></li>
-                <li><a href="roadmap.html">16 // Roadmap</a></li>
+                <li><a href="#opcodes">16 // Opcode Table</a></li>
+                <li><a href="visualizer.html">17 // System Visualizer</a></li>
+                <li><a href="roadmap.html">18 // Roadmap</a></li>
             </ul>
         </div>
     </aside>
@@ -369,8 +371,55 @@ print strcmp("zzz", "aaa");  "  1</code></pre>
             </div>
         </section>
 
+        <section id="file-io">
+            <span class="lesson-meta">Section 13 // Persistent Storage</span>
+            <h2>File I/O Operations</h2>
+            <p>ELIN provides basic file handling for reading and writing data to disk (PC) or flash memory (ESP). File handles are integers (fds) that reference an internal table.</p>
+
+            <h3>Opening and Closing</h3>
+            <p><code>fopen(path)</code> opens a file and pushes a handle. <code>fclose(handle)</code> closes it:</p>
+            <pre><code>let int fd = fopen("data.txt");
+# ... do work ...
+fclose(fd);</code></pre>
+
+            <h3>Reading and Writing</h3>
+            <p><code>fread(fd)</code> reads one line from a file into a new string handle. <code>fwrite(fd, s)</code> writes string handle <code>s</code> to the file:</p>
+            <pre><code>let int fd = fopen("log.txt");
+fwrite(fd, "system boot\n");
+fclose(fd);
+
+let int input_fd = fopen("config.txt");
+let str line = fread(input_fd);
+print line;
+fclose(input_fd);</code></pre>
+
+            <div class="box">
+                <p>On ESP hardware, these operations use LittleFS. On PC, they use standard C file streams.</p>
+            </div>
+        </section>
+
+        <section id="time-ops">
+            <span class="lesson-meta">Section 14 // Chronos</span>
+            <h2>Time & Real-Time Clock</h2>
+            <p>For automation and timing, ELIN includes millisecond-precision timers and access to non-volatile RTC memory on supported hardware.</p>
+
+            <h3>Timing</h3>
+            <p><code>time()</code> returns milliseconds since the VM started. <code>delay(ms)</code> pauses execution:</p>
+            <pre><code>let int start = time();
+delay(1000);
+let int end = time();
+print end - start; # Should be approx 1000</code></pre>
+
+            <h3>RTC Memory</h3>
+            <p><code>rtc_read()</code> and <code>rtc_write(val)</code> allow storing a single integer in the ESP's Real-Time Clock memory, which persists through deep sleep (no-op on PC):</p>
+            <pre><code>let int boot_count = rtc_read();
+boot_count = boot_count + 1;
+rtc_write(boot_count);
+print boot_count;</code></pre>
+        </section>
+
         <section id="debug">
-            <span class="lesson-meta">Section 13 // Debug Mode</span>
+            <span class="lesson-meta">Section 15 // Debug Mode</span>
             <h2>Tracing Execution</h2>
             <p>The VM has a debug mode that prints every instruction as it runs — opcode, stack contents, and call depth. Launch it with the <code>--debug</code> flag:</p>
             <pre><code>./elin_vm --debug program.outz</code></pre>
@@ -386,7 +435,7 @@ trace;    # Turn debug output OFF</code></pre>
         </section>
 
         <section id="opcodes">
-            <span class="lesson-meta">Section 14 // Opcode Table</span>
+            <span class="lesson-meta">Section 16 // Opcode Table</span>
             <h2>Opcode Specification</h2>
             <p>The following instructions are the raw commands the ELIN Virtual Machine understands. Every high-level
                 command you write is translated into these decimal IDs.</p>
@@ -637,6 +686,46 @@ trace;    # Turn debug output OFF</code></pre>
                         <td>Compare two string handles, push -1/0/1</td>
                     </tr>
                     <tr>
+                        <td>76</td>
+                        <td>FOPEN</td>
+                        <td>Open file by path string, push fd</td>
+                    </tr>
+                    <tr>
+                        <td>77</td>
+                        <td>FREAD</td>
+                        <td>Read from fd into string handle</td>
+                    </tr>
+                    <tr>
+                        <td>78</td>
+                        <td>FWRITE</td>
+                        <td>Write string handle to fd</td>
+                    </tr>
+                    <tr>
+                        <td>79</td>
+                        <td>FCLOSE</td>
+                        <td>Close fd</td>
+                    </tr>
+                    <tr>
+                        <td>80</td>
+                        <td>TIME</td>
+                        <td>Push ms since boot</td>
+                    </tr>
+                    <tr>
+                        <td>81</td>
+                        <td>DELAY</td>
+                        <td>Block for N ms</td>
+                    </tr>
+                    <tr>
+                        <td>82</td>
+                        <td>RTC_READ</td>
+                        <td>Read ESP RTC memory (no-op on PC)</td>
+                    </tr>
+                    <tr>
+                        <td>83</td>
+                        <td>RTC_WRITE</td>
+                        <td>Write ESP RTC memory (no-op on PC)</td>
+                    </tr>
+                    <tr>
                         <td>90</td>
                         <td>TRACE</td>
                         <td>Toggle debug output on/off</td>
@@ -741,7 +830,7 @@ trace;    # Turn debug output OFF</code></pre>
 
         // Documentation Syntax Highlighting
         const highlight = (code) => {
-            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print|abs|input|read|write|flush|strlen|strcat|substr|strcmp|trace|dup|drop|swap|neg|not|inc|dec)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
+            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print|abs|input|read|write|flush|strlen|strcat|substr|strcmp|trace|dup|drop|swap|neg|not|inc|dec|fopen|fclose|fread|fwrite|time|delay|rtc_read|rtc_write)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
             return code.replace(regex, (m, p1, p2, p3, p4, p5) => {
                 if (p1) return `<span class="hl-comment">${p1}</span>`;
                 if (p2) return `<span class="hl-string">${p2}</span>`;

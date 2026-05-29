@@ -1,0 +1,19 @@
+// File I/O test
+// Write to a file, read it back, print it, then close
+
+let str path = "test_output.txt"
+let int fd = fopen(path)
+
+print "File opened, fd:"
+print fd
+
+let str msg = "Hello from ELIN file I/O!"
+fwrite(fd, msg)
+print "Wrote message to file"
+
+let str contents = fread(fd)
+print "Read back from file:"
+print contents
+
+fclose(fd)
+print "File closed successfully"

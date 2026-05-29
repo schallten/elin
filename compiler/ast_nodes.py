@@ -166,3 +166,44 @@ class SubstrNode:
 class StrCmpNode:
     left: object = None
     right: object = None
+
+
+@dataclass
+class TimeNode:
+    pass
+
+
+@dataclass
+class DelayNode:
+    value: object = None
+
+
+@dataclass
+class RtcReadNode:
+    pass
+
+
+@dataclass
+class RtcWriteNode:
+    value: object = None
+
+
+@dataclass
+class FopenNode:
+    path: object = None
+
+
+@dataclass
+class FreadNode:
+    fd: object = None
+
+
+@dataclass
+class FwriteNode:
+    fd: object = None
+    string: object = None
+
+
+@dataclass
+class FcloseNode:
+    fd: object = None
