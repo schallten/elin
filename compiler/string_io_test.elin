@@ -1,0 +1,36 @@
+# Test Standard I/O (Item 12) and String Operations (Item 13)
+
+# --- String operations ---
+let str greeting = "hello";
+let str name = "world";
+let str msg = strcat(greeting, " ");
+let str full = strcat(msg, name);
+print full;
+
+let int slen = strlen(full);
+print slen;
+
+let str part = substr(full, 0, 5);
+print part;
+
+let str other = substr(full, 6, 5);
+print other;
+
+let int cmp1 = strcmp("abc", "def");
+print cmp1;
+
+let int cmp2 = strcmp("xyz", "xyz");
+print cmp2;
+
+let int cmp3 = strcmp("zzz", "aaa");
+print cmp3;
+
+# --- write (no newline) ---
+write "hello ";
+write "world";
+write "!";
+
+# --- flush ---
+flush;
+
+print "done";

@@ -1,0 +1,5 @@
+let str s = read();
+print s;
+write "got: ";
+write s;
+flush;
