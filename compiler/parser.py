@@ -53,6 +53,12 @@ def parse_statements(tokens, pos, root=False):
         elif tok.type == "HALT":
             pos += 1
             stmts.append(HaltNode())
+        elif tok.type == "WRITE":
+            node, pos = parse_write(tokens, pos)
+            stmts.append(node)
+        elif tok.type == "FLUSH":
+            node, pos = parse_flush(tokens, pos)
+            stmts.append(node)
         elif (tok.type == "IDENTIFIER" and pos + 1 < len(tokens)
               and peek(tokens, pos + 1).type == "LBRACKET"):
             node, pos = parse_array_assign(tokens, pos)
@@ -61,7 +67,7 @@ def parse_statements(tokens, pos, root=False):
               and peek(tokens, pos + 1).type == "EQUALS"):
             node, pos = parse_reassign(tokens, pos)
             stmts.append(node)
-        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN", "ABS", "INPUT"):
+        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN", "ABS", "INPUT", "READ", "STRLEN", "STRCAT", "SUBSTR", "STRCMP"):
             node, pos = parse_expression(tokens, pos)
             stmts.append(node)
         elif tok.type in ("COMMA", "RPAREN", "RBRACKET"):
@@ -112,6 +118,17 @@ def parse_print(tokens, pos):
     pos += 1
     expr, pos = parse_expression(tokens, pos)
     return PrintNode(value_node=expr), pos
+
+
+def parse_write(tokens, pos):
+    pos += 1
+    expr, pos = parse_expression(tokens, pos)
+    return WriteNode(value=expr), pos
+
+
+def parse_flush(tokens, pos):
+    pos += 1
+    return FlushNode(), pos
 
 
 def parse_if(tokens, pos):
@@ -265,6 +282,53 @@ def parse_primary(tokens, pos):
         if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
             pos += 1
         return InputNode(), pos
+    if tok.type == "READ":
+        pos += 1
+        if peek(tokens, pos) and peek(tokens, pos).type == "LPAREN":
+            pos += 1
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return ReadStrNode(), pos
+    if tok.type == "STRLEN":
+        pos += 1
+        pos += 1
+        expr, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return StrLenNode(value=expr), pos
+    if tok.type == "STRCAT":
+        pos += 1
+        pos += 1
+        left, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
+            pos += 1
+        right, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return StrCatNode(left=left, right=right), pos
+    if tok.type == "SUBSTR":
+        pos += 1
+        pos += 1
+        string, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
+            pos += 1
+        offset, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
+            pos += 1
+        length, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return SubstrNode(string=string, offset=offset, length=length), pos
+    if tok.type == "STRCMP":
+        pos += 1
+        pos += 1
+        left, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
+            pos += 1
+        right, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return StrCmpNode(left=left, right=right), pos
     raise Exception(f"Unexpected token in expression: {tok.type}")
 
 

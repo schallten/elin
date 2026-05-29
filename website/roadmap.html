@@ -16,27 +16,12 @@
                 <img src="logo.png" alt="ELIN Logo" style="height: 30px; margin-bottom: 10px;">
                 <h1>ELIN_SYSTEM</h1>
             </a>
-            <p>// v0.3.0 <a href="changes.html" style="color: var(--accent); font-size: 0.7rem; text-decoration: underline;">[Changes]</a></p>
+            <p>// v0.4.0 <a href="changes.html" style="color: var(--accent); font-size: 0.7rem; text-decoration: underline;">[Changes]</a></p>
         </div>
 
         <div style="margin-bottom: 20px;">
             <a href="index.html" style="font-size: 0.8rem; color: var(--text-secondary);">&larr; Back to Home</a>
         </div>
-
-        <h2>Core VM <span class="badge badge-030">v0.3.0</span></h2>
-        <ul class="sidebar-links">
-            <li><a href="#v1" class="active">01 // PRINT from stack</a></li>
-            <li><a href="#v2">02 // Constant pool</a></li>
-            <li><a href="#v3">03 // Stack ops</a></li>
-            <li><a href="#v4">04 // Unary ops</a></li>
-            <li><a href="#v5">05 // NOP</a></li>
-            <li><a href="#v6">06 // INC / DEC</a></li>
-            <li><a href="#v7">07 // DEBUG / TRACE</a></li>
-            <li><a href="#v8">08 // INPUT</a></li>
-            <li><a href="#v9">09 // MOD / ABS</a></li>
-            <li><a href="#v10">10 // Versioned format</a></li>
-            <li><a href="#v11">11 // Compile-time evaluation</a></li>
-        </ul>
 
         <h2>Libraries <span class="badge badge-040">v0.4.0</span></h2>
         <ul class="sidebar-links">
@@ -46,6 +31,7 @@
             <li><a href="#v15">15 // Time</a></li>
             <li><a href="#v16">16 // Random</a></li>
             <li><a href="#v17">17 // FFI</a></li>
+            <li><a href="#m1">M1 // Core bump allocator</a></li>
         </ul>
 
         <h2>Tooling <span class="badge badge-040">v0.4.0</span></h2>
@@ -56,9 +42,16 @@
             <li><a href="#v21">21 // Package manager</a></li>
         </ul>
 
-        <h2>Self-Hosting <span class="badge badge-050">v0.5.0</span></h2>
+        <h2>Memory + Self-Hosting <span class="badge badge-050">v0.5.0</span></h2>
         <ul class="sidebar-links">
+            <li><a href="#m2">M2 // Multi-segment + regions</a></li>
             <li><a href="#v22">22 // Self-hosting</a></li>
+        </ul>
+
+        <h2>Memory Subsystem <span class="badge badge-060">v0.6.0</span></h2>
+        <ul class="sidebar-links">
+            <li><a href="#m3">M3 // Embedded hardening</a></li>
+            <li><a href="#m4">M4 // PC comfort features</a></li>
         </ul>
     </aside>
 
@@ -70,95 +63,21 @@
         </header>
 
         <div class="version-header">
-            <span class="version-badge v030">v0.3.0</span>
-            <h2>Core VM — Foundation</h2>
-            <p>Our first eleven items harden the instruction set and bytecode format. By the end of this release we want a VM that is capable, efficient, and pleasant to target.</p>
-        </div>
-
-        <section id="v1">
-            <span class="lesson-meta">Core VM // Item 01</span>
-            <h2>PRINT pops from eval_stack</h2>
-            <p>Right now <code>PRINT</code> reads from a global slot, forcing the compiler to emit a STORE/LOAD round-trip just to print a value. We're changing <strong>PRINT (8)</strong> to pop the top of eval_stack and print it directly. Then <code>print r;</code> becomes simply <code>LOAD 2; PRINT;</code> — no more temporary juggling. Same for <code>PRINT_STR</code>.</p>
-        </section>
-
-        <section id="v2">
-            <span class="lesson-meta">Core VM // Item 02</span>
-            <h2>Constant pool + PUSH_CONST</h2>
-            <p>Every <code>PUSH</code> costs us 5 bytes (<code>1 0 0 0 value</code>). For repeated constants — zeros, ones, common values — that adds up fast. We're adding a <strong>constant pool</strong> to the <code>.outz</code> format and a <code>PUSH_CONST &lt;idx&gt;</code> opcode that references pool entries with a single byte. Same expressiveness, much denser bytecode.</p>
-        </section>
-
-        <section id="v3">
-            <span class="lesson-meta">Core VM // Item 03</span>
-            <h2>DUP, DROP, SWAP</h2>
-            <p>We're reserving IDs <strong>60-62</strong> for the three fundamental stack operations every stack VM needs: <code>DUP</code> duplicates the top, <code>DROP</code> discards it, <code>SWAP</code> exchanges the top two. Without them we end up with STORE/LOAD hacks — more bytes, more globals, more noise.</p>
-        </section>
-
-        <section id="v4">
-            <span class="lesson-meta">Core VM // Item 04</span>
-            <h2>NEG and NOT</h2>
-            <p>Today <code>-x</code> compiles to <code>PUSH 0; LOAD x; SUB;</code> — three instructions for one operation. Logical not (<code>!x</code>) has no dedicated opcode at all. We're adding <strong>NEG (63)</strong> and <strong>NOT (64)</strong>. <code>NEG</code> pops <code>a</code> and pushes <code>-a</code>. <code>NOT</code> pushes <code>1</code> if <code>a == 0</code> and <code>0</code> otherwise — natural for our boolean-as-int model.</p>
-        </section>
-
-        <section id="v5">
-            <span class="lesson-meta">Core VM // Item 05</span>
-            <h2>NOP</h2>
-            <p>We're adding a no-operation instruction at ID <strong>0</strong> or <strong>65</strong>. It advances the program counter and does nothing else — useful for padding, alignment, and placeholder slots during optimization.</p>
-        </section>
-
-        <section id="v6">
-            <span class="lesson-meta">Core VM // Item 06</span>
-            <h2>INC and DEC</h2>
-            <p>Increment and decrement are the most common operations in almost every program. Right now <code>i = i + 1</code> compiles to <code>LOAD 5; PUSH 1; ADD; STORE 5;</code> — 4 instructions, 11 bytes. With IDs <strong>66-67</strong>, <code>INC 5</code> does the same in 2 bytes. A cheap win for a pattern we use constantly.</p>
-        </section>
-
-        <section id="v7">
-            <span class="lesson-meta">Core VM // Item 07</span>
-            <h2>DEBUG / TRACE mode</h2>
-            <p>We have zero visibility into VM execution today. Compiler bugs look the same as runtime bugs and we have no way to tell them apart. We're building a flag that prints every opcode, eval_stack state, and frame info — so we can finally see what's happening inside.</p>
-        </section>
-
-        <section id="v8">
-            <span class="lesson-meta">Core VM // Item 08</span>
-            <h2>INPUT opcode</h2>
-            <p>ELIN is output-only right now. We're adding <strong>INPUT (68)</strong>: it blocks until a number arrives (serial on ESP, stdin on PC), then pushes it onto eval_stack. This unlocks everything interactive — calculators, prompts, games.</p>
-        </section>
-
-        <section id="v9">
-            <span class="lesson-meta">Core VM // Item 09</span>
-            <h2>MOD and ABS</h2>
-            <p>We need <code>MOD</code> for array indexing, circular buffers, and clock arithmetic. We need <code>ABS</code> for distance calculations. IDs <strong>55-56</strong> slot right into our 64-bit integer model and we reach for both constantly in embedded code.</p>
-        </section>
-
-        <section id="v10">
-            <span class="lesson-meta">Core VM // Item 10</span>
-            <h2>Version the .outz format</h2>
-            <p>Our bytecode format has no header — raw opcodes from offset zero. We're fixing that with magic bytes (<code>0x45 0x4C 0x49 0x4E</code> = "ELIN"), a version byte, flags, and pool offsets. This lets us evolve the format over time, detect corruption, and reject unsupported files gracefully.</p>
-        </section>
-
-        <section id="v11">
-            <span class="lesson-meta">Core VM // Item 11</span>
-            <h2>Compile-time constant evaluation</h2>
-            <p>If every operand in an expression is a compile-time constant, the compiler folds the result directly into the bytecode instead of emitting runtime instructions. <code>42 + 15</code> becomes a single <code>PUSH_CONST 57</code> rather than <code>PUSH 42; PUSH 15; ADD;</code> — the work happens once, at compile time, and the runtime never sees the arithmetic. The same applies to any pure operation — unary, binary, logical — whose inputs are all known at compile time. The interpreter never executes what the compiler already knows.</p>
-
-            <p>We'll need to be careful not to over-fold. A function that never calls an impure opcode (<code>WRITE</code>, <code>FOPEN</code>, <code>CALL_EXTERN</code>, etc.) is pure by default — but tracing the call graph to prove that won't make it into the first pass. For now we'll only fold literals and expressions built from them: no function calls, no variables (even const, unless we can trace the value locally), and no array accesses (unless the array is const and the index resolves at compile time).</p>
-        </section>
-
-        <div class="version-header">
             <span class="version-badge v040">v0.4.0</span>
             <h2>Libraries &amp; Tooling — Ecosystem</h2>
-            <p>Items 12–21 are where we ship a standard library and developer toolchain. This is how we turn ELIN from a bare VM into a usable programming environment.</p>
+            <p>Items 12–21 ship a standard library and developer toolchain, alongside the core bump allocator (M1) for dynamic allocation. This is how we turn ELIN from a bare VM into a usable programming environment.</p>
         </div>
 
         <section id="v12">
-            <span class="lesson-meta">Libraries // Item 12</span>
+            <span class="lesson-meta">Libraries // Item 12 <span style="color: #4ade80;">✓ Done</span></span>
             <h2>Standard I/O library</h2>
-            <p>We're building three opcodes for interactive programs: <strong>READ (69)</strong> reads a line from stdin into a string pool slot and pushes the handle; <strong>WRITE (70)</strong> takes a handle and prints without a newline; <strong>FLUSH (71)</strong> forces pending output. Prompts, menus, dialogs — all compile identically for PC and ESP (where <code>READ</code> draws from a serial buffer).</p>
+            <p>Three opcodes for interactive programs: <strong>READ (69)</strong> reads a line from stdin into the string pool and pushes the handle; <strong>WRITE (70)</strong> prints a string handle without newline; <strong>FLUSH (71)</strong> flushes stdout. <code>read()</code>, <code>write</code>, and <code>flush</code> keyword syntax in the compiler.</p>
         </section>
 
         <section id="v13">
-            <span class="lesson-meta">Libraries // Item 13</span>
+            <span class="lesson-meta">Libraries // Item 13 <span style="color: #4ade80;">✓ Done</span></span>
             <h2>String operations library</h2>
-            <p>Four opcodes we need for real text handling: <strong>STRLEN (72)</strong>, <strong>STRCAT (73)</strong>, <strong>SUBSTR (74)</strong>, <strong>STRCMP (75)</strong>. They operate on string pool handles passed as 64-bit integers. On PC we delegate to C++; on ESP we use pre-allocated buffers. No dynamic allocation — <code>STRCAT</code> fails cleanly if the result exceeds our fixed max.</p>
+            <p>Four opcodes for text handling: <strong>STRLEN (72)</strong> pushes the length of a string handle; <strong>STRCAT (73)</strong> concatenates two handles and pushes a new one; <strong>SUBSTR (74)</strong> extracts a substring by handle, offset, and length; <strong>STRCMP (75)</strong> compares two handles and pushes -1/0/1. Accessed via <code>strlen()</code>, <code>strcat()</code>, <code>substr()</code>, and <code>strcmp()</code> in source.</p>
         </section>
 
         <section id="v14">
@@ -219,6 +138,12 @@ HALT</code></pre>
             <p>Dependencies are just <code>.elin</code> files with their own <code>elin.json</code>. No registry server — git URLs or local paths. This also serves as a prototype for Loom so we can figure out what it really needs before writing it in C++ for ESP.</p>
         </section>
 
+        <section id="m1">
+            <span class="lesson-meta">Memory // Item M1</span>
+            <h2>Core bump allocator</h2>
+            <p>A single heap segment using bump-pointer allocation. Each allocation returns a handle (integer ID) rather than a raw address. A flat handle table maps IDs to block metadata (pointer, size, validity flag). Allocation is O(1) — increment a pointer. Deallocation is explicit: <code>FREE</code> invalidates the handle and recycles its slot; memory is not reclaimed, the bump pointer only advances. <code>LOAD_H</code> / <code>STORE_H</code> opcodes access cells with bounds checking. Use-after-free, double-free, and OOB are caught at runtime — no silent corruption.</p>
+        </section>
+
         <section id="gleam-port">
             <span class="lesson-meta">Compiler // Item —</span>
             <h2>Port the compiler to Gleam</h2>
@@ -235,9 +160,15 @@ HALT</code></pre>
 
         <div class="version-header">
             <span class="version-badge v050">v0.5.0</span>
-            <h2>Self-Hosting — The Turning Point</h2>
-            <p>Item 22 is the whole release. Once ELIN can compile itself, it stops being a toy and becomes a self-sustaining system. This is the milestone everything else is building toward.</p>
+            <h2>Memory + Self-Hosting — The Turning Point</h2>
+            <p>Multi-segment memory regions (M2) provide temp allocation for function-local work without manual <code>FREE</code>, powering the self-hosting compiler (Item 22). Once ELIN can compile itself, it stops being a toy and becomes a self-sustaining system.</p>
         </div>
+
+        <section id="m2">
+            <span class="lesson-meta">Memory // Item M2</span>
+            <h2>Multi-segment architecture + regions</h2>
+            <p>Four logical bump-allocated arenas: <strong>Main (0)</strong> for explicitly managed allocations, <strong>Temp (1)</strong> for function-local scratch (compiler auto-inserts <code>REGION_ENTER</code>/<code>REGION_EXIT</code> around function bodies), <strong>Interrupt (2)</strong> for ISR-safe allocations, and <strong>Spare (3)</strong> for overflow or special-purpose use. <code>REGION_EXIT</code> resets the bump pointer and invalidates all handles in that segment — no per-object tracking needed. Recursive functions and loops can allocate temporaries without leaking and without manual <code>FREE</code>.</p>
+        </section>
 
         <section id="v22">
             <span class="lesson-meta">Self-Hosting // Item 22</span>
@@ -260,21 +191,39 @@ HALT</code></pre>
             <p>We'll start with Stage 1 only. The moment our ELIN lexer produces the same token stream as the reference implementation for a real program, we'll know the language is viable for self-hosting.</p>
         </section>
 
+        <div class="version-header">
+            <span class="version-badge v060">v0.6.0</span>
+            <h2>Memory — Hardening &amp; PC Comfort</h2>
+            <p>Embedded-hardening (M3) makes memory usage fully predictable at link time, while PC features (M4) add dynamic growth, compaction, and profiling for long-running desktop/server programs.</p>
+        </div>
+
+        <section id="m3">
+            <span class="lesson-meta">Memory // Item M3</span>
+            <h2>Embedded hardening</h2>
+            <p>Segments bind to statically provided memory blocks (e.g. <code>static ll main_heap[2048]</code>) — no <code>malloc</code> or C++ heap usage. The VM performs zero runtime allocation; all memory is accounted for in the linker map. <code>ALLOC</code> returns null (handle 0) on segment full — no exceptions, no crashes. Generation counters make temp reclamation O(1): each <code>REGION_EXIT</code> increments a per-segment generation number, and handle validity becomes a generation comparison instead of a table scan. <code>SEG_USED</code> opcode reports current utilization for runtime pressure monitoring. Published worst-case cycle counts for all memory ops enable hard real-time scheduling.</p>
+        </section>
+
+        <section id="m4">
+            <span class="lesson-meta">Memory // Item M4</span>
+            <h2>PC comfort features</h2>
+            <p>Additive features gated behind build flags: <strong>dynamic growth</strong> allows segments backed by <code>malloc</code>/<code>new</code> to grow on demand; <strong>compaction</strong> moves live objects to segment start and can run incrementally across VM cycles to avoid visible pauses; <strong>profiling hooks</strong> provide runtime callbacks for allocation events and segment pressure thresholds. All PC features are optional — the embedded binary remains unchanged.</p>
+        </section>
+
         <div class="version-summary">
             <div class="version-summary-item">
-                <span class="version-badge v030">v0.3.0</span>
-                <span>Items 1–10 — Core VM foundation</span>
-            </div>
-            <div class="version-summary-item">
                 <span class="version-badge v040">v0.4.0</span>
-                <span>Items 12–21 — Libraries &amp; tooling</span>
+                <span>Items 12–21 + M1 — Libraries, tooling &amp; bump allocator</span>
             </div>
             <div class="version-summary-item">
                 <span class="version-badge v050">v0.5.0</span>
-                <span>Item 22 — Self-hosting</span>
+                <span>Items M2 + 22 — Multi-segment memory &amp; self-hosting</span>
+            </div>
+            <div class="version-summary-item">
+                <span class="version-badge v060">v0.6.0</span>
+                <span>Items M3–M4 — Embedded hardening &amp; PC comfort</span>
             </div>
             <p class="version-summary-note">
-                Hit the end and ELIN becomes a self-sustaining system. These versions aren't about keeping up with other languages — they're our own milestones toward something complete.
+                These versions aren't about keeping up with other languages — they're our own milestones toward something complete.
             </p>
         </div>
 

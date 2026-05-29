@@ -62,6 +62,13 @@ def lex(code_string):
                 elif part == "len": tokens.append(Token("LEN"))
                 elif part == "abs": tokens.append(Token("ABS"))
                 elif part == "input": tokens.append(Token("INPUT"))
+                elif part == "read": tokens.append(Token("READ"))
+                elif part == "write": tokens.append(Token("WRITE"))
+                elif part == "flush": tokens.append(Token("FLUSH"))
+                elif part == "strlen": tokens.append(Token("STRLEN"))
+                elif part == "strcat": tokens.append(Token("STRCAT"))
+                elif part == "substr": tokens.append(Token("SUBSTR"))
+                elif part == "strcmp": tokens.append(Token("STRCMP"))
                 elif part in ["int", "str"]: tokens.append(Token("TYPE", part))
                 else: tokens.append(Token("IDENTIFIER", part))
                 continue

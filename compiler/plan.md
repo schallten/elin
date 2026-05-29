@@ -7,24 +7,24 @@ phase: a standard library and developer toolchain.
 
 ## Libraries
 
-### Item 12 — Standard I/O
+### Item 12 — Standard I/O ✅
 Three opcodes for interactive programs:
 - **READ (69)** — read a line from stdin into a string pool slot, push handle
 - **WRITE (70)** — print string handle without newline
 - **FLUSH (71)** — force pending output
 
-Same opcodes on PC (C++ stdio) and ESP (serial buffer).
+Same opcodes on PC (C++ stdio) and ESP (serial buffer). Implemented in compiler and C++ VM with `read()`, `write`, `flush` syntax.
 
 ---
 
-### Item 13 — String operations
+### Item 13 — String operations ✅
 Four opcodes for text handling:
 - **STRLEN (72)** — push length of string handle
-- **STRCAT (73)** — concatenate two handles into a third (fail if over max)
+- **STRCAT (73)** — concatenate two handles into a third
 - **SUBSTR (74)** — extract substring by handle, offset, length
 - **STRCMP (75)** — compare two handles, push -1/0/1
 
-No dynamic allocation — fixed max buffer, fail cleanly on overflow.
+Accessible via `strlen()`, `strcat()`, `substr()`, `strcmp()` in source. String pool grows at runtime for concatenation and substring results.
 
 ---
 

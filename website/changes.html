@@ -26,6 +26,61 @@
 
     <main class="landing-content">
         <header style="margin-bottom: 60px; text-align: center;">
+            <span class="lesson-meta">Update Log // v0.4.0</span>
+            <h1 style="font-size: 3rem; letter-spacing: -1px;">Standard Library Arrives</h1>
+            <p style="color: var(--text-secondary); font-size: 1.1rem; max-width: 700px; margin: 20px auto;">
+                ELIN grows its standard library. Items 12 and 13 from the roadmap are now implemented: Standard I/O and String Operations. You can read input, write output without newlines, and manipulate strings at runtime.
+            </p>
+        </header>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>Standard I/O — read, write, flush</h3>
+            <p>
+                Three new opcodes for interactive programs: <strong>READ (69)</strong> reads a line from stdin into the string pool and pushes its handle; <strong>WRITE (70)</strong> pops a string handle and prints it without a newline; <strong>FLUSH (71)</strong> flushes stdout. Use them together for prompts:
+            </p>
+            <div class="code-preview" style="margin-top: 15px; padding: 15px;">
+                <pre><code>write "enter name: ";
+flush;
+let str name = read();
+print strcat("hello ", name);</code></pre>
+            </div>
+            <p style="margin-top: 15px;">
+                The compiler exposes these as <code>read()</code>, <code>write</code>, and <code>flush</code> keywords. TRACE was moved to opcode 90 to free up the 69-75 range.
+            </p>
+        </section>
+
+        <section class="feature-item" style="margin-bottom: 60px;">
+            <h3>String operations — strlen, strcat, substr, strcmp</h3>
+            <p>
+                Four opcodes for text manipulation: <strong>STRLEN (72)</strong> pushes a string's length; <strong>STRCAT (73)</strong> concatenates two string handles and pushes a new one; <strong>SUBSTR (74)</strong> extracts a substring by handle, offset, and length; <strong>STRCMP (75)</strong> compares two strings and pushes -1, 0, or 1. All accessible via <code>strlen()</code>, <code>strcat()</code>, <code>substr()</code>, and <code>strcmp()</code> in source.
+            </p>
+            <div class="code-preview" style="margin-top: 15px; padding: 15px;">
+                <pre><code>let str msg = strcat("hello", " world");
+print strlen(msg);       " 11
+print substr(msg, 0, 5); " hello
+print strcmp("a", "b");  " -1</code></pre>
+            </div>
+            <p style="margin-top: 15px;">
+                The string pool grows at runtime to accommodate <code>strcat</code> and <code>substr</code> results. Bounds checking prevents out-of-range reads in <code>substr</code>.
+            </p>
+        </section>
+
+        <section class="code-preview" style="margin-top: 60px; margin-bottom: 80px; padding: 40px; border-color: var(--accent);">
+            <h2 style="text-align: left; font-family: monospace; color: var(--accent);">[ TECHNICAL_DEEP_DIVE ]</h2>
+
+            <div style="margin-top: 30px;">
+                <h4 style="color: #fff; font-family: monospace;">// Opcode allocations</h4>
+                <p style="font-size: 0.9rem; color: var(--fg);">
+                    READ=69, WRITE=70, FLUSH=71 (Standard I/O slot), STRLEN=72, STRCAT=73, SUBSTR=74, STRCMP=75 (String ops slot). TRACE was moved to 90 to make room. String pool uses <code>push_back</code> for runtime growth; <code>substr</code> clamps offset and length to string bounds. The compiler adds <code>read()</code>, <code>write</code>, <code>flush</code>, <code>strlen()</code>, <code>strcat()</code>, <code>substr()</code>, <code>strcmp()</code> as keyword primaries in the parser.
+                </p>
+            </div>
+        </section>
+
+        <div style="text-align: center; margin-top: 60px; border-top: 1px solid var(--border); padding-top: 40px;">
+            <span style="color: var(--text-secondary); font-size: 0.9rem;">— v0.4.0 changelog —</span>
+        </div>
+
+        <header style="margin-bottom: 60px; text-align: center; margin-top: 100px;">
             <span class="lesson-meta">Update Log // v0.3.0</span>
             <h1 style="font-size: 3rem; letter-spacing: -1px;">Core VM Complete</h1>
             <p style="color: var(--text-secondary); font-size: 1.1rem; max-width: 700px; margin: 20px auto;">
@@ -112,7 +167,7 @@
             <div style="margin-top: 30px;">
                 <h4 style="color: #fff; font-family: monospace;">// Opcode assignments</h4>
                 <p style="font-size: 0.9rem; color: var(--fg);">
-                    MOD=55, ABS=56 (math slot), DUP=60, DROP=61, SWAP=62 (stack slot), NEG=63, NOT=64 (unary slot), NOP=65 (padding), INC=66, DEC=67 (counter slot), INPUT=68, TRACE=69 (I/O slot). Every opcode has a handler in <code>main.cpp</code> and a constant in <code>ops.py</code>.
+                    MOD=55, ABS=56 (math slot), DUP=60, DROP=61, SWAP=62 (stack slot), NEG=63, NOT=64 (unary slot), NOP=65 (padding), INC=66, DEC=67 (counter slot), INPUT=68, READ=69, WRITE=70, FLUSH=71 (std I/O slot), STRLEN=72, STRCAT=73, SUBSTR=74, STRCMP=75 (string ops slot), TRACE=90 (debug slot). Every opcode has a handler in <code>main.cpp</code> and a constant in <code>ops.py</code>.
                 </p>
             </div>
 
@@ -219,14 +274,14 @@ let int result = (10 + 5) * (20 - 5);</code></pre>
     <footer style="padding: 60px 10%; border-top: 1px solid var(--border); margin-top: 100px; font-family: monospace; font-size: 0.8rem; color: #666;">
         <div style="display: flex; justify-content: space-between;">
             <div>ELIN_CORE // 2026</div>
-            <div>STABLE v0.3.0</div>
+            <div>STABLE v0.4.0</div>
         </div>
     </footer>
 
     <script>
         // Syntax Highlighting for the preview
         const highlight = (code) => {
-            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print|abs|input|trace|dup|drop|swap|neg|not|inc|dec)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
+            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print|abs|input|read|write|flush|strlen|strcat|substr|strcmp|trace|dup|drop|swap|neg|not|inc|dec)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
             return code.replace(regex, (m, p1, p2, p3, p4, p5) => {
                 if (p1) return `<span class="hl-comment">${p1}</span>`;
                 if (p2) return `<span class="hl-string">${p2}</span>`;

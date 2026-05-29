@@ -8,6 +8,8 @@ from ops import (
     DUP, DROP, SWAP,
     NEG, NOT, NOP, INC, DEC,
     MOD, ABS, INPUT, TRACE,
+    READ, WRITE, FLUSH,
+    STRLEN, STRCAT, SUBSTR, STRCMP,
 )
 from ast_nodes import *
 from lexer import lex
@@ -62,6 +64,20 @@ def tc_infer_type(node, env):
         case AbsNode():
             return "int"
         case InputNode():
+            return "int"
+        case ReadStrNode():
+            return "str"
+        case WriteNode():
+            return "int"
+        case FlushNode():
+            return "int"
+        case StrLenNode():
+            return "int"
+        case StrCatNode():
+            return "str"
+        case SubstrNode():
+            return "str"
+        case StrCmpNode():
             return "int"
         case FunctionCallNode(name=n):
             funcs = env["functions"]
@@ -154,6 +170,24 @@ def check(ast, env):
             return check(v, env)
         case InputNode():
             return env
+        case ReadStrNode():
+            return env
+        case WriteNode(value=v):
+            return check(v, env)
+        case FlushNode():
+            return env
+        case StrLenNode(value=v):
+            return check(v, env)
+        case StrCatNode(left=l, right=r):
+            check(l, env)
+            return check(r, env)
+        case SubstrNode(string=s, offset=o, length=l):
+            check(s, env)
+            check(o, env)
+            return check(l, env)
+        case StrCmpNode(left=l, right=r):
+            check(l, env)
+            return check(r, env)
         case ReturnNode(value=v):
             return check(v, env)
         case _:
@@ -427,6 +461,43 @@ def generate(ast, state):
 
         case InputNode():
             cg_add_operation(INPUT, state)
+            return state
+
+        case ReadStrNode():
+            cg_add_operation(READ, state)
+            return state
+
+        case WriteNode(value=v):
+            state = generate(v, state)
+            cg_add_operation(WRITE, state)
+            return state
+
+        case FlushNode():
+            cg_add_operation(FLUSH, state)
+            return state
+
+        case StrLenNode(value=v):
+            state = generate(v, state)
+            cg_add_operation(STRLEN, state)
+            return state
+
+        case StrCatNode(left=l, right=r):
+            state = generate(l, state)
+            state = generate(r, state)
+            cg_add_operation(STRCAT, state)
+            return state
+
+        case SubstrNode(string=s, offset=o, length=l):
+            state = generate(s, state)
+            state = generate(o, state)
+            state = generate(l, state)
+            cg_add_operation(SUBSTR, state)
+            return state
+
+        case StrCmpNode(left=l, right=r):
+            state = generate(l, state)
+            state = generate(r, state)
+            cg_add_operation(STRCMP, state)
             return state
 
         case FunctionDefNode(ret_type=rt, name=n, params=params, body=body):

@@ -16,7 +16,7 @@
                 <img src="logo.png" alt="ELIN Logo" style="height: 30px; margin-bottom: 10px;">
                 <h1>ELIN_SYSTEM</h1>
             </a>
-            <p>// v0.3.0 <a href="changes.html" style="color: var(--accent); font-size: 0.7rem; text-decoration: underline;">[Changes]</a></p>
+            <p>// v0.4.0 <a href="changes.html" style="color: var(--accent); font-size: 0.7rem; text-decoration: underline;">[Changes]</a></p>
         </div>
 
         <div style="margin-bottom: 20px;">
@@ -48,17 +48,22 @@
                 <li><a href="#functions">10 // Functions & Scoping</a></li>
             </ul>
 
-            <h2>I/O & Debugging</h2>
+            <h2>I/O & Strings</h2>
             <ul class="sidebar-links">
                 <li><a href="#io">11 // Input & Output</a></li>
-                <li><a href="#debug">12 // Debug Mode</a></li>
+                <li><a href="#string-ops">12 // String Operations</a></li>
+            </ul>
+
+            <h2>Debugging</h2>
+            <ul class="sidebar-links">
+                <li><a href="#debug">13 // Debug Mode</a></li>
             </ul>
 
             <h2>Resources</h2>
             <ul class="sidebar-links">
-                <li><a href="#opcodes">13 // Opcode Table</a></li>
-                <li><a href="visualizer.html">14 // System Visualizer</a></li>
-                <li><a href="roadmap.html">15 // Roadmap</a></li>
+                <li><a href="#opcodes">14 // Opcode Table</a></li>
+                <li><a href="visualizer.html">15 // System Visualizer</a></li>
+                <li><a href="roadmap.html">16 // Roadmap</a></li>
             </ul>
         </div>
     </aside>
@@ -298,7 +303,9 @@ print double 5; # Outputs 10</code></pre>
 
         <section id="io">
             <span class="lesson-meta">Section 11 // Input & Output</span>
-            <h2>Reading Input</h2>
+            <h2>Reading and Writing</h2>
+
+            <h3>Numeric Input</h3>
             <p><code>input()</code> reads a number from the keyboard while the program is running and pushes it onto the stack. Use it to make interactive programs:</p>
             <pre><code>print "Enter a number:";
 let int x = input();
@@ -308,10 +315,62 @@ print x;</code></pre>
             <div class="box box-warning">
                 <p><code>input()</code> blocks until you type a number and press Enter. The VM expects a valid integer — any non-numeric input will cause a runtime error.</p>
             </div>
+
+            <h3>String Input</h3>
+            <p><code>read()</code> reads an entire line of text from stdin into the string pool and pushes its handle onto the stack. Unlike <code>input()</code>, it accepts any text, not just numbers:</p>
+            <pre><code>print "What is your name?";
+let str name = read();
+print strcat("Hello, ", name);</code></pre>
+
+            <h3>Writing Without Newlines</h3>
+            <p>The <code>print</code> statement always appends a newline. Use <code>write</code> to output a string handle without a newline — useful for prompts:</p>
+            <pre><code>write "Enter name: ";
+flush;
+let str name = read();
+print strcat("Hello, ", name);</code></pre>
+
+            <h3>Flushing Output</h3>
+            <p><code>flush</code> forces any buffered output to be written immediately. Combine with <code>write</code> for prompt-style interactions where the output must appear before blocking on input.</p>
+        </section>
+
+        <section id="string-ops">
+            <span class="lesson-meta">Section 12 // String Operations</span>
+            <h2>Manipulating Strings at Runtime</h2>
+            <p>ELIN provides four built-in operations for text manipulation. All operate on string pool handles (the values stored in <code>str</code> variables).</p>
+
+            <h3>String Length</h3>
+            <p><code>strlen(s)</code> pushes the length of the string referenced by handle <code>s</code>:</p>
+            <pre><code>let str msg = "hello";
+let int n = strlen(msg);
+print n;  " 5</code></pre>
+
+            <h3>String Concatenation</h3>
+            <p><code>strcat(a, b)</code> concatenates two strings and pushes a new handle to the result. The original strings are unchanged:</p>
+            <pre><code>let str a = "hello ";
+let str b = "world";
+let str c = strcat(a, b);
+print c;  " hello world</code></pre>
+
+            <h3>Substring</h3>
+            <p><code>substr(s, offset, length)</code> extracts a portion of a string and pushes a new handle. Offsets and lengths are clamped to the string bounds — out-of-range values won't crash:</p>
+            <pre><code>let str s = "hello world";
+let str a = substr(s, 0, 5);   " "hello"
+let str b = substr(s, 6, 5);   " "world"
+let str c = substr(s, 0, 100); " "hello world" (clamped)</code></pre>
+
+            <h3>String Comparison</h3>
+            <p><code>strcmp(a, b)</code> compares two strings lexicographically and pushes <code>-1</code> if <code>a &lt; b</code>, <code>0</code> if equal, or <code>1</code> if <code>a &gt; b</code>:</p>
+            <pre><code>print strcmp("abc", "def");  " -1
+print strcmp("xyz", "xyz");  "  0
+print strcmp("zzz", "aaa");  "  1</code></pre>
+
+            <div class="box">
+                <p>All string operations work with string pool handles, not raw pointers. The string pool grows at runtime to accommodate new strings created by <code>read()</code>, <code>strcat()</code>, and <code>substr()</code>.</p>
+            </div>
         </section>
 
         <section id="debug">
-            <span class="lesson-meta">Section 12 // Debugging</span>
+            <span class="lesson-meta">Section 13 // Debug Mode</span>
             <h2>Tracing Execution</h2>
             <p>The VM has a debug mode that prints every instruction as it runs — opcode, stack contents, and call depth. Launch it with the <code>--debug</code> flag:</p>
             <pre><code>./elin_vm --debug program.outz</code></pre>
@@ -327,11 +386,13 @@ trace;    # Turn debug output OFF</code></pre>
         </section>
 
         <section id="opcodes">
-            <span class="lesson-meta">Section 13 // Opcode Table</span>
+            <span class="lesson-meta">Section 14 // Opcode Table</span>
             <h2>Opcode Specification</h2>
             <p>The following instructions are the raw commands the ELIN Virtual Machine understands. Every high-level
                 command you write is translated into these decimal IDs.</p>
-            <table>
+            <details style="cursor: pointer; user-select: none;">
+            <summary style="font-family: monospace; color: var(--accent); padding: 8px 0; font-size: 0.9rem;">▼ Click to expand opcode table (<span id="opcount"></span> entries)</summary>
+            <table style="margin-top: 12px;">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -542,11 +603,48 @@ trace;    # Turn debug output OFF</code></pre>
                     </tr>
                     <tr>
                         <td>69</td>
+                        <td>READ</td>
+                        <td>Read line from stdin into string pool, push handle</td>
+                    </tr>
+                    <tr>
+                        <td>70</td>
+                        <td>WRITE</td>
+                        <td>Print string handle without newline</td>
+                    </tr>
+                    <tr>
+                        <td>71</td>
+                        <td>FLUSH</td>
+                        <td>Flush stdout</td>
+                    </tr>
+                    <tr>
+                        <td>72</td>
+                        <td>STRLEN</td>
+                        <td>Push length of string handle</td>
+                    </tr>
+                    <tr>
+                        <td>73</td>
+                        <td>STRCAT</td>
+                        <td>Concatenate two string handles, push new handle</td>
+                    </tr>
+                    <tr>
+                        <td>74</td>
+                        <td>SUBSTR</td>
+                        <td>Extract substring by handle, offset, length, push new handle</td>
+                    </tr>
+                    <tr>
+                        <td>75</td>
+                        <td>STRCMP</td>
+                        <td>Compare two string handles, push -1/0/1</td>
+                    </tr>
+                    <tr>
+                        <td>90</td>
                         <td>TRACE</td>
                         <td>Toggle debug output on/off</td>
                     </tr>
                 </tbody>
             </table>
+            </details>
+            <script>document.getElementById('opcount').textContent = document.querySelectorAll('#opcodes table tbody tr').length;</script>
         </section>
 
         <div class="nav-buttons">
@@ -643,7 +741,7 @@ trace;    # Turn debug output OFF</code></pre>
 
         // Documentation Syntax Highlighting
         const highlight = (code) => {
-            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print|abs|input|trace|dup|drop|swap|neg|not|inc|dec)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
+            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print|abs|input|read|write|flush|strlen|strcat|substr|strcmp|trace|dup|drop|swap|neg|not|inc|dec)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
             return code.replace(regex, (m, p1, p2, p3, p4, p5) => {
                 if (p1) return `<span class="hl-comment">${p1}</span>`;
                 if (p2) return `<span class="hl-string">${p2}</span>`;

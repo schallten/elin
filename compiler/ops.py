@@ -76,7 +76,18 @@ DEC = 67 # Load, decrement, and store variable
 
 # --- I/O Instructions ---
 INPUT = 68 # Blocking read from stdin, push result onto eval_stack
-TRACE = 69 # Toggle debug trace mode (prints each opcode + stack state)
+TRACE = 90 # Toggle debug trace mode (prints each opcode + stack state)
+
+# --- Standard I/O Library (Item 12) ---
+READ  = 69 # Read a line from stdin into string pool, push handle
+WRITE = 70 # Print string handle without newline
+FLUSH = 71 # Flush stdout
+
+# --- String Operations Library (Item 13) ---
+STRLEN = 72 # Push length of string handle
+STRCAT = 73 # Concatenate two string handles, push new handle
+SUBSTR = 74 # Extract substring by handle, offset, length, push new handle
+STRCMP = 75 # Compare two string handles, push -1/0/1
 
 # --- Mappings ---
 # These dictionaries help the compiler convert text like '+' or '==' into the numbers above.

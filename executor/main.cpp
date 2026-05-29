@@ -59,7 +59,14 @@ const int DEC = 67;
 const int MOD = 55;
 const int ABS = 56;
 const int INPUT = 68;
-const int TRACE = 69;
+const int READ = 69;
+const int WRITE = 70;
+const int FLUSH = 71;
+const int STRLEN = 72;
+const int STRCAT = 73;
+const int SUBSTR = 74;
+const int STRCMP = 75;
+const int TRACE = 90;
 
 bool debug_mode = false;
 
@@ -237,6 +244,91 @@ void execute() {
       ll val;
       cin >> val;
       eval_stack.push(val);
+      break;
+    }
+    case READ: {
+      string input_line;
+      getline(cin, input_line);
+      string_pool.push_back(input_line);
+      eval_stack.push((ll)string_pool.size() - 1);
+      break;
+    }
+    case WRITE: {
+      if (!eval_stack.empty()) {
+        ll str_idx = eval_stack.top();
+        eval_stack.pop();
+        if (str_idx >= 0 && str_idx < (ll)string_pool.size()) {
+          cout << string_pool[str_idx];
+        } else {
+          printer.print_debug("Invalid string pool index", str_idx);
+        }
+      }
+      break;
+    }
+    case FLUSH: {
+      cout.flush();
+      break;
+    }
+    case STRLEN: {
+      if (!eval_stack.empty()) {
+        ll str_idx = eval_stack.top();
+        eval_stack.pop();
+        if (str_idx >= 0 && str_idx < (ll)string_pool.size()) {
+          eval_stack.push((ll)string_pool[str_idx].size());
+        } else {
+          eval_stack.push(0);
+        }
+      }
+      break;
+    }
+    case STRCAT: {
+      if (eval_stack.size() >= 2) {
+        ll b_idx = eval_stack.top(); eval_stack.pop();
+        ll a_idx = eval_stack.top(); eval_stack.pop();
+        if (a_idx >= 0 && a_idx < (ll)string_pool.size() &&
+            b_idx >= 0 && b_idx < (ll)string_pool.size()) {
+          string_pool.push_back(string_pool[a_idx] + string_pool[b_idx]);
+          eval_stack.push((ll)string_pool.size() - 1);
+        } else {
+          eval_stack.push(0);
+        }
+      }
+      break;
+    }
+    case SUBSTR: {
+      if (eval_stack.size() >= 3) {
+        ll len = eval_stack.top(); eval_stack.pop();
+        ll off = eval_stack.top(); eval_stack.pop();
+        ll str_idx = eval_stack.top(); eval_stack.pop();
+        if (str_idx >= 0 && str_idx < (ll)string_pool.size()) {
+          string s = string_pool[str_idx];
+          if (off < 0) off = 0;
+          if (off > (ll)s.size()) off = (ll)s.size();
+          if (len < 0) len = 0;
+          if (off + len > (ll)s.size()) len = (ll)s.size() - off;
+          string_pool.push_back(s.substr(off, len));
+          eval_stack.push((ll)string_pool.size() - 1);
+        } else {
+          eval_stack.push(0);
+        }
+      }
+      break;
+    }
+    case STRCMP: {
+      if (eval_stack.size() >= 2) {
+        ll b_idx = eval_stack.top(); eval_stack.pop();
+        ll a_idx = eval_stack.top(); eval_stack.pop();
+        if (a_idx >= 0 && a_idx < (ll)string_pool.size() &&
+            b_idx >= 0 && b_idx < (ll)string_pool.size()) {
+          string &a = string_pool[a_idx];
+          string &b = string_pool[b_idx];
+          if (a < b) eval_stack.push(-1);
+          else if (a > b) eval_stack.push(1);
+          else eval_stack.push(0);
+        } else {
+          eval_stack.push(0);
+        }
+      }
       break;
     }
     case TRACE: {

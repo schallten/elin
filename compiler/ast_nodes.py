@@ -127,3 +127,42 @@ class InputNode:
 @dataclass
 class ReturnNode:
     value: object = None
+
+
+@dataclass
+class ReadStrNode:
+    pass
+
+
+@dataclass
+class WriteNode:
+    value: object = None
+
+
+@dataclass
+class FlushNode:
+    pass
+
+
+@dataclass
+class StrLenNode:
+    value: object = None
+
+
+@dataclass
+class StrCatNode:
+    left: object = None
+    right: object = None
+
+
+@dataclass
+class SubstrNode:
+    string: object = None
+    offset: object = None
+    length: object = None
+
+
+@dataclass
+class StrCmpNode:
+    left: object = None
+    right: object = None
