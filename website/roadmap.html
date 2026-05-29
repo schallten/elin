@@ -48,10 +48,15 @@
             <li><a href="#v22">22 // Self-hosting</a></li>
         </ul>
 
-        <h2>Memory Subsystem <span class="badge badge-060">v0.6.0</span></h2>
+            <h2>Memory Subsystem <span class="badge badge-060">v0.6.0</span></h2>
         <ul class="sidebar-links">
             <li><a href="#m3">M3 // Embedded hardening</a></li>
             <li><a href="#m4">M4 // PC comfort features</a></li>
+        </ul>
+
+        <h2>Design <span style="font-size: 0.65rem; padding: 1px 6px; border-radius: 4px; background: #2a2a3a; color: #94a3b8; border: 1px solid #94a3b8; vertical-align: middle;">Future</span></h2>
+        <ul class="sidebar-links">
+            <li><a href="#syntax">S // Syntax evolution</a></li>
         </ul>
     </aside>
 
@@ -224,6 +229,60 @@ HALT</code></pre>
             </div>
             <p class="version-summary-note">
                 These versions aren't about keeping up with other languages — they're our own milestones toward something complete.
+            </p>
+        </div>
+
+        <div id="syntax" style="margin-top: 80px; padding-top: 40px; border-top: 1px solid var(--border);">
+            <span class="lesson-meta">Future // Language Design</span>
+            <h2>Syntax Evolution — Toward Professional Readability</h2>
+            <p>
+                The current syntax was built incrementally as the VM grew, and it shows. Semicolons as statement terminators,
+                <code>wend</code> to close <code>while</code>, <code>end</code> to close every block — these were expedient
+                choices that served well during early prototyping but now constrain how the language reads.
+            </p>
+            <p>
+                A formal syntax revision is planned to shift the language toward a style where structure and data flow
+                are immediately apparent from the surface form of the code — where a function's signature, a block's
+                boundaries, and an error path all announce themselves without requiring the reader to hold context in
+                their head.
+            </p>
+
+            <h3>What that means in practice</h3>
+            <ul style="margin-left: 20px; margin-top: 15px; line-height: 2;">
+                <li>
+                    <strong>Braces over keywords.</strong> Replacing <code>if ... end</code> and <code>while ... wend</code>
+                    with <code>{ }</code> blocks. Keyword-delimited blocks require the reader to match an opening
+                    keyword against a closing one that may be dozens of lines away — a cognitive tax that grows with
+                    nesting depth. Braces give an immediate visual boundary anchored at both ends, letting the eye see
+                    the shape of control flow in a single glance. This is the difference between prose and blueprint.
+                </li>
+                <li>
+                    <strong>Explicit error paths.</strong> If a function can fail, the caller must acknowledge it at the
+                    call site — no silently ignored error codes, no exceptions unwinding through frames the caller
+                    never inspected. The failure mode is part of the function's signature, not a footnote. This keeps
+                    error handling linear and local: you see it where it happens, not three function calls up the stack
+                    in a catch block that might as well be in another file.
+                </li>
+                <li>
+                    <strong>Signature-sufficient semantics.</strong> A function declaration should tell you everything
+                    you need to know about what goes in, what comes out, and what side effects to expect — no implicit
+                    references, no hidden mutation, no surprising ownership transfers. The caller should be able to
+                    reason about a function's behaviour from its type alone, without consulting its implementation.
+                    This is especially important as the codebase grows beyond a handful of files.
+                </li>
+                <li>
+                    <strong>Minimal implicit behaviour.</strong> No automatic type coercion, no implicit truthiness
+                    beyond integer-as-boolean, and no operators that secretly invoke user-defined logic. What you
+                    read is what the compiler sees; there is no hidden dispatch layer translating ordinary-looking
+                    expressions into something the programmer did not write.
+                </li>
+            </ul>
+
+            <p style="margin-top: 20px;">
+                This revision is not yet scheduled to a specific version. It will be informed by the self-hosting
+                compiler effort — nothing reveals syntax friction faster than writing a compiler in the language
+                itself. The immediate focus remains items 14–21 (libraries and tooling), but the syntax redesign
+                is the next major language-level project after the ecosystem stabilises.
             </p>
         </div>
 
