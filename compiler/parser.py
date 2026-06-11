@@ -59,6 +59,9 @@ def parse_statements(tokens, pos, root=False):
         elif tok.type == "FLUSH":
             node, pos = parse_flush(tokens, pos)
             stmts.append(node)
+        elif tok.type == "SRAND":
+            node, pos = parse_srand(tokens, pos)
+            stmts.append(node)
         elif (tok.type == "IDENTIFIER" and pos + 1 < len(tokens)
               and peek(tokens, pos + 1).type == "LBRACKET"):
             node, pos = parse_array_assign(tokens, pos)
@@ -67,7 +70,7 @@ def parse_statements(tokens, pos, root=False):
               and peek(tokens, pos + 1).type == "EQUALS"):
             node, pos = parse_reassign(tokens, pos)
             stmts.append(node)
-        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN", "ABS", "INPUT", "READ", "STRLEN", "STRCAT", "SUBSTR", "STRCMP", "TIME", "DELAY", "RTC_READ", "RTC_WRITE", "FOPEN", "FREAD", "FWRITE", "FCLOSE"):
+        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN", "ABS", "INPUT", "READ", "STRLEN", "STRCAT", "SUBSTR", "STRCMP", "TIME", "DELAY", "RTC_READ", "RTC_WRITE", "FOPEN", "FREAD", "FWRITE", "FCLOSE", "RAND"):
             node, pos = parse_expression(tokens, pos)
             stmts.append(node)
         elif tok.type in ("COMMA", "RPAREN", "RBRACKET"):
@@ -129,6 +132,15 @@ def parse_write(tokens, pos):
 def parse_flush(tokens, pos):
     pos += 1
     return FlushNode(), pos
+
+
+def parse_srand(tokens, pos):
+    pos += 1  # SRAND
+    pos += 1  # LPAREN
+    seed, pos = parse_expression(tokens, pos)
+    if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+        pos += 1
+    return SrandNode(seed=seed), pos
 
 
 def parse_if(tokens, pos):
@@ -388,6 +400,13 @@ def parse_primary(tokens, pos):
         if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
             pos += 1
         return FcloseNode(fd=fd), pos
+    if tok.type == "RAND":
+        pos += 1
+        if peek(tokens, pos) and peek(tokens, pos).type == "LPAREN":
+            pos += 1
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return RandNode(), pos
     raise Exception(f"Unexpected token in expression: {tok.type}")
 
 

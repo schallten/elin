@@ -77,6 +77,8 @@ def lex(code_string):
                 elif part == "fread": tokens.append(Token("FREAD"))
                 elif part == "fwrite": tokens.append(Token("FWRITE"))
                 elif part == "fclose": tokens.append(Token("FCLOSE"))
+                elif part == "rand": tokens.append(Token("RAND"))
+                elif part == "srand": tokens.append(Token("SRAND"))
                 elif part in ["int", "str"]: tokens.append(Token("TYPE", part))
                 else: tokens.append(Token("IDENTIFIER", part))
                 continue

@@ -11,7 +11,8 @@ from ops import (
     READ, WRITE, FLUSH,
     STRLEN, STRCAT, SUBSTR, STRCMP,
     TIME, DELAY, RTC_READ, RTC_WRITE,
-    FOPEN, FREAD, FWRITE, FCLOSE
+    FOPEN, FREAD, FWRITE, FCLOSE,
+    RAND, SRAND
 )
 from ast_nodes import *
 from lexer import lex
@@ -96,6 +97,10 @@ def tc_infer_type(node, env):
         case FwriteNode():
             return "int"
         case FcloseNode():
+            return "int"
+        case RandNode():
+            return "int"
+        case SrandNode():
             return "int"
         case FunctionCallNode(name=n):
             funcs = env["functions"]
@@ -223,6 +228,10 @@ def check(ast, env):
             return check(s, env)
         case FcloseNode(fd=f):
             return check(f, env)
+        case RandNode():
+            return env
+        case SrandNode(seed=s):
+            return check(s, env)
         case ReturnNode(value=v):
             return check(v, env)
         case _:
@@ -572,6 +581,15 @@ def generate(ast, state):
         case FcloseNode(fd=f):
             state = generate(f, state)
             cg_add_operation(FCLOSE, state)
+            return state
+
+        case RandNode():
+            cg_add_operation(RAND, state)
+            return state
+
+        case SrandNode(seed=s):
+            state = generate(s, state)
+            cg_add_operation(SRAND, state)
             return state
 
         case FunctionDefNode(ret_type=rt, name=n, params=params, body=body):

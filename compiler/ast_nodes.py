@@ -207,3 +207,13 @@ class FwriteNode:
 @dataclass
 class FcloseNode:
     fd: object = None
+
+
+@dataclass
+class RandNode:
+    pass
+
+
+@dataclass
+class SrandNode:
+    seed: object = None

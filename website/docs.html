@@ -54,18 +54,19 @@
                 <li><a href="#string-ops">12 // String Operations</a></li>
                 <li><a href="#file-io">13 // File I/O</a></li>
                 <li><a href="#time-ops">14 // Time & RTC</a></li>
+                <li><a href="#random-ops">15 // Random Numbers</a></li>
             </ul>
 
             <h2>Debugging</h2>
             <ul class="sidebar-links">
-                <li><a href="#debug">15 // Debug Mode</a></li>
+                <li><a href="#debug">16 // Debug Mode</a></li>
             </ul>
 
             <h2>Resources</h2>
             <ul class="sidebar-links">
-                <li><a href="#opcodes">16 // Opcode Table</a></li>
-                <li><a href="visualizer.html">17 // System Visualizer</a></li>
-                <li><a href="roadmap.html">18 // Roadmap</a></li>
+                <li><a href="#opcodes">17 // Opcode Table</a></li>
+                <li><a href="visualizer.html">18 // System Visualizer</a></li>
+                <li><a href="roadmap.html">19 // Roadmap</a></li>
             </ul>
         </div>
     </aside>
@@ -418,8 +419,40 @@ rtc_write(boot_count);
 print boot_count;</code></pre>
         </section>
 
+        <section id="random-ops">
+            <span class="lesson-meta">Section 15 // Random Numbers</span>
+            <h2>Random Number Generation</h2>
+            <p>ELIN includes a pseudorandom number generator for games, simulations, and any program that needs unpredictable values.</p>
+
+            <h3>Generating Random Numbers</h3>
+            <p><code>rand()</code> pushes a random 64-bit integer onto the stack:</p>
+            <pre><code>let int x = rand();
+print x;  # Something like 4964309973687637289</code></pre>
+
+            <h3>Seeding the Generator</h3>
+            <p><code>srand(seed)</code> initializes the generator with a specific seed. Using the same seed always produces the same sequence — useful for reproducible results:</p>
+            <pre><code>srand(42);
+let int a = rand();
+let int b = rand();
+
+srand(42);
+let int c = rand();
+let int d = rand();
+
+# a == c and b == d — same seed, same sequence</code></pre>
+
+            <div class="box">
+                <p>On PC, ELIN uses the Mersenne Twister algorithm (<code>std::mt19937_64</code>). On ESP, it uses the hardware <code>random()</code> function. If you don't call <code>srand()</code>, the generator is automatically seeded with a non-deterministic value at startup.</p>
+            </div>
+
+            <h3>Random in a Range</h3>
+            <p>To get a random number within a specific range, use modulo:</p>
+            <pre><code># Random number between 0 and 99
+let int dice = rand() % 100;</code></pre>
+        </section>
+
         <section id="debug">
-            <span class="lesson-meta">Section 15 // Debug Mode</span>
+            <span class="lesson-meta">Section 16 // Debug Mode</span>
             <h2>Tracing Execution</h2>
             <p>The VM has a debug mode that prints every instruction as it runs — opcode, stack contents, and call depth. Launch it with the <code>--debug</code> flag:</p>
             <pre><code>./elin_vm --debug program.outz</code></pre>
@@ -435,7 +468,7 @@ trace;    # Turn debug output OFF</code></pre>
         </section>
 
         <section id="opcodes">
-            <span class="lesson-meta">Section 16 // Opcode Table</span>
+            <span class="lesson-meta">Section 17 // Opcode Table</span>
             <h2>Opcode Specification</h2>
             <p>The following instructions are the raw commands the ELIN Virtual Machine understands. Every high-level
                 command you write is translated into these decimal IDs.</p>
@@ -726,6 +759,16 @@ trace;    # Turn debug output OFF</code></pre>
                         <td>Write ESP RTC memory (no-op on PC)</td>
                     </tr>
                     <tr>
+                        <td>84</td>
+                        <td>RAND</td>
+                        <td>Push random 64-bit integer</td>
+                    </tr>
+                    <tr>
+                        <td>85</td>
+                        <td>SRAND</td>
+                        <td>Seed the random generator</td>
+                    </tr>
+                    <tr>
                         <td>90</td>
                         <td>TRACE</td>
                         <td>Toggle debug output on/off</td>
@@ -830,7 +873,7 @@ trace;    # Turn debug output OFF</code></pre>
 
         // Documentation Syntax Highlighting
         const highlight = (code) => {
-            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print|abs|input|read|write|flush|strlen|strcat|substr|strcmp|trace|dup|drop|swap|neg|not|inc|dec|fopen|fclose|fread|fwrite|time|delay|rtc_read|rtc_write)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
+            const regex = /(#.*$)|("[^"]*")|\b(let|func|return|if|else|while|wend|end|print|abs|input|read|write|flush|strlen|strcat|substr|strcmp|trace|dup|drop|swap|neg|not|inc|dec|fopen|fclose|fread|fwrite|time|delay|rtc_read|rtc_write|rand|srand)\b|\b(int|str|arr)\b|\b(\d+)\b/gm;
             return code.replace(regex, (m, p1, p2, p3, p4, p5) => {
                 if (p1) return `<span class="hl-comment">${p1}</span>`;
                 if (p2) return `<span class="hl-string">${p2}</span>`;

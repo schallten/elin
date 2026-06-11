@@ -76,7 +76,12 @@ const int TIME = 80;
 const int DELAY = 81;
 const int RTC_READ = 82;
 const int RTC_WRITE = 83;
+const int RAND_OP = 84;
+const int SRAND_OP = 85;
 const int TRACE = 90;
+
+#include <random>
+static mt19937_64 rng(random_device{}());
 
 bool debug_mode = false;
 auto vm_boot_time = chrono::steady_clock::now();
@@ -444,6 +449,18 @@ void execute() {
         open_files.erase(it);
       } else {
         printer.print_str("Error: Invalid fd for FCLOSE");
+      }
+      break;
+    }
+    case RAND_OP: {
+      eval_stack.push((ll)rng());
+      break;
+    }
+    case SRAND_OP: {
+      if (!eval_stack.empty()) {
+        ll seed = eval_stack.top();
+        eval_stack.pop();
+        rng.seed((unsigned long long)seed);
       }
       break;
     }

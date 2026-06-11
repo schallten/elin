@@ -7,6 +7,7 @@
     <meta name="description" content="ELIN Roadmap - Planned features and future direction.">
     <title>ELIN | Roadmap</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 
 <body class="docs-page">
@@ -25,332 +26,60 @@
 
         <h2>Libraries <span class="badge badge-040">v0.4.0</span></h2>
         <ul class="sidebar-links">
-            <li><a href="#v12">12 // Standard I/O</a></li>
-            <li><a href="#v13">13 // String ops</a></li>
-            <li><a href="#v14">14 // File I/O</a></li>
-            <li><a href="#v15">15 // Time</a></li>
-            <li><a href="#v16">16 // Random</a></li>
-            <li><a href="#v17">17 // FFI</a></li>
-            <li><a href="#m1">M1 // Core bump allocator</a></li>
+            <li><a href="#item-12--standard-io">12 // Standard I/O</a></li>
+            <li><a href="#item-13--string-operations">13 // String ops</a></li>
+            <li><a href="#item-14--file-io">14 // File I/O</a></li>
+            <li><a href="#item-15--time">15 // Time</a></li>
+            <li><a href="#item-16--random">16 // Random</a></li>
+            <li><a href="#item-17--ffi-call_extern">17 // FFI</a></li>
         </ul>
 
         <h2>Tooling <span class="badge badge-040">v0.4.0</span></h2>
         <ul class="sidebar-links">
-            <li><a href="#v18">18 // Assembler</a></li>
-            <li><a href="#v19">19 // Debugger</a></li>
-            <li><a href="#v20">20 // REPL</a></li>
-            <li><a href="#v21">21 // Package manager</a></li>
+            <li><a href="#item-m1--core-bump-allocator">M1 // Core bump allocator</a></li>
+            <li><a href="#item-18--bytecode-assembler">18 // Assembler</a></li>
+            <li><a href="#item-21--package-manager">21 // Package manager</a></li>
+            <li><a href="#item-19--source-level-debugger">19 // Debugger</a></li>
+            <li><a href="#item-20--repl">20 // REPL</a></li>
         </ul>
 
         <h2>Memory + Self-Hosting <span class="badge badge-050">v0.5.0</span></h2>
         <ul class="sidebar-links">
-            <li><a href="#m2">M2 // Multi-segment + regions</a></li>
-            <li><a href="#v22">22 // Self-hosting</a></li>
+            <li><a href="#item-m2--multi-segment-architecture--regions">M2 // Multi-segment + regions</a></li>
+            <li><a href="#item-22--write-the-elin-compiler-in-elin">22 // Self-hosting</a></li>
         </ul>
 
-            <h2>Memory Subsystem <span class="badge badge-060">v0.6.0</span></h2>
+        <h2>Memory Subsystem <span class="badge badge-060">v0.6.0</span></h2>
         <ul class="sidebar-links">
-            <li><a href="#m3">M3 // Embedded hardening</a></li>
-            <li><a href="#m4">M4 // PC comfort features</a></li>
+            <li><a href="#item-m3--embedded-hardening">M3 // Embedded hardening</a></li>
+            <li><a href="#item-m4--pc-comfort-features">M4 // PC comfort features</a></li>
         </ul>
 
         <h2>Design <span style="font-size: 0.65rem; padding: 1px 6px; border-radius: 4px; background: #2a2a3a; color: #94a3b8; border: 1px solid #94a3b8; vertical-align: middle;">Future</span></h2>
         <ul class="sidebar-links">
-            <li><a href="#syntax">S // Syntax evolution</a></li>
+            <li><a href="#syntax-evolution--toward-professional-readability">S // Syntax evolution</a></li>
         </ul>
     </aside>
 
-    <main class="main-content">
-        <header>
-            <span class="lesson-meta">Roadmap</span>
-            <h1>Where We're Taking ELIN</h1>
-            <p style="font-style: italic; color: var(--text-secondary);">Our wishlist. No deadlines. Subject to whims.</p>
-        </header>
-
-        <div class="version-header">
-            <span class="version-badge v040">v0.4.0</span>
-            <h2>Libraries &amp; Tooling — Ecosystem</h2>
-            <p>Items 12–21 ship a standard library and developer toolchain, alongside the core bump allocator (M1) for dynamic allocation. This is how we turn ELIN from a bare VM into a usable programming environment.</p>
-        </div>
-
-        <section id="v12">
-            <span class="lesson-meta">Libraries // Item 12 <span style="color: #4ade80;">✓ Done</span></span>
-            <h2>Standard I/O library</h2>
-            <p>Three opcodes for interactive programs: <strong>READ (69)</strong> reads a line from stdin into the string pool and pushes the handle; <strong>WRITE (70)</strong> prints a string handle without newline; <strong>FLUSH (71)</strong> flushes stdout. <code>read()</code>, <code>write</code>, and <code>flush</code> keyword syntax in the compiler.</p>
-        </section>
-
-        <section id="v13">
-            <span class="lesson-meta">Libraries // Item 13 <span style="color: #4ade80;">✓ Done</span></span>
-            <h2>String operations library</h2>
-            <p>Four opcodes for text handling: <strong>STRLEN (72)</strong> pushes the length of a string handle; <strong>STRCAT (73)</strong> concatenates two handles and pushes a new one; <strong>SUBSTR (74)</strong> extracts a substring by handle, offset, and length; <strong>STRCMP (75)</strong> compares two handles and pushes -1/0/1. Accessed via <code>strlen()</code>, <code>strcat()</code>, <code>substr()</code>, and <code>strcmp()</code> in source.</p>
-        </section>
-
-        <section id="v14">
-            <span class="lesson-meta">Libraries // Item 14 <span style="color: #4ade80;">✓ Done</span></span>
-            <h2>File I/O library</h2>
-            <p>Four opcodes: <strong>FOPEN (76)</strong>, <strong>FREAD (77)</strong>, <strong>FWRITE (78)</strong>, <strong>FCLOSE (79)</strong>. On PC they wrap the C stdio API; on ESP they wrap LittleFS. Same API surface, different backend. File handles are integer descriptors into a fixed-size table we maintain inside the VM.</p>
-        </section>
-
-        <section id="v15">
-            <span class="lesson-meta">Libraries // Item 15 <span style="color: #4ade80;">✓ Done</span></span>
-            <h2>Time library</h2>
-            <p>We need four opcodes for anything real-time: <strong>TIME (80)</strong> pushes milliseconds since boot (<code>std::chrono</code> on PC, <code>millis()</code> on ESP); <strong>DELAY (81)</strong> blocks for N ms; <strong>RTC_READ (82)</strong> and <strong>RTC_WRITE (83)</strong> access ESP RTC memory (no-op on PC). Every nontrivial program we write needs at least <code>TIME</code> and <code>DELAY</code>.</p>
-        </section>
-
-        <section id="v16">
-            <span class="lesson-meta">Libraries // Item 16</span>
-            <h2>Random number library</h2>
-            <p>Two opcodes: <strong>RAND (84)</strong> pushes a random 64-bit integer; <strong>SRAND (85)</strong> seeds the generator. On PC we use <code>std::mt19937_64</code>; on ESP we use the hardware <code>random()</code>. Same interface, platform-appropriate implementation underneath.</p>
-        </section>
-
-        <section id="v17">
-            <span class="lesson-meta">Libraries // Item 17</span>
-            <h2>FFI (CALL_EXTERN)</h2>
-            <p>This is how we bridge ELIN to the host system. A source declaration like <code>EXTERN "math" sin;</code> emits <strong>CALL_EXTERN (86)</strong>. We maintain a function registry per platform: C++ stdlib on PC, GPIO and WiFi on ESP. Same opcode, different registration tables.</p>
-        </section>
-
-        <section id="v18">
-            <span class="lesson-meta">Tooling // Item 18</span>
-            <h2>Bytecode assembler</h2>
-            <p>We're building <code>elin-asm</code> — a human-readable text format that assembles to <code>.outz</code>:</p>
-            <pre><code>PUSH 42
-STORE 0
-HALT</code></pre>
-            <p>We want to hand-write optimized bytecode, test individual opcodes, and bootstrap the compiler — all without hex-editing raw <code>.outz</code> files.</p>
-        </section>
-
-        <section id="v19">
-            <span class="lesson-meta">Tooling // Item 19</span>
-            <h2>Source-level debugger</h2>
-            <p>We're building <code>elin-debug</code>: set breakpoints, single-step through source lines, inspect state. The compiler will emit a line-number table in <code>.outz</code> that maps source lines to bytecode offsets. On PC it's an interactive terminal; on ESP it accepts serial commands (<code>s</code> = step, <code>c</code> = continue, <code>p</code> = print stack).</p>
-        </section>
-
-        <section id="v20">
-            <span class="lesson-meta">Tooling // Item 20</span>
-            <h2>REPL</h2>
-            <p>We're building <code>elin-repl</code>: read a line of ELIN source, compile it, run it, print the result, repeat. This requires making the compiler embeddable as a library (or building a separate JIT mode). On PC it gives us immediate feedback for learning; on ESP it lets us write interactive shell commands in ELIN instead of hardcoded C++.</p>
-        </section>
-
-        <section id="v21">
-            <span class="lesson-meta">Tooling // Item 21</span>
-            <h2>Package manager</h2>
-            <p>We're building <code>elin-pkg</code> to manage dependencies:</p>
-            <ul>
-                <li><code>elin-pkg init</code> — creates an <code>elin.json</code> manifest</li>
-                <li><code>elin-pkg add math</code> — pulls from a git repo or local path</li>
-                <li><code>elin-pkg build</code> — compiles everything together</li>
-            </ul>
-            <p>Dependencies are just <code>.elin</code> files with their own <code>elin.json</code>. No registry server — git URLs or local paths. This also serves as a prototype for Loom so we can figure out what it really needs before writing it in C++ for ESP.</p>
-        </section>
-
-        <section id="m1">
-            <span class="lesson-meta">Memory // Item M1</span>
-            <h2>Core bump allocator</h2>
-            <p>A single heap segment using bump-pointer allocation. Each allocation returns a handle (integer ID) rather than a raw address. A flat handle table maps IDs to block metadata (pointer, size, validity flag). Allocation is O(1) — increment a pointer. Deallocation is explicit: <code>FREE</code> invalidates the handle and recycles its slot; memory is not reclaimed, the bump pointer only advances. <code>LOAD_H</code> / <code>STORE_H</code> opcodes access cells with bounds checking. Use-after-free, double-free, and OOB are caught at runtime — no silent corruption.</p>
-        </section>
-
-        <section id="gleam-port">
-            <span class="lesson-meta">Compiler // Item —</span>
-            <h2>Port the compiler to Gleam</h2>
-            <p>
-                The Python compiler was deliberately written without classes — just pure functions taking data in and returning data out — so it could be ported to another language. We're moving it to <strong>Gleam</strong>, a type-safe functional language with algebraic data types and exhaustive pattern matching.
-            </p>
-            <p>
-                This isn't just cosmetic. Our 17 <code>@dataclass</code> AST nodes become a single <code>type Expr</code> with variants. Every <code>isinstance</code> check in Python becomes a compile-time exhaustiveness check in Gleam — if we add a new AST node and forget to handle it in a <code>case</code>, the compiler refuses to build. Our manual state threading (<code>state = generate(x, state); state = generate(y, state)</code>) collapses into clean pipelines (<code>state |&gt; generate(x) |&gt; generate(y)</code>). The whole codebase shrinks by roughly 40%.
-            </p>
-            <p>
-                More importantly, a cleaner compiler is easier to port to ELIN itself for v0.5.0. If the Python compiler was already a stepping stone to self-hosting, the Gleam version is a sturdier one — fewer bugs, smaller surface area, and a type system that catches mismatches before runtime.
-            </p>
-        </section>
-
-        <div class="version-header">
-            <span class="version-badge v050">v0.5.0</span>
-            <h2>Memory + Self-Hosting — The Turning Point</h2>
-            <p>Multi-segment memory regions (M2) provide temp allocation for function-local work without manual <code>FREE</code>, powering the self-hosting compiler (Item 22). Once ELIN can compile itself, it stops being a toy and becomes a self-sustaining system.</p>
-        </div>
-
-        <section id="m2">
-            <span class="lesson-meta">Memory // Item M2</span>
-            <h2>Multi-segment architecture + regions</h2>
-            <p>Four logical bump-allocated arenas: <strong>Main (0)</strong> for explicitly managed allocations, <strong>Temp (1)</strong> for function-local scratch (compiler auto-inserts <code>REGION_ENTER</code>/<code>REGION_EXIT</code> around function bodies), <strong>Interrupt (2)</strong> for ISR-safe allocations, and <strong>Spare (3)</strong> for overflow or special-purpose use. <code>REGION_EXIT</code> resets the bump pointer and invalidates all handles in that segment — no per-object tracking needed. Recursive functions and loops can allocate temporaries without leaking and without manual <code>FREE</code>.</p>
-        </section>
-
-        <section id="v22">
-            <span class="lesson-meta">Self-Hosting // Item 22</span>
-            <h2>Write the ELIN compiler in ELIN</h2>
-            <p>Our endgame: write the ELIN compiler in ELIN itself. That's the proof that we've built something complete. We'll break it into three stages:</p>
-
-            <p><strong>Stage 1:</strong> Write a lexer in ELIN. It takes a string handle to source code and produces an array of token structs (type, value). We'll validate it against the output of our Python/Haskell lexer.</p>
-
-            <p><strong>Stage 2:</strong> Write a parser in ELIN. It consumes the token array and produces an AST using nested arrays or structs.</p>
-
-            <p><strong>Stage 3:</strong> Write a bytecode emitter in ELIN. It walks the AST and writes valid <code>.outz</code> bytes through the file I/O library (Item 14).</p>
-
-            <p>Prerequisite: we need structs or records first — or a convention of using arrays with fixed offsets:</p>
-
-            <pre><code>struct Token {
-    int type;
-    str value;
-};</code></pre>
-
-            <p>We'll start with Stage 1 only. The moment our ELIN lexer produces the same token stream as the reference implementation for a real program, we'll know the language is viable for self-hosting.</p>
-        </section>
-
-        <div class="version-header">
-            <span class="version-badge v060">v0.6.0</span>
-            <h2>Memory — Hardening &amp; PC Comfort</h2>
-            <p>Embedded-hardening (M3) makes memory usage fully predictable at link time, while PC features (M4) add dynamic growth, compaction, and profiling for long-running desktop/server programs.</p>
-        </div>
-
-        <section id="m3">
-            <span class="lesson-meta">Memory // Item M3</span>
-            <h2>Embedded hardening</h2>
-            <p>Segments bind to statically provided memory blocks (e.g. <code>static ll main_heap[2048]</code>) — no <code>malloc</code> or C++ heap usage. The VM performs zero runtime allocation; all memory is accounted for in the linker map. <code>ALLOC</code> returns null (handle 0) on segment full — no exceptions, no crashes. Generation counters make temp reclamation O(1): each <code>REGION_EXIT</code> increments a per-segment generation number, and handle validity becomes a generation comparison instead of a table scan. <code>SEG_USED</code> opcode reports current utilization for runtime pressure monitoring. Published worst-case cycle counts for all memory ops enable hard real-time scheduling.</p>
-        </section>
-
-        <section id="m4">
-            <span class="lesson-meta">Memory // Item M4</span>
-            <h2>PC comfort features</h2>
-            <p>Additive features gated behind build flags: <strong>dynamic growth</strong> allows segments backed by <code>malloc</code>/<code>new</code> to grow on demand; <strong>compaction</strong> moves live objects to segment start and can run incrementally across VM cycles to avoid visible pauses; <strong>profiling hooks</strong> provide runtime callbacks for allocation events and segment pressure thresholds. All PC features are optional — the embedded binary remains unchanged.</p>
-        </section>
-
-        <div class="version-summary">
-            <div class="version-summary-item">
-                <span class="version-badge v040">v0.4.0</span>
-                <span>Items 12–21 + M1 — Libraries, tooling &amp; bump allocator</span>
-            </div>
-            <div class="version-summary-item">
-                <span class="version-badge v050">v0.5.0</span>
-                <span>Items M2 + 22 — Multi-segment memory &amp; self-hosting</span>
-            </div>
-            <div class="version-summary-item">
-                <span class="version-badge v060">v0.6.0</span>
-                <span>Items M3–M4 — Embedded hardening &amp; PC comfort</span>
-            </div>
-            <p class="version-summary-note">
-                These versions aren't about keeping up with other languages — they're our own milestones toward something complete.
-            </p>
-        </div>
-
-        <div id="syntax" style="margin-top: 80px; padding-top: 40px; border-top: 1px solid var(--border);">
-            <span class="lesson-meta">Future // Language Design</span>
-            <h2>Syntax Evolution — Toward Professional Readability</h2>
-            
-            <div style="background: var(--surface); padding: 15px 20px; border-radius: 6px; border-left: 4px solid var(--accent); margin-bottom: 30px;">
-                <strong>TL;DR:</strong> We are transitioning ELIN into a "calm systems language"—procedural, data-oriented, and non-OOP. The upcoming syntax revision will replace keyword-heavy noise with minimal, C-style braces, enforcing explicit control flow, flat architectures, and a single unified declaration style. The goal is code that is readable at a glance, easy to parse, and simple to debug.
-            </div>
-
-            <h3>The Motivation</h3>
-            <p>
-                The current syntax was built incrementally as the VM grew, and it shows. Semicolons as statement terminators,
-                <code>wend</code> to close <code>while</code>, <code>end</code> to close every block — these were expedient
-                choices that served well during early prototyping but now constrain how the language reads.
-            </p>
-            <p>
-                A formal syntax revision is planned to shift the language toward a style where structure and data flow
-                are immediately apparent from the surface form of the code — where a function's signature, a block's
-                boundaries, and an error path all announce themselves without requiring the reader to hold context in
-                their head.
-            </p>
-
-            <h3>What Will Need to Change</h3>
-            <p>To achieve our goals, we will fundamentally restructure how programs are written in ELIN:</p>
-            <ul style="margin-left: 20px; margin-top: 15px; line-height: 2;">
-                <li>
-                    <strong>No Classes or Methods.</strong> We separate data and behavior entirely. We will use structs, enums, unions, procedures, and modules. Instead of calling methods like <code>player.move(dir)</code>, we will write procedures like <code>player_move(player, dir)</code>. This keeps logic isolated, APIs flat, and architecture simpler.
-                </li>
-                <li>
-                    <strong>Unified Declaration Style.</strong> We will adopt one consistent style everywhere: <code>name: Type</code> for declarations and <code>value := expression</code> for inference.
-                </li>
-                <li>
-                    <strong>Visually Calm Syntax.</strong> We will replace semicolon spam, keyword-delimited blocks (<code>if ... end</code>, <code>while ... wend</code>), and excessive punctuation with clean <code>{ }</code> blocks. Conditions will be written without unnecessary parentheses (e.g., <code>if x > 10 { }</code>).
-                </li>
-                <li>
-                    <strong>Explicitness over Cleverness.</strong> Control flow and error paths must be obvious and readable top-to-bottom. We will avoid hidden allocations, magic iterators, implicit type coercion, decorators, and chained calls. 
-                </li>
-                <li>
-                    <strong>Tagged Unions + Match.</strong> Instead of inheritance, subclass hierarchies, or virtual methods, we will use explicit tagged unions and <code>match</code> statements to handle variants safely.
-                </li>
-            </ul>
-
-            <h3>How We Will Achieve This</h3>
-            <p>
-                This revision will be informed directly by our self-hosting compiler effort (Item 22). Nothing reveals syntax friction faster than writing a compiler in the language itself. We will incrementally introduce the new parser alongside the old one, migrating the standard library and existing tools (like <code>elin-asm</code> and <code>elin-pkg</code>) to the new syntax. 
-            </p>
-            <p>
-                The immediate focus remains items 14–21 (libraries and tooling), but the syntax redesign is the next major language-level project after the ecosystem stabilises.
-            </p>
-
-            <h3>Code Comparison: Binary Search</h3>
-            <p>To illustrate the difference, here is what a standard binary search looks like in our current syntax compared to our target future syntax.</p>
-            
-            <h4>Current Syntax</h4>
-            <pre><code>func int binary_search arr int data int size int target;
-    let int low = 0;
-    let int high = size - 1;
-    
-    while low <= high;
-        let int mid = (low + high) / 2;
-        let int val = data[mid];
-        
-        if val == target;
-            return mid;
-        end;
-        
-        if val < target;
-            low = mid + 1;
-        else;
-            high = mid - 1;
-        end;
-    wend;
-    
-    return -1;
-end;</code></pre>
-
-            <h4 style="margin-top: 30px;">Future Syntax</h4>
-            <p style="margin-bottom: 10px;">Notice how the code shape is recognizable, readable top-to-bottom, and mentally easy to parse:</p>
-            <pre><code>package main
-
-import "core:io"
-
-binary_search :: proc(arr: []int, target: int) -> int {
-    left := 0
-    right := len(arr) - 1
-
-    for left <= right {
-        mid := (left + right) / 2
-        value := arr[mid]
-
-        if value == target {
-            return mid
-        }
-
-        if value < target {
-            left = mid + 1
-        } else {
-            right = mid - 1
-        }
-    }
-
-    return -1
-}
-
-main :: proc() {
-    nums := []int{1, 3, 5, 7, 9, 11, 13}
-    index := binary_search(nums, 7)
-    io.println(index)
-}</code></pre>
-        </div>
-
-        <div class="nav-buttons" style="margin-top: 60px;">
-            <a href="index.html" class="btn">&larr; Back to Home</a>
-            <a href="docs.html" class="btn">Read the docs &rarr;</a>
-        </div>
+    <main class="main-content" id="roadmap-content">
+        <p style="color: var(--text-secondary);">Loading roadmap...</p>
     </main>
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const sections = document.querySelectorAll('section');
+        fetch('roadmap.md')
+            .then(r => r.text())
+            .then(md => {
+                document.getElementById('roadmap-content').innerHTML = marked.parse(md);
+            })
+            .catch(err => {
+                document.getElementById('roadmap-content').innerHTML =
+                    '<p style="color: #f44;">Failed to load roadmap.md</p>';
+            });
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
         const navLinks = document.querySelectorAll('.sidebar-links a');
 
         const observer = new IntersectionObserver((entries) => {
@@ -368,7 +97,13 @@ main :: proc() {
             rootMargin: '-20% 0px -80% 0px'
         });
 
-        sections.forEach(section => observer.observe(section));
+        // Re-observe after markdown loads
+        const mutateObs = new MutationObserver(() => {
+            document.querySelectorAll('.main-content section, .main-content h2[id], .main-content h3[id]').forEach(el => {
+                observer.observe(el);
+            });
+        });
+        mutateObs.observe(document.getElementById('roadmap-content'), { childList: true, subtree: true });
     });
 </script>
 </body>

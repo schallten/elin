@@ -48,7 +48,7 @@ Four opcodes for real-time programs:
 
 ---
 
-### Item 16 — Random
+### Item 16 — Random ✅
 Two opcodes:
 - **RAND (84)** — push random 64-bit integer
 - **SRAND (85)** — seed the RNG
@@ -67,6 +67,11 @@ Bridge ELIN to the host system:
 
 ## Tooling
 
+### Item M1 — Core bump allocator
+Single heap segment, bump-pointer allocation. Handle-based, O(1) alloc, explicit FREE.
+
+---
+
 ### Item 18 — Bytecode assembler (elin-asm)
 Human-readable text format that assembles to `.outz`:
 
@@ -78,6 +83,16 @@ HALT
 
 For hand-writing optimized bytecode, testing individual opcodes, and
 bootstrapping the compiler.
+
+---
+
+### Item 21 — Package manager (elin-pkg)
+Manage dependencies:
+- `elin-pkg init` — create `elin.json` manifest
+- `elin-pkg add math` — pull from git URL or local path
+- `elin-pkg build` — compile everything together
+
+No registry server — just git URLs and local paths.
 
 ---
 
@@ -94,16 +109,6 @@ Read a line of ELIN source, compile, run, print result, repeat.
 - Requires making the compiler embeddable as a library
 - On PC: immediate feedback for learning
 - On ESP: interactive shell commands in ELIN
-
----
-
-### Item 21 — Package manager (elin-pkg)
-Manage dependencies:
-- `elin-pkg init` — create `elin.json` manifest
-- `elin-pkg add math` — pull from git URL or local path
-- `elin-pkg build` — compile everything together
-
-No registry server — just git URLs and local paths.
 
 ---
 

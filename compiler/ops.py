@@ -101,6 +101,10 @@ DELAY = 81 # Block for N ms
 RTC_READ = 82 # Read ESP RTC memory (no-op on PC)
 RTC_WRITE = 83 # Write ESP RTC memory (no-op on PC)
 
+# --- Random Number Library (Item 16) ---
+RAND = 84  # Push random 64-bit integer
+SRAND = 85 # Seed the random generator
+
 # --- Mappings ---
 # These dictionaries help the compiler convert text like '+' or '==' into the numbers above.
 
