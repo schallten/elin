@@ -1,0 +1,310 @@
+/* ELIN Custom Theme Overrides */
+
+:root {
+    --elin-accent: #f7a31d;
+    --elin-bg: #121212;
+    --elin-code-bg: #1a1a1a;
+    --elin-border: #2a2a2a;
+}
+
+/* Hero Section */
+.hero-section {
+    text-align: center;
+    padding: 4rem 0;
+}
+
+.hero-section img {
+    margin-bottom: 1.5rem;
+}
+
+.hero-section h2 {
+    font-size: 2.5rem;
+    letter-spacing: -1px;
+}
+
+.cta-group {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+/* Feature Cards */
+.grid.cards > ul > li {
+    border-left: 3px solid var(--elin-accent);
+}
+
+/* Not a Big Deal Section */
+.not-a-big-deal {
+    text-align: center;
+    padding: 3rem 0;
+    border-top: 1px solid var(--md-default-fg-color--lightest);
+    margin-top: 3rem;
+}
+
+/* ========================================
+   VISUALIZER STYLES
+   ======================================== */
+
+.viz-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.viz-panel {
+    border: 1px solid var(--md-default-fg-color--lightest);
+    padding: 20px;
+    background-color: var(--md-code-bg-color);
+    height: 600px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.viz-panel h3 {
+    position: sticky;
+    top: -20px;
+    background: var(--md-code-bg-color);
+    border-bottom: 1px solid var(--md-default-fg-color--lightest);
+    margin: 0 -20px 15px -20px;
+    padding: 10px 20px;
+    z-index: 10;
+    font-family: monospace;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--md-accent-fg-color);
+}
+
+.line {
+    font-family: monospace;
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    color: #888;
+}
+
+.line:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+.line.active {
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    border-left-color: var(--md-accent-fg-color);
+}
+
+.stack-item {
+    border: 1px solid var(--md-default-fg-color--lightest);
+    margin-bottom: 5px;
+    padding: 8px;
+    background: var(--md-code-bg-color);
+    text-align: center;
+    font-family: monospace;
+    font-size: 0.9rem;
+    color: var(--md-fg-color);
+}
+
+.stack-item.new {
+    border-color: var(--md-accent-fg-color);
+    color: var(--md-accent-fg-color);
+}
+
+.stack-item.frame {
+    border-left: 4px solid var(--md-accent-fg-color);
+    text-align: left;
+    font-size: 0.75rem;
+}
+
+.controls {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid var(--md-default-fg-color--lightest);
+    background: var(--md-code-bg-color);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.controls button {
+    padding: 8px 16px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    background: var(--md-accent-fg-color);
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+.controls button:hover {
+    opacity: 0.9;
+}
+
+select {
+    padding: 8px 16px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    background: var(--md-code-bg-color);
+    color: var(--md-fg-color);
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 4px;
+}
+
+.input-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.input-area, .intellisense-overlay {
+    width: 100%;
+    height: 200px;
+    font-family: monospace;
+    padding: 15px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 4px;
+}
+
+.input-area {
+    background: transparent;
+    color: transparent;
+    caret-color: var(--md-fg-color);
+    resize: vertical;
+    position: relative;
+    z-index: 2;
+}
+
+.intellisense-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: var(--md-code-bg-color);
+    color: var(--md-fg-color);
+    z-index: 1;
+    pointer-events: none;
+    overflow-y: auto;
+}
+
+.syntax-opcode { color: var(--md-accent-fg-color); font-weight: bold; }
+.syntax-string { color: #ce9178; }
+.syntax-comment { color: #6a9955; font-style: italic; }
+.syntax-arg { color: #b5cea8; }
+
+#console-output {
+    font-family: monospace;
+    white-space: pre-wrap;
+    font-size: 0.85rem;
+    color: var(--md-fg-color);
+    padding: 10px;
+    background: var(--md-code-bg-color);
+    border: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.action-display {
+    background: var(--md-code-bg-color);
+    border: 1px solid var(--md-default-fg-color--lightest);
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    font-family: monospace;
+    font-size: 0.85rem;
+    border-left: 5px solid var(--md-accent-fg-color);
+}
+
+.action-display strong {
+    color: var(--md-accent-fg-color);
+    margin-right: 10px;
+    text-transform: uppercase;
+}
+
+h4 {
+    font-family: monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #666;
+    margin: 15px 0 10px 0;
+}
+
+input[type="range"] { accent-color: var(--md-accent-fg-color); }
+
+hr {
+    border: none;
+    border-top: 1px solid var(--md-default-fg-color--lightest);
+    margin: 20px 0;
+}
+
+/* ========================================
+   GENERAL STYLES
+   ======================================== */
+
+/* Code Blocks */
+.md-typeset pre {
+    border: 1px solid var(--elin-border);
+    border-radius: 4px;
+}
+
+.md-typeset code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Admonitions */
+.md-typeset .admonition {
+    border-left-color: var(--elin-accent);
+}
+
+/* Tables */
+.md-typeset table {
+    font-size: 0.85rem;
+}
+
+.md-typeset th {
+    background: rgba(0,0,0,0.2);
+}
+
+/* Details/Summary */
+.md-typeset details {
+    border: 1px solid var(--elin-border);
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+}
+
+.md-typeset details summary {
+    color: var(--elin-accent);
+    font-family: monospace;
+}
+
+/* Navigation */
+.md-nav__link {
+    font-size: 0.85rem;
+}
+
+/* Footer */
+.md-footer {
+    margin-top: 0;
+}
+
+/* Version Badge Styling */
+.version-badge {
+    display: inline-block;
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+/* Responsive */
+@media (max-width: 1000px) {
+    .viz-container {
+        grid-template-columns: 1fr;
+    }
+}
