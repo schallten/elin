@@ -60,7 +60,6 @@ markdown_extensions:
       permalink: true
 
 extra_javascript:
-  - javascripts/visualizer.js
   - javascripts/extra.js
 
 extra_css:

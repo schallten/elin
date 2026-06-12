@@ -42,109 +42,208 @@
     margin-top: 3rem;
 }
 
-/* Visualizer Embed */
-.viz-embed {
-    border: 1px solid var(--elin-border);
-    border-radius: 8px;
-    overflow: hidden;
-    margin: 2rem 0;
-    background: var(--elin-code-bg);
+/* ========================================
+   VISUALIZER STYLES
+   ======================================== */
+
+.viz-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-top: 30px;
 }
 
 .viz-panel {
-    border-bottom: 1px solid var(--elin-border);
+    border: 1px solid var(--md-default-fg-color--lightest);
+    padding: 20px;
+    background-color: var(--md-code-bg-color);
+    height: 600px;
+    overflow-y: auto;
+    position: relative;
 }
 
-.panel-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.75rem 1rem;
-    background: rgba(0,0,0,0.2);
-    border-bottom: 1px solid var(--elin-border);
+.viz-panel h3 {
+    position: sticky;
+    top: -20px;
+    background: var(--md-code-bg-color);
+    border-bottom: 1px solid var(--md-default-fg-color--lightest);
+    margin: 0 -20px 15px -20px;
+    padding: 10px 20px;
+    z-index: 10;
+    font-family: monospace;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    color: var(--md-accent-fg-color);
+}
+
+.line {
     font-family: monospace;
     font-size: 0.85rem;
-    color: var(--elin-accent);
-}
-
-.panel-controls {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.panel-controls button {
-    padding: 0.25rem 0.5rem;
-    background: var(--elin-border);
-    border: none;
-    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
     color: #888;
+}
+
+.line:hover {
+    background: rgba(255,255,255,0.03);
+}
+
+.line.active {
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    border-left-color: var(--md-accent-fg-color);
+}
+
+.stack-item {
+    border: 1px solid var(--md-default-fg-color--lightest);
+    margin-bottom: 5px;
+    padding: 8px;
+    background: var(--md-code-bg-color);
+    text-align: center;
     font-family: monospace;
+    font-size: 0.9rem;
+    color: var(--md-fg-color);
+}
+
+.stack-item.new {
+    border-color: var(--md-accent-fg-color);
+    color: var(--md-accent-fg-color);
+}
+
+.stack-item.frame {
+    border-left: 4px solid var(--md-accent-fg-color);
+    text-align: left;
     font-size: 0.75rem;
-    cursor: pointer;
 }
 
-.panel-controls button:hover {
-    background: var(--elin-accent);
-    color: #000;
-}
-
-#source-input {
-    width: 100%;
-    min-height: 150px;
-    padding: 1rem;
-    background: var(--elin-code-bg);
-    border: none;
-    color: var(--md-code-fg-color);
-    font-family: monospace;
-    font-size: 0.85rem;
-    resize: vertical;
-}
-
-#source-input:focus {
-    outline: none;
-}
-
-.bytecode-output, .eval-section, .output-container {
-    padding: 1rem;
-    font-family: monospace;
-    font-size: 0.8rem;
-    min-height: 100px;
-}
-
-.stack-container, .callstack-container, .vars-container {
-    padding: 0.5rem;
-    font-family: monospace;
-    font-size: 0.8rem;
-}
-
-.output-container {
-    color: #4ade80;
-    white-space: pre-wrap;
-}
-
-.viz-controls {
+.controls {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid var(--md-default-fg-color--lightest);
+    background: var(--md-code-bg-color);
     display: flex;
     align-items: center;
-    gap: 1rem;
-    padding: 1rem;
-    background: rgba(0,0,0,0.2);
-    border-top: 1px solid var(--elin-border);
+    flex-wrap: wrap;
+    gap: 15px;
 }
 
-.ctrl-btn {
-    padding: 0.5rem 1rem;
-    background: var(--elin-accent);
+.controls button {
+    padding: 8px 16px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    background: var(--md-accent-fg-color);
+    color: #000;
     border: none;
     border-radius: 4px;
-    color: #000;
-    font-family: monospace;
     font-weight: 700;
-    cursor: pointer;
 }
 
-.ctrl-btn:hover {
+.controls button:hover {
     opacity: 0.9;
 }
+
+select {
+    padding: 8px 16px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    cursor: pointer;
+    background: var(--md-code-bg-color);
+    color: var(--md-fg-color);
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 4px;
+}
+
+.input-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.input-area, .intellisense-overlay {
+    width: 100%;
+    height: 200px;
+    font-family: monospace;
+    padding: 15px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 4px;
+}
+
+.input-area {
+    background: transparent;
+    color: transparent;
+    caret-color: var(--md-fg-color);
+    resize: vertical;
+    position: relative;
+    z-index: 2;
+}
+
+.intellisense-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: var(--md-code-bg-color);
+    color: var(--md-fg-color);
+    z-index: 1;
+    pointer-events: none;
+    overflow-y: auto;
+}
+
+.syntax-opcode { color: var(--md-accent-fg-color); font-weight: bold; }
+.syntax-string { color: #ce9178; }
+.syntax-comment { color: #6a9955; font-style: italic; }
+.syntax-arg { color: #b5cea8; }
+
+#console-output {
+    font-family: monospace;
+    white-space: pre-wrap;
+    font-size: 0.85rem;
+    color: var(--md-fg-color);
+    padding: 10px;
+    background: var(--md-code-bg-color);
+    border: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.action-display {
+    background: var(--md-code-bg-color);
+    border: 1px solid var(--md-default-fg-color--lightest);
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    font-family: monospace;
+    font-size: 0.85rem;
+    border-left: 5px solid var(--md-accent-fg-color);
+}
+
+.action-display strong {
+    color: var(--md-accent-fg-color);
+    margin-right: 10px;
+    text-transform: uppercase;
+}
+
+h4 {
+    font-family: monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #666;
+    margin: 15px 0 10px 0;
+}
+
+input[type="range"] { accent-color: var(--md-accent-fg-color); }
+
+hr {
+    border: none;
+    border-top: 1px solid var(--md-default-fg-color--lightest);
+    margin: 20px 0;
+}
+
+/* ========================================
+   GENERAL STYLES
+   ======================================== */
 
 /* Code Blocks */
 .md-typeset pre {
@@ -201,4 +300,11 @@
     padding: 3px 10px;
     border-radius: 4px;
     margin-bottom: 10px;
+}
+
+/* Responsive */
+@media (max-width: 1000px) {
+    .viz-container {
+        grid-template-columns: 1fr;
+    }
 }

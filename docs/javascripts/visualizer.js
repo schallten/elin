@@ -1,5 +1,3 @@
-// ELIN Bytecode Visualizer - Adapted for MkDocs
-
 const examples = {
     hello: `# Hello World in ELIN Bytecode
 STR 0 Hello, World!
@@ -30,21 +28,57 @@ STR 0 Element:
 9`
 };
 
-const state = {
-    lines: [],
-    instructions: [],
-    stringPool: {},
-    arrayPool: {},
-    pc: 0,
-    stack: [],
-    vars: {},
-    callStack: [],
-    halted: false,
-    output: []
-};
+function loadExample(key) {
+    if (!key || !examples[key]) return;
+    const input = document.getElementById('source-input');
+    input.value = examples[key];
+    if (typeof updateIntellisense === 'function') updateIntellisense();
+    loadFromInput();
+}
 
 let runInterval = null;
 let runSpeedMs = 600;
+
+function updateSpeed(val) {
+    runSpeedMs = parseInt(val, 10);
+    document.getElementById('speed-disp').textContent = val + "ms";
+    if (runInterval) {
+        stop();
+        run();
+    }
+}
+
+function loadFromInput() {
+    const src = document.getElementById('source-input').value;
+    if (src) parseSource(src);
+}
+
+function renderCode() {
+    const container = document.getElementById('code-display');
+    if (!container) return;
+    container.innerHTML = '';
+    state.instructions.forEach((instr, idx) => {
+        const div = document.createElement('div');
+        div.className = 'line';
+        div.id = `instr-${idx}`;
+        div.onclick = () => { state.pc = idx; updateUI(); };
+        div.innerHTML = `<span style="color:#888; width:30px; display:inline-block;">${idx}</span> ${instr.text}`;
+        container.appendChild(div);
+    });
+}
+
+const state = {
+    lines: [],        // Raw source lines
+    instructions: [], // Parsed instructions { op, args, originalLineIndex }
+    stringPool: {},   // index -> string
+    arrayPool: {},    // index -> array of BigInt/Strings
+    pc: 0,            // Program Counter
+    stack: [],        // values (BigInt or String)
+    vars: {},         // index -> { value, isString }
+    callStack: [],    // stack of { returnPc, locals }
+    halted: false,
+    output: []
+};
 
 function reset() {
     stop();
@@ -81,7 +115,11 @@ function parseSource(source) {
             const parts = line.split(' ');
             const idx = parseInt(parts[1], 10);
             const valStr = parts.slice(2).join(' ');
-            const vals = valStr.split(',').filter(v => v !== "").map(v => BigInt(v));
+            const vals = valStr.split(',').filter(v => v !== "").map(v => {
+                // If it looks like a number, use BigInt, else it's a string index? 
+                // Actually strings in arrays are stored as indices (BigInt)
+                return BigInt(v);
+            });
             state.arrayPool[idx] = vals;
             continue;
         }
@@ -96,31 +134,19 @@ function parseSource(source) {
             text: line
         };
 
-        if (opcode === 1) {
+        if (opcode === 1) { // PUSH
             instruction.args = [tokens.length >= 5 ? BigInt(tokens[4]) : 0n];
         } else if ([2, 3, 8, 16, 17, 18, 20, 21, 30, 31, 32, 33, 34, 40, 41, 42, 43, 66, 67].includes(opcode)) {
+            // Updated to handle all opcodes with operands
             instruction.args = tokens.slice(1).map(t => parseInt(t, 10));
         }
 
         state.instructions.push(instruction);
     }
 
+    document.getElementById('visualizer').style.display = 'block';
     renderCode();
     updateUI();
-}
-
-function renderCode() {
-    const container = document.getElementById('bytecode-view');
-    if (!container) return;
-    container.innerHTML = '';
-    state.instructions.forEach((instr, idx) => {
-        const div = document.createElement('div');
-        div.className = 'line';
-        div.id = `instr-${idx}`;
-        div.onclick = () => { state.pc = idx; updateUI(); };
-        div.innerHTML = `<span style="color:#888; width:30px; display:inline-block;">${idx}</span> ${instr.text}`;
-        container.appendChild(div);
-    });
 }
 
 function updateUI(highlightStack = false, updatedVarIndex = -1) {
@@ -135,22 +161,20 @@ function updateUI(highlightStack = false, updatedVarIndex = -1) {
     }
 
     // Render Stack
-    const stackDiv = document.getElementById('stack-view');
-    if (stackDiv) {
-        stackDiv.innerHTML = '';
-        for (let i = state.stack.length - 1; i >= 0; i--) {
-            const item = document.createElement('div');
-            item.className = 'stack-item';
-            const val = state.stack[i];
-            item.textContent = typeof val === 'string' ? `"${val}"` : val.toString();
-            if (highlightStack && i === state.stack.length - 1) item.classList.add('new');
-            stackDiv.appendChild(item);
-        }
-        if (state.stack.length === 0) stackDiv.innerHTML = '<div style="color:#888; font-style:italic;">Empty</div>';
+    const stackDiv = document.getElementById('stack-display');
+    stackDiv.innerHTML = '';
+    for (let i = state.stack.length - 1; i >= 0; i--) {
+        const item = document.createElement('div');
+        item.className = 'stack-item';
+        const val = state.stack[i];
+        item.textContent = typeof val === 'string' ? `"${val}"` : val.toString();
+        if (highlightStack && i === state.stack.length - 1) item.classList.add('new');
+        stackDiv.appendChild(item);
     }
+    if (state.stack.length === 0) stackDiv.innerHTML = '<div style="color:#888; font-style:italic;">Empty</div>';
 
     // Render Call Stack
-    const callStackDiv = document.getElementById('callstack-view');
+    const callStackDiv = document.getElementById('callstack-display');
     if (callStackDiv) {
         callStackDiv.innerHTML = '';
         for (let i = state.callStack.length - 1; i >= 0; i--) {
@@ -162,26 +186,12 @@ function updateUI(highlightStack = false, updatedVarIndex = -1) {
         }
         if (state.callStack.length === 0) callStackDiv.innerHTML = '<div style="color:#888; font-style:italic;">Top Level</div>';
     }
-
-    // Render Variables
-    const varsDiv = document.getElementById('vars-view');
-    if (varsDiv) {
-        varsDiv.innerHTML = '';
-        for (const [idx, val] of Object.entries(state.vars)) {
-            const item = document.createElement('div');
-            item.className = 'var-item';
-            item.textContent = `Var ${idx}: ${val.value.toString()}`;
-            if (updatedVarIndex == idx) item.classList.add('updated');
-            varsDiv.appendChild(item);
-        }
-        if (Object.keys(state.vars).length === 0) varsDiv.innerHTML = '<div style="color:#888; font-style:italic;">No variables</div>';
+    const actionDisplay = document.getElementById('action-display');
+    if (actionDisplay) {
+        actionDisplay.innerHTML = state.lastExplanation || "Waiting to start...";
     }
 
-    // Render Output
-    const outputDiv = document.getElementById('output-view');
-    if (outputDiv) {
-        outputDiv.textContent = state.output.join('\n');
-    }
+    document.getElementById('console-output').textContent = state.output.join('\n');
 }
 
 function getExplanation(instr) {
@@ -430,7 +440,7 @@ function step() {
             state.output.push(state.stringPool[sIdx] || "");
             break;
         }
-        case 71: // FLUSH
+        case 71: // FLUSH (no-op in browser console output usually)
             break;
         case 72: { // STRLEN
             const sIdx = Number(state.stack.pop());
@@ -475,27 +485,27 @@ function step() {
             break;
         }
         case 76: // FOPEN (stub)
-            state.stack.pop();
-            state.stack.push(0n);
+            state.stack.pop(); // pop path
+            state.stack.push(0n); // push fd 0
             highlightStack = true;
             break;
         case 77: // FREAD (stub)
-            state.stack.pop();
-            state.stack.push(0n);
+            state.stack.pop(); // pop fd
+            state.stack.push(0n); // push empty handle
             highlightStack = true;
             break;
         case 78: // FWRITE (stub)
-            state.stack.pop();
-            state.stack.pop();
+            state.stack.pop(); // pop fd
+            state.stack.pop(); // pop string
             break;
         case 79: // FCLOSE (stub)
-            state.stack.pop();
+            state.stack.pop(); // pop fd
             break;
         case 80: // TIME
             state.stack.push(BigInt(Date.now()));
             highlightStack = true;
             break;
-        case 81: // DELAY (stub)
+        case 81: // DELAY (stub - use visualizer speed instead)
             state.stack.pop();
             break;
         case 82: // RTC_READ (stub)
@@ -505,7 +515,7 @@ function step() {
         case 83: // RTC_WRITE (stub)
             state.stack.pop();
             break;
-        case 90: // TRACE
+        case 90: // TRACE (no-op in visualizer as it's always tracing)
             break;
     }
     state.pc++;
@@ -513,15 +523,25 @@ function step() {
 }
 
 function run() {
-    if (runInterval) return;
-    if (state.halted || state.pc >= state.instructions.length) reset();
+    if (runInterval) return; // Already running
 
+    // Check if we are at the end, if so reset
+    if (state.halted || state.pc >= state.instructions.length) {
+        reset();
+    }
+
+    // Change button text to "Pause"
     const runBtn = document.getElementById('btn-run');
     if (runBtn) runBtn.textContent = "Pause";
     if (runBtn) runBtn.onclick = stop;
 
-    runInterval = setInterval(step, runSpeedMs);
-    updateUI();
+    // Execute first step immediately? optional.
+
+    runInterval = setInterval(() => {
+        step();
+    }, runSpeedMs);
+
+    updateUI(); // active state update
 }
 
 function stop() {
@@ -529,71 +549,48 @@ function stop() {
         clearInterval(runInterval);
         runInterval = null;
     }
+
     const runBtn = document.getElementById('btn-run');
-    if (runBtn) runBtn.textContent = "Run";
+    if (runBtn) runBtn.textContent = "Run All";
     if (runBtn) runBtn.onclick = run;
+
     updateUI();
 }
 
-function loadExample(key) {
-    if (!key || !examples[key]) return;
+// Helper functions for syntax highlighting overlay
+function syncScroll() {
     const input = document.getElementById('source-input');
-    if (input) {
-        input.value = examples[key];
-        parseSource(examples[key]);
+    const overlay = document.getElementById('intellisense-overlay');
+    if (input && overlay) {
+        overlay.scrollTop = input.scrollTop;
+        overlay.scrollLeft = input.scrollLeft;
     }
 }
 
-function loadFromInput() {
-    const src = document.getElementById('source-input');
-    if (src && src.value) parseSource(src.value);
+function updateIntellisense() {
+    const input = document.getElementById('source-input');
+    const overlay = document.getElementById('intellisense-overlay');
+    if (!input || !overlay) return;
+    
+    let text = input.value;
+    
+    // Basic Syntax Highlighting Logic
+    const highlighted = text.split('\n').map(line => {
+        if (!line.trim()) return '';
+        if (line.trim().startsWith('#')) return `<span class="syntax-comment">${line}</span>`;
+        
+        const parts = line.split(/\s+/);
+        if (line.startsWith('STR ')) {
+            return `<span class="syntax-opcode">STR</span> <span class="syntax-arg">${parts[1]}</span> <span class="syntax-string">${parts.slice(2).join(' ')}</span>`;
+        }
+        if (line.startsWith('ARR ')) {
+            return `<span class="syntax-opcode">ARR</span> <span class="syntax-arg">${parts[1]}</span> <span class="syntax-arg">${parts.slice(2).join(' ')}</span>`;
+        }
+
+        return line.replace(/^(\d+)/, '<span class="syntax-opcode">$1</span>')
+                   .replace(/(\s\d+)/g, ' <span class="syntax-arg">$1</span>');
+    }).join('\n');
+
+    overlay.innerHTML = highlighted + '\n';
+    syncScroll();
 }
-
-function updateSpeed(val) {
-    runSpeedMs = parseInt(val, 10);
-    if (runInterval) {
-        stop();
-        run();
-    }
-}
-
-// Initialize event listeners when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    const loadBtn = document.getElementById('btn-load');
-    const exampleBtn = document.getElementById('btn-example');
-    const stepBtn = document.getElementById('btn-step');
-    const runBtn = document.getElementById('btn-run');
-    const resetBtn = document.getElementById('btn-reset');
-    const speedSlider = document.getElementById('speed-slider');
-    const fileInput = document.getElementById('file-input');
-    const sourceInput = document.getElementById('source-input');
-
-    if (loadBtn && fileInput) {
-        loadBtn.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    if (sourceInput) sourceInput.value = ev.target.result;
-                    parseSource(ev.target.result);
-                };
-                reader.readAsText(file);
-            }
-        });
-    }
-
-    if (exampleBtn) {
-        exampleBtn.addEventListener('click', () => {
-            const examplesList = Object.keys(examples);
-            const randomExample = examplesList[Math.floor(Math.random() * examplesList.length)];
-            loadExample(randomExample);
-        });
-    }
-
-    if (stepBtn) stepBtn.addEventListener('click', step);
-    if (runBtn) runBtn.addEventListener('click', run);
-    if (resetBtn) resetBtn.addEventListener('click', reset);
-    if (speedSlider) speedSlider.addEventListener('input', (e) => updateSpeed(e.target.value));
-    if (sourceInput) sourceInput.addEventListener('input', loadFromInput);
-});
