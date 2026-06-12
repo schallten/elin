@@ -42,3 +42,9 @@ elin-hs/dist-newstyle
 
 # debug information files
 *.dwo
+
+# MkDocs build output
+site/
+
+# Python virtual environment
+.venv/

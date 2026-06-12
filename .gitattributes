@@ -1,0 +1,8 @@
+# Exclude website files from GitHub language detection
+website/* linguist-documentation
+website/style.css linguist-detectable=false
+website/vm.js linguist-detectable=false
+
+# Mark documentation as documentation
+docs/* linguist-documentation
+*.md linguist-documentation

@@ -1,0 +1,91 @@
+site_name: ELIN
+site_description: A high-performance bytecode programming system for low-power microcontrollers
+site_url: https://schallten.github.io/elin
+repo_url: https://github.com/schallten/elin
+repo_name: schallten/elin
+
+theme:
+  name: material
+  custom_dir: docs/overrides
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  font:
+    text: system-ui
+    code: JetBrains Mono
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - javascripts/visualizer.js
+  - javascripts/extra.js
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Documentation:
+      - Introduction: docs/introduction.md
+      - The Stack Logic: docs/stack-logic.md
+      - Environment Setup: docs/setup.md
+      - Basic Syntax: docs/syntax.md
+      - Memory & Types: docs/types.md
+      - Mathematics: docs/math.md
+      - Stack Operations: docs/stack-ops.md
+      - Conditionals: docs/conditionals.md
+      - Loops: docs/loops.md
+      - Functions & Scoping: docs/functions.md
+      - Input & Output: docs/io.md
+      - String Operations: docs/string-ops.md
+      - File I/O: docs/file-io.md
+      - Time & RTC: docs/time.md
+      - Random Numbers: docs/random.md
+      - Debug Mode: docs/debug.md
+      - Opcode Table: docs/opcodes.md
+  - Changelog: changelog.md
+  - Roadmap: roadmap.md
+  - Visualizer: visualizer.md

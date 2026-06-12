@@ -1,0 +1,204 @@
+/* ELIN Custom Theme Overrides */
+
+:root {
+    --elin-accent: #f7a31d;
+    --elin-bg: #121212;
+    --elin-code-bg: #1a1a1a;
+    --elin-border: #2a2a2a;
+}
+
+/* Hero Section */
+.hero-section {
+    text-align: center;
+    padding: 4rem 0;
+}
+
+.hero-section img {
+    margin-bottom: 1.5rem;
+}
+
+.hero-section h2 {
+    font-size: 2.5rem;
+    letter-spacing: -1px;
+}
+
+.cta-group {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+/* Feature Cards */
+.grid.cards > ul > li {
+    border-left: 3px solid var(--elin-accent);
+}
+
+/* Not a Big Deal Section */
+.not-a-big-deal {
+    text-align: center;
+    padding: 3rem 0;
+    border-top: 1px solid var(--md-default-fg-color--lightest);
+    margin-top: 3rem;
+}
+
+/* Visualizer Embed */
+.viz-embed {
+    border: 1px solid var(--elin-border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 2rem 0;
+    background: var(--elin-code-bg);
+}
+
+.viz-panel {
+    border-bottom: 1px solid var(--elin-border);
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid var(--elin-border);
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--elin-accent);
+}
+
+.panel-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.panel-controls button {
+    padding: 0.25rem 0.5rem;
+    background: var(--elin-border);
+    border: none;
+    border-radius: 4px;
+    color: #888;
+    font-family: monospace;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.panel-controls button:hover {
+    background: var(--elin-accent);
+    color: #000;
+}
+
+#source-input {
+    width: 100%;
+    min-height: 150px;
+    padding: 1rem;
+    background: var(--elin-code-bg);
+    border: none;
+    color: var(--md-code-fg-color);
+    font-family: monospace;
+    font-size: 0.85rem;
+    resize: vertical;
+}
+
+#source-input:focus {
+    outline: none;
+}
+
+.bytecode-output, .eval-section, .output-container {
+    padding: 1rem;
+    font-family: monospace;
+    font-size: 0.8rem;
+    min-height: 100px;
+}
+
+.stack-container, .callstack-container, .vars-container {
+    padding: 0.5rem;
+    font-family: monospace;
+    font-size: 0.8rem;
+}
+
+.output-container {
+    color: #4ade80;
+    white-space: pre-wrap;
+}
+
+.viz-controls {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(0,0,0,0.2);
+    border-top: 1px solid var(--elin-border);
+}
+
+.ctrl-btn {
+    padding: 0.5rem 1rem;
+    background: var(--elin-accent);
+    border: none;
+    border-radius: 4px;
+    color: #000;
+    font-family: monospace;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.ctrl-btn:hover {
+    opacity: 0.9;
+}
+
+/* Code Blocks */
+.md-typeset pre {
+    border: 1px solid var(--elin-border);
+    border-radius: 4px;
+}
+
+.md-typeset code {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Admonitions */
+.md-typeset .admonition {
+    border-left-color: var(--elin-accent);
+}
+
+/* Tables */
+.md-typeset table {
+    font-size: 0.85rem;
+}
+
+.md-typeset th {
+    background: rgba(0,0,0,0.2);
+}
+
+/* Details/Summary */
+.md-typeset details {
+    border: 1px solid var(--elin-border);
+    border-radius: 4px;
+    padding: 0.5rem 1rem;
+}
+
+.md-typeset details summary {
+    color: var(--elin-accent);
+    font-family: monospace;
+}
+
+/* Navigation */
+.md-nav__link {
+    font-size: 0.85rem;
+}
+
+/* Footer */
+.md-footer {
+    margin-top: 0;
+}
+
+/* Version Badge Styling */
+.version-badge {
+    display: inline-block;
+    font-family: monospace;
+    font-weight: 700;
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
