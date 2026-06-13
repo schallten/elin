@@ -46,6 +46,10 @@
    VISUALIZER STYLES
    ======================================== */
 
+.viz-hidden {
+    display: none !important;
+}
+
 .viz-container {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
@@ -175,8 +179,8 @@ select {
 }
 
 .input-area {
-    background: transparent;
-    color: transparent;
+    background: var(--md-code-bg-color);
+    color: var(--md-code-fg-color);
     caret-color: var(--md-fg-color);
     resize: vertical;
     position: relative;
@@ -184,14 +188,7 @@ select {
 }
 
 .intellisense-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    background: var(--md-code-bg-color);
-    color: var(--md-fg-color);
-    z-index: 1;
-    pointer-events: none;
-    overflow-y: auto;
+    display: none;
 }
 
 .syntax-opcode { color: var(--md-accent-fg-color); font-weight: bold; }
