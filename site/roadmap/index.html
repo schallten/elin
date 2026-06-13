@@ -1,0 +1,1896 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A high-performance bytecode programming system for low-power microcontrollers">
+      
+      
+      
+        <link rel="canonical" href="https://schallten.github.io/elin/roadmap/">
+      
+      
+        <link rel="prev" href="../changelog/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+    
+    
+      
+        <title>Roadmap - ELIN</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=system-ui:300,300i,400,400i,700,700i%7CJetBrains+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"system-ui";--md-code-font:"JetBrains Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#elin-roadmap" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="ELIN" class="md-header__button md-logo" aria-label="ELIN" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            ELIN
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Roadmap
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="custom"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/schallten/elin" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    schallten/elin
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../docs/introduction/" class="md-tabs__link">
+          
+  
+  
+  Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../changelog/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Changelog
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="./" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Roadmap
+
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="ELIN" class="md-nav__button md-logo" aria-label="ELIN" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    ELIN
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/schallten/elin" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    schallten/elin
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/introduction/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/stack-logic/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    The Stack Logic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/setup/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Environment Setup
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/syntax/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Basic Syntax
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Memory & Types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/math/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mathematics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/stack-ops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Stack Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/conditionals/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conditionals
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/loops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Loops
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/functions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Functions & Scoping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Input & Output
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/string-ops/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    String Operations
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/file-io/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    File I/O
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/time/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Time & RTC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/random/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Random Numbers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/debug/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Debug Mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/packages/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Packages
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docs/opcodes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Opcode Table
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Changelog
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Roadmap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Libraries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Libraries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#item-12-standard-io-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 12 — Standard I/O ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-13-string-operations-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 13 — String operations ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-14-file-io-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 14 — File I/O ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-15-time-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 15 — Time ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-16-random-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 16 — Random ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-17-ffi-call_extern-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 17 — FFI (CALL_EXTERN) ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tooling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tooling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tooling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#item-m1-core-bump-allocator-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item M1 — Core bump allocator ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-18-bytecode-assembler-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 18 — Bytecode assembler ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-21-package-manager-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 21 — Package manager ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-19-source-level-debugger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 19 — Source-level debugger
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-20-repl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 20 — REPL
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-m2-multi-segment-architecture-regions-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item M2 — Multi-segment architecture + regions ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-22-write-the-elin-compiler-in-elin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 22 — Write the ELIN compiler in ELIN
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-m3-embedded-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item M3 — Embedded hardening
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-m4-pc-comfort-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item M4 — PC comfort features
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#syntax-evolution-toward-professional-readability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Syntax Evolution — Toward Professional Readability
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Syntax Evolution — Toward Professional Readability">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-motivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Motivation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-will-need-to-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Will Need to Change
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-we-will-achieve-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How We Will Achieve This
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-comparison-binary-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Comparison: Binary Search
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#libraries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Libraries
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Libraries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#item-12-standard-io-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 12 — Standard I/O ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-13-string-operations-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 13 — String operations ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-14-file-io-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 14 — File I/O ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-15-time-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 15 — Time ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-16-random-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 16 — Random ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-17-ffi-call_extern-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 17 — FFI (CALL_EXTERN) ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tooling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Tooling
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Tooling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#item-m1-core-bump-allocator-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item M1 — Core bump allocator ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-18-bytecode-assembler-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 18 — Bytecode assembler ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-21-package-manager-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 21 — Package manager ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-19-source-level-debugger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 19 — Source-level debugger
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-20-repl" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 20 — REPL
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-m2-multi-segment-architecture-regions-done" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item M2 — Multi-segment architecture + regions ✓ Done
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-22-write-the-elin-compiler-in-elin" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item 22 — Write the ELIN compiler in ELIN
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-m3-embedded-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item M3 — Embedded hardening
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#item-m4-pc-comfort-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Item M4 — PC comfort features
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#syntax-evolution-toward-professional-readability" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Syntax Evolution — Toward Professional Readability
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Syntax Evolution — Toward Professional Readability">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-motivation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Motivation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#what-will-need-to-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Will Need to Change
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-we-will-achieve-this" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How We Will Achieve This
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#code-comparison-binary-search" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Code Comparison: Binary Search
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+
+                  
+
+
+  
+  
+
+
+<h1 id="elin-roadmap">ELIN Roadmap<a class="headerlink" href="#elin-roadmap" title="Permanent link">&para;</a></h1>
+<p><em>Our wishlist. No deadlines. Subject to whims.</em></p>
+<hr />
+<div class="version-header">
+<span class="version-badge v040">v0.4.0</span>
+<h2>Libraries & Tooling — Ecosystem</h2>
+<p>Items 12–21 ship a standard library and developer toolchain, alongside the core bump allocator (M1) for dynamic allocation. This is how we turn ELIN from a bare VM into a usable programming environment.</p>
+</div>
+
+<h2 id="libraries">Libraries<a class="headerlink" href="#libraries" title="Permanent link">&para;</a></h2>
+<h3 id="item-12-standard-io-done">Item 12 — Standard I/O <span style="color: #4ade80;">✓ Done</span><a class="headerlink" href="#item-12-standard-io-done" title="Permanent link">&para;</a></h3>
+<p>Three opcodes for interactive programs:
+- <strong>READ (69)</strong> — read a line from stdin into the string pool and push the handle
+- <strong>WRITE (70)</strong> — print a string handle without newline
+- <strong>FLUSH (71)</strong> — flushes stdout</p>
+<p><code>read()</code>, <code>write</code>, and <code>flush</code> keyword syntax in the compiler.</p>
+<hr />
+<h3 id="item-13-string-operations-done">Item 13 — String operations <span style="color: #4ade80;">✓ Done</span><a class="headerlink" href="#item-13-string-operations-done" title="Permanent link">&para;</a></h3>
+<p>Four opcodes for text handling:
+- <strong>STRLEN (72)</strong> — push the length of a string handle
+- <strong>STRCAT (73)</strong> — concatenate two handles and push a new one
+- <strong>SUBSTR (74)</strong> — extract a substring by handle, offset, and length
+- <strong>STRCMP (75)</strong> — compare two handles and push -1/0/1</p>
+<p>Accessed via <code>strlen()</code>, <code>strcat()</code>, <code>substr()</code>, and <code>strcmp()</code> in source.</p>
+<hr />
+<h3 id="item-14-file-io-done">Item 14 — File I/O <span style="color: #4ade80;">✓ Done</span><a class="headerlink" href="#item-14-file-io-done" title="Permanent link">&para;</a></h3>
+<p>Four opcodes:
+- <strong>FOPEN (76)</strong> — open file by path string, push fd
+- <strong>FREAD (77)</strong> — read from fd into string handle
+- <strong>FWRITE (78)</strong> — write string handle to fd
+- <strong>FCLOSE (79)</strong> — close fd</p>
+<p>On PC they wrap the C stdio API; on ESP they wrap LittleFS. Same API surface, different backend.</p>
+<hr />
+<h3 id="item-15-time-done">Item 15 — Time <span style="color: #4ade80;">✓ Done</span><a class="headerlink" href="#item-15-time-done" title="Permanent link">&para;</a></h3>
+<p>Four opcodes for anything real-time:
+- <strong>TIME (80)</strong> — push milliseconds since boot (<code>std::chrono</code> on PC, <code>millis()</code> on ESP)
+- <strong>DELAY (81)</strong> — block for N ms
+- <strong>RTC_READ (82)</strong> — read ESP RTC memory (no-op on PC)
+- <strong>RTC_WRITE (83)</strong> — write ESP RTC memory (no-op on PC)</p>
+<hr />
+<h3 id="item-16-random-done">Item 16 — Random <span style="color: #4ade80;">✓ Done</span><a class="headerlink" href="#item-16-random-done" title="Permanent link">&para;</a></h3>
+<p>Two opcodes:
+- <strong>RAND (84)</strong> — push a random 64-bit integer
+- <strong>SRAND (85)</strong> — seed the generator</p>
+<p>On PC we use <code>std::mt19937_64</code>; on ESP we use the hardware <code>random()</code>. Same interface, platform-appropriate implementation underneath.</p>
+<hr />
+<h3 id="item-17-ffi-call_extern-done">Item 17 — FFI (CALL_EXTERN) <span style="color: #4ade80;">✓ Done</span><a class="headerlink" href="#item-17-ffi-call_extern-done" title="Permanent link">&para;</a></h3>
+<p>This is how we bridge ELIN to the host system. A source declaration like <code>extern "math" add;</code> emits <strong>CALL_EXTERN (86)</strong>. We maintain a function registry per platform: C++ stdlib on PC, GPIO and WiFi on ESP. Same opcode, different registration tables.</p>
+<hr />
+<h2 id="tooling">Tooling<a class="headerlink" href="#tooling" title="Permanent link">&para;</a></h2>
+<h3 id="item-m1-core-bump-allocator-done">Item M1 — Core bump allocator <span style="color: #4ade80;">✓ Done</span><a class="headerlink" href="#item-m1-core-bump-allocator-done" title="Permanent link">&para;</a></h3>
+<p>A single heap segment using bump-pointer allocation. Each allocation returns a handle (integer ID) rather than a raw address. A flat handle table maps IDs to block metadata (pointer, size, validity flag). Allocation is O(1) — increment a pointer. Deallocation is explicit: <code>FREE</code> invalidates the handle and recycles its slot; memory is not reclaimed, the bump pointer only advances. <code>LOAD_H</code> / <code>STORE_H</code> opcodes access cells with bounds checking. Use-after-free, double-free, and OOB are caught at runtime — no silent corruption.</p>
+<hr />
+<h3 id="item-18-bytecode-assembler-done">Item 18 — Bytecode assembler <span style="color: #4ade80;">✓ Done</span><a class="headerlink" href="#item-18-bytecode-assembler-done" title="Permanent link">&para;</a></h3>
+<p>We built <code>elin-asm</code> — a human-readable text format that assembles to <code>.outz</code>:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>PUSH_CONST 0
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>STORE 0
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>HALT
+</span></code></pre></div>
+<p>For hand-writing optimized bytecode, testing individual opcodes, and bootstrapping the compiler — all without hex-editing raw <code>.outz</code> files. Supports labels, forward references, and pool definitions.</p>
+<hr />
+<h3 id="item-21-package-manager-done">Item 21 — Package manager <span style="color: #4ade80;">✓ Done</span><a class="headerlink" href="#item-21-package-manager-done" title="Permanent link">&para;</a></h3>
+<p>We built <code>pkg.py</code> to manage dependencies:</p>
+<ul>
+<li><code>pkg.py init</code> — creates an <code>elin.json</code> manifest</li>
+<li><code>pkg.py add &lt;name&gt; &lt;source&gt;</code> — pulls from a git repo or local path</li>
+<li><code>pkg.py build</code> — finds all <code>.elin</code> files, compiles everything together</li>
+</ul>
+<p>Dependencies are just <code>.elin</code> files from git URLs or local paths. Stored in <code>.elin_packages/</code>. This also serves as a prototype for Loom so we can figure out what it really needs before writing it in C++ for ESP.</p>
+<hr />
+<h3 id="item-19-source-level-debugger">Item 19 — Source-level debugger<a class="headerlink" href="#item-19-source-level-debugger" title="Permanent link">&para;</a></h3>
+<p>We're building <code>elin-debug</code>: set breakpoints, single-step through source lines, inspect state. The compiler will emit a line-number table in <code>.outz</code> that maps source lines to bytecode offsets. On PC it's an interactive terminal; on ESP it accepts serial commands (<code>s</code> = step, <code>c</code> = continue, <code>p</code> = print stack).</p>
+<hr />
+<h3 id="item-20-repl">Item 20 — REPL<a class="headerlink" href="#item-20-repl" title="Permanent link">&para;</a></h3>
+<p>We're building <code>elin-repl</code>: read a line of ELIN source, compile it, run it, print the result, repeat. This requires making the compiler embeddable as a library (or building a separate JIT mode). On PC it gives us immediate feedback for learning; on ESP it lets us write interactive shell commands in ELIN instead of hardcoded C++.</p>
+<hr />
+<div class="version-header">
+<span class="version-badge v050">v0.5.0</span>
+<h2>Memory + Self-Hosting — The Turning Point</h2>
+<p>Multi-segment memory regions (M2) provide temp allocation for function-local work without manual <code>FREE</code>, powering the self-hosting compiler (Item 22). Once ELIN can compile itself, it stops being a toy and becomes a self-sustaining system.</p>
+</div>
+
+<h3 id="item-m2-multi-segment-architecture-regions-done">Item M2 — Multi-segment architecture + regions <span style="color: #4ade80;">✓ Done</span><a class="headerlink" href="#item-m2-multi-segment-architecture-regions-done" title="Permanent link">&para;</a></h3>
+<p>Four logical bump-allocated arenas:
+- <strong>Main (0)</strong> — explicitly managed allocations
+- <strong>Temp (1)</strong> — function-local scratch (use <code>alloc_seg(size, 1)</code>)
+- <strong>Interrupt (2)</strong> — ISR-safe allocations
+- <strong>Spare (3)</strong> — overflow or special-purpose use</p>
+<p><code>region_enter(segment)</code> saves the bump pointer. <code>region_exit(segment)</code> resets it and invalidates all handles allocated since then — no per-object tracking needed. Recursive functions can allocate temporaries without leaking and without manual <code>FREE</code>.</p>
+<hr />
+<h3 id="item-22-write-the-elin-compiler-in-elin">Item 22 — Write the ELIN compiler in ELIN<a class="headerlink" href="#item-22-write-the-elin-compiler-in-elin" title="Permanent link">&para;</a></h3>
+<p>Our endgame: write the ELIN compiler in ELIN itself. That's the proof that we've built something complete. We'll break it into three stages:</p>
+<p><strong>Stage 1:</strong> Write a lexer in ELIN. It takes a string handle to source code and produces an array of token structs (type, value). We'll validate it against the output of our Python/Haskell lexer.</p>
+<p><strong>Stage 2:</strong> Write a parser in ELIN. It consumes the token array and produces an AST using nested arrays or structs.</p>
+<p><strong>Stage 3:</strong> Write a bytecode emitter in ELIN. It walks the AST and writes valid <code>.outz</code> bytes through the file I/O library (Item 14).</p>
+<p>Prerequisite: we need structs or records first — or a convention of using arrays with fixed offsets:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>struct Token {
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    int type;
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    str value;
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>};
+</span></code></pre></div>
+<p>We'll start with Stage 1 only. The moment our ELIN lexer produces the same token stream as the reference implementation for a real program, we'll know the language is viable for self-hosting.</p>
+<hr />
+<div class="version-header">
+<span class="version-badge v060">v0.6.0</span>
+<h2>Memory — Hardening & PC Comfort</h2>
+<p>Embedded-hardening (M3) makes memory usage fully predictable at link time, while PC features (M4) add dynamic growth, compaction, and profiling for long-running desktop/server programs.</p>
+</div>
+
+<h3 id="item-m3-embedded-hardening">Item M3 — Embedded hardening<a class="headerlink" href="#item-m3-embedded-hardening" title="Permanent link">&para;</a></h3>
+<p>Segments bind to statically provided memory blocks (e.g. <code>static ll main_heap[2048]</code>) — no <code>malloc</code> or C++ heap usage. The VM performs zero runtime allocation; all memory is accounted for in the linker map. <code>ALLOC</code> returns null (handle 0) on segment full — no exceptions, no crashes. Generation counters make temp reclamation O(1): each <code>REGION_EXIT</code> increments a per-segment generation number, and handle validity becomes a generation comparison instead of a table scan. <code>SEG_USED</code> opcode reports current utilization for runtime pressure monitoring. Published worst-case cycle counts for all memory ops enable hard real-time scheduling.</p>
+<hr />
+<h3 id="item-m4-pc-comfort-features">Item M4 — PC comfort features<a class="headerlink" href="#item-m4-pc-comfort-features" title="Permanent link">&para;</a></h3>
+<p>Additive features gated behind build flags:
+- <strong>Dynamic growth</strong> — allows segments backed by <code>malloc</code>/<code>new</code> to grow on demand
+- <strong>Compaction</strong> — moves live objects to segment start, can run incrementally across VM cycles to avoid visible pauses
+- <strong>Profiling hooks</strong> — runtime callbacks for allocation events and segment pressure thresholds</p>
+<p>All PC features are optional — the embedded binary remains unchanged.</p>
+<hr />
+<div class="version-summary">
+<div class="version-summary-item">
+<span class="version-badge v040">v0.4.0</span>
+<span>Items 12–21 + M1 — Libraries, tooling & bump allocator</span>
+</div>
+<div class="version-summary-item">
+<span class="version-badge v050">v0.5.0</span>
+<span>Items M2 + 22 — Multi-segment memory & self-hosting</span>
+</div>
+<div class="version-summary-item">
+<span class="version-badge v060">v0.6.0</span>
+<span>Items M3–M4 — Embedded hardening & PC comfort</span>
+</div>
+<p class="version-summary-note">
+These versions aren't about keeping up with other languages — they're our own milestones toward something complete.
+</p>
+</div>
+
+<hr />
+<h2 id="syntax-evolution-toward-professional-readability">Syntax Evolution — Toward Professional Readability<a class="headerlink" href="#syntax-evolution-toward-professional-readability" title="Permanent link">&para;</a></h2>
+<blockquote>
+<p><strong>TL;DR:</strong> We are transitioning ELIN into a "calm systems language"—procedural, data-oriented, and non-OOP. The upcoming syntax revision will replace keyword-heavy noise with minimal, C-style braces, enforcing explicit control flow, flat architectures, and a single unified declaration style. The goal is code that is readable at a glance, easy to parse, and simple to debug.</p>
+</blockquote>
+<h3 id="the-motivation">The Motivation<a class="headerlink" href="#the-motivation" title="Permanent link">&para;</a></h3>
+<p>The current syntax was built incrementally as the VM grew, and it shows. Semicolons as statement terminators, <code>wend</code> to close <code>while</code>, <code>end</code> to close every block — these were expedient choices that served well during early prototyping but now constrain how the language reads.</p>
+<p>A formal syntax revision is planned to shift the language toward a style where structure and data flow are immediately apparent from the surface form of the code — where a function's signature, a block's boundaries, and an error path all announce themselves without requiring the reader to hold context in their head.</p>
+<h3 id="what-will-need-to-change">What Will Need to Change<a class="headerlink" href="#what-will-need-to-change" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>No Classes or Methods.</strong> We separate data and behavior entirely. We will use structs, enums, unions, procedures, and modules. Instead of calling methods like <code>player.move(dir)</code>, we will write procedures like <code>player_move(player, dir)</code>. This keeps logic isolated, APIs flat, and architecture simpler.</li>
+<li><strong>Unified Declaration Style.</strong> We will adopt one consistent style everywhere: <code>name: Type</code> for declarations and <code>value := expression</code> for inference.</li>
+<li><strong>Visually Calm Syntax.</strong> We will replace semicolon spam, keyword-delimited blocks (<code>if ... end</code>, <code>while ... wend</code>), and excessive punctuation with clean <code>{ }</code> blocks. Conditions will be written without unnecessary parentheses (e.g., <code>if x &gt; 10 { }</code>).</li>
+<li><strong>Explicitness over Cleverness.</strong> Control flow and error paths must be obvious and readable top-to-bottom. We will avoid hidden allocations, magic iterators, implicit type coercion, decorators, and chained calls.</li>
+<li><strong>Tagged Unions + Match.</strong> Instead of inheritance, subclass hierarchies, or virtual methods, we will use explicit tagged unions and <code>match</code> statements to handle variants safely.</li>
+</ul>
+<h3 id="how-we-will-achieve-this">How We Will Achieve This<a class="headerlink" href="#how-we-will-achieve-this" title="Permanent link">&para;</a></h3>
+<p>This revision will be informed directly by our self-hosting compiler effort (Item 22). Nothing reveals syntax friction faster than writing a compiler in the language itself. We will incrementally introduce the new parser alongside the old one, migrating the standard library and existing tools (like <code>elin-asm</code> and <code>elin-pkg</code>) to the new syntax.</p>
+<p>The immediate focus remains items 14–21 (libraries and tooling), but the syntax redesign is the next major language-level project after the ecosystem stabilises.</p>
+<h3 id="code-comparison-binary-search">Code Comparison: Binary Search<a class="headerlink" href="#code-comparison-binary-search" title="Permanent link">&para;</a></h3>
+<p>To illustrate the difference, here is what a standard binary search looks like in our current syntax compared to our target future syntax.</p>
+<details>
+<summary><strong>Current Syntax</strong></summary>
+
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>func int binary_search arr int data int size int target;
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    let int low = 0;
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    let int high = size - 1;
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    while low &lt;= high;
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        let int mid = (low + high) / 2;
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>        let int val = data[mid];
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>        if val == target;
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>            return mid;
+</span><span id="__span-2-11"><a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>        end;
+</span><span id="__span-2-12"><a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>
+</span><span id="__span-2-13"><a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>        if val &lt; target;
+</span><span id="__span-2-14"><a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a>            low = mid + 1;
+</span><span id="__span-2-15"><a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a>        else;
+</span><span id="__span-2-16"><a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a>            high = mid - 1;
+</span><span id="__span-2-17"><a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a>        end;
+</span><span id="__span-2-18"><a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a>    wend;
+</span><span id="__span-2-19"><a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a>
+</span><span id="__span-2-20"><a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a>    return -1;
+</span><span id="__span-2-21"><a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a>end;
+</span></code></pre></div>
+</details>
+
+<details open>
+<summary><strong>Future Syntax</strong></summary>
+
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>package main
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>import &quot;core:io&quot;
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>binary_search :: proc(arr: []int, target: int) -&gt; int {
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    left := 0
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    right := len(arr) - 1
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>    for left &lt;= right {
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>        mid := (left + right) / 2
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>        value := arr[mid]
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a>        if value == target {
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>            return mid
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>        }
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>        if value &lt; target {
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>            left = mid + 1
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>        } else {
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a>            right = mid - 1
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>        }
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>    }
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>    return -1
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>}
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a>
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>main :: proc() {
+</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>    nums := []int{1, 3, 5, 7, 9, 11, 13}
+</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>    index := binary_search(nums, 7)
+</span><span id="__span-3-30"><a id="__codelineno-3-30" name="__codelineno-3-30" href="#__codelineno-3-30"></a>    io.println(index)
+</span><span id="__span-3-31"><a id="__codelineno-3-31" name="__codelineno-3-31" href="#__codelineno-3-31"></a>}
+</span></code></pre></div>
+</details>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+
+
+
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["navigation.tabs", "navigation.sections", "navigation.expand", "navigation.top", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate", "content.tabs.link"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+        <script src="../javascripts/extra.js"></script>
+      
+    
+  </body>
+</html>
