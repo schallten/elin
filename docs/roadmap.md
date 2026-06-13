@@ -95,15 +95,15 @@ For hand-writing optimized bytecode, testing individual opcodes, and bootstrappi
 
 ---
 
-### Item 21 — Package manager
+### Item 21 — Package manager <span style="color: #4ade80;">✓ Done</span>
 
-We're building `elin-pkg` to manage dependencies:
+We built `pkg.py` to manage dependencies:
 
-- `elin-pkg init` — creates an `elin.json` manifest
-- `elin-pkg add math` — pulls from a git repo or local path
-- `elin-pkg build` — compiles everything together
+- `pkg.py init` — creates an `elin.json` manifest
+- `pkg.py add <name> <source>` — pulls from a git repo or local path
+- `pkg.py build` — finds all `.elin` files, compiles everything together
 
-Dependencies are just `.elin` files with their own `elin.json`. No registry server — git URLs or local paths. This also serves as a prototype for Loom so we can figure out what it really needs before writing it in C++ for ESP.
+Dependencies are just `.elin` files from git URLs or local paths. Stored in `.elin_packages/`. This also serves as a prototype for Loom so we can figure out what it really needs before writing it in C++ for ESP.
 
 ---
 
@@ -125,15 +125,15 @@ We're building `elin-repl`: read a line of ELIN source, compile it, run it, prin
 <p>Multi-segment memory regions (M2) provide temp allocation for function-local work without manual <code>FREE</code>, powering the self-hosting compiler (Item 22). Once ELIN can compile itself, it stops being a toy and becomes a self-sustaining system.</p>
 </div>
 
-### Item M2 — Multi-segment architecture + regions
+### Item M2 — Multi-segment architecture + regions <span style="color: #4ade80;">✓ Done</span>
 
 Four logical bump-allocated arenas:
 - **Main (0)** — explicitly managed allocations
-- **Temp (1)** — function-local scratch (compiler auto-inserts `REGION_ENTER`/`REGION_EXIT` around function bodies)
+- **Temp (1)** — function-local scratch (use `alloc_seg(size, 1)`)
 - **Interrupt (2)** — ISR-safe allocations
 - **Spare (3)** — overflow or special-purpose use
 
-`REGION_EXIT` resets the bump pointer and invalidates all handles in that segment — no per-object tracking needed. Recursive functions and loops can allocate temporaries without leaking and without manual `FREE`.
+`region_enter(segment)` saves the bump pointer. `region_exit(segment)` resets it and invalidates all handles allocated since then — no per-object tracking needed. Recursive functions can allocate temporaries without leaking and without manual `FREE`.
 
 ---
 

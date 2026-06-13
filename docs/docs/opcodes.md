@@ -41,6 +41,9 @@ The following instructions are the raw commands the ELIN Virtual Machine underst
 | 46 | LOAD_H | Read cell from heap via handle + index |
 | 47 | STORE_H | Write cell to heap via handle + index |
 | 48 | HEAP_LEN | Push size of a handle's block |
+| 49 | REGION_ENTER | Save segment's bump pointer |
+| 50 | REGION_EXIT | Reset segment, invalidate temp handles |
+| 51 | SEG_USED | Push how many cells a segment has used |
 | 55 | MOD | Pop two values, push remainder of division |
 | 56 | ABS | Pop one value, push its absolute value |
 | 60 | DUP | Duplicate the top value on the stack |

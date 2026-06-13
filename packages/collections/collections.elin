@@ -1,0 +1,106 @@
+# collections.elin — Dynamic data structures using heap allocation
+# Provides: stack (push/pop/peek), queue (enqueue/dequeue/size)
+
+# --- Stack ---
+# A stack stores its elements in a heap block.
+# Fields: handle at h, size at h+0, capacity at h+1, data starts at h+2
+
+func int stack_create int capacity;
+    let int h = alloc(capacity + 2);
+    store_h(h, 0, 0);
+    store_h(h, 1, capacity);
+    return h;
+end;
+
+func int stack_push int h int val;
+    let int sz = load_h(h, 0);
+    let int cap = load_h(h, 1);
+    if sz >= cap;
+        return -1;
+    end;
+    store_h(h, sz + 2, val);
+    store_h(h, 0, sz + 1);
+    return 0;
+end;
+
+func int stack_pop int h;
+    let int sz = load_h(h, 0);
+    if sz <= 0;
+        return -1;
+    end;
+    let int val = load_h(h, sz + 1);
+    store_h(h, 0, sz - 1);
+    return val;
+end;
+
+func int stack_peek int h;
+    let int sz = load_h(h, 0);
+    if sz <= 0;
+        return -1;
+    end;
+    return load_h(h, sz + 1);
+end;
+
+func int stack_size int h;
+    return load_h(h, 0);
+end;
+
+func int stack_destroy int h;
+    free(h);
+    return 0;
+end;
+
+# --- Queue ---
+# Uses two stacks for FIFO behavior (classic algorithm).
+# But for simplicity, we use a circular buffer in a heap block.
+# Fields: head at h, tail at h+1, capacity at h+2, data starts at h+3
+
+func int queue_create int capacity;
+    let int h = alloc(capacity + 3);
+    store_h(h, 0, 0);
+    store_h(h, 1, 0);
+    store_h(h, 2, capacity);
+    return h;
+end;
+
+func int queue_enqueue int h int val;
+    let int tail = load_h(h, 1);
+    let int cap = load_h(h, 2);
+    let int next = tail + 1;
+    if next >= cap;
+        next = 0;
+    end;
+    let int head = load_h(h, 0);
+    if next == head;
+        return -1;
+    end;
+    store_h(h, tail + 3, val);
+    store_h(h, 1, next);
+    return 0;
+end;
+
+func int queue_dequeue int h;
+    let int head = load_h(h, 0);
+    let int tail = load_h(h, 1);
+    if head == tail;
+        return -1;
+    end;
+    let int val = load_h(h, head + 3);
+    let int cap = load_h(h, 2);
+    let int next = head + 1;
+    if next >= cap;
+        next = 0;
+    end;
+    store_h(h, 0, next);
+    return val;
+end;
+
+func int queue_size int h;
+    let int head = load_h(h, 0);
+    let int tail = load_h(h, 1);
+    let int cap = load_h(h, 2);
+    if tail >= head;
+        return tail - head;
+    end;
+    return cap - head + tail;
+end;

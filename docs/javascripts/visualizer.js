@@ -287,7 +287,7 @@ function parseSource(source) {
         }
     }
 
-    document.getElementById('visualizer').style.display = 'block';
+    document.getElementById('visualizer').classList.remove('viz-hidden');
     renderCode();
     updateUI();
 }

@@ -1,0 +1,53 @@
+# math.elin — Extended math operations for ELIN
+# Provides: power, min, max, clamp, lerp, sign
+
+func int power int base int exp;
+    let int result = 1;
+    let int i = 0;
+    while i < exp;
+        result = result * base;
+        i = i + 1;
+    wend;
+    return result;
+end;
+
+func int min int a int b;
+    if a < b;
+        return a;
+    end;
+    return b;
+end;
+
+func int max int a int b;
+    if a > b;
+        return a;
+    end;
+    return b;
+end;
+
+func int clamp int val int lo int hi;
+    if val < lo;
+        return lo;
+    end;
+    if val > hi;
+        return hi;
+    end;
+    return val;
+end;
+
+func int abs_val int a;
+    if a < 0;
+        return 0 - a;
+    end;
+    return a;
+end;
+
+func int sign int a;
+    if a > 0;
+        return 1;
+    end;
+    if a < 0;
+        return -1;
+    end;
+    return 0;
+end;

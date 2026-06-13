@@ -1,0 +1,57 @@
+# strings.elin — String utilities for ELIN
+# Provides: repeat_str, reverse, contains, starts_with, ends_with
+
+func str repeat_str str s int n;
+    let str result = "";
+    let int i = 0;
+    while i < n;
+        result = strcat(result, s);
+        i = i + 1;
+    wend;
+    return result;
+end;
+
+func str reverse str s;
+    let int s_len = strlen(s);
+    let str result = "";
+    let int i = s_len - 1;
+    while i >= 0;
+        result = strcat(result, substr(s, i, 1));
+        i = i - 1;
+    wend;
+    return result;
+end;
+
+func int contains str haystack str needle;
+    let int h_len = strlen(haystack);
+    let int n_len = strlen(needle);
+    if n_len > h_len;
+        return 0;
+    end;
+    let int i = 0;
+    while i <= h_len - n_len;
+        let str sub = substr(haystack, i, n_len);
+        if strcmp(sub, needle) == 0;
+            return 1;
+        end;
+        i = i + 1;
+    wend;
+    return 0;
+end;
+
+func int starts_with str s str prefix;
+    let int p_len = strlen(prefix);
+    if p_len > strlen(s);
+        return 0;
+    end;
+    return strcmp(substr(s, 0, p_len), prefix) == 0;
+end;
+
+func int ends_with str s str suffix;
+    let int s_len = strlen(s);
+    let int su_len = strlen(suffix);
+    if su_len > s_len;
+        return 0;
+    end;
+    return strcmp(substr(s, s_len - su_len, su_len), suffix) == 0;
+end;

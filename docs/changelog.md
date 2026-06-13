@@ -200,6 +200,58 @@ free(h);
 
 The heap is a 64K-cell flat array with a bump pointer. Allocation is O(1) — just move the pointer forward. Deallocation marks handles as invalid and recycles their IDs via a free list. Use-after-free, double-free, and out-of-bounds access are all caught at runtime with error messages.
 
+### Multi-Segment Memory — Item M2
+
+The heap is now split into 4 independent segments:
+
+| Segment | Size | Purpose |
+|---------|------|---------|
+| Main (0) | 48K | Long-lived data, freed manually |
+| Temp (1) | 12K | Function-local scratch, auto-freed |
+| Interrupt (2) | 2K | ISR-safe allocations |
+| Spare (3) | 2K | Overflow |
+
+New opcodes: `REGION_ENTER` (49), `REGION_EXIT` (50), `SEG_USED` (51). Use `alloc_seg(size, segment)` to allocate in a specific segment. `region_exit` resets the segment and invalidates all handles allocated since `region_enter` — no per-object tracking needed.
+
+```elin
+region_enter(1);
+let int h = alloc_seg(3, 1);  # allocate in Temp segment
+store_h(h, 0, 42);
+# ... use h ...
+region_exit(1);                # wipe all temp allocations
+# h is now invalid — no memory leak
+```
+
+### Package Manager — elin-pkg
+
+A new tool at `compiler/pkg.py` for managing ELIN project dependencies:
+
+```bash
+python3 pkg.py init                  # create elin.json manifest
+python3 pkg.py add math ./libs/math  # add local dependency
+python3 pkg.py add fmt https://github.com/user/elin-fmt  # add git dependency
+python3 pkg.py build                 # compile all .elin files together
+python3 pkg.py list                  # show installed packages
+```
+
+Dependencies are stored in `.elin_packages/`. The build command concatenates package files (packages first) with project files and compiles the result. No registry server — just git URLs or local paths.
+
+### Standard Packages
+
+Seven official packages ship with ELIN:
+
+| Package | Functions |
+|---------|-----------|
+| **math** | `power`, `min`, `max`, `clamp`, `abs_val`, `sign` |
+| **strings** | `repeat_str`, `reverse`, `contains`, `starts_with`, `ends_with` |
+| **collections** | `stack_create/push/pop/peek/size/destroy`, `queue_create/enqueue/dequeue/size` |
+| **io** | `prompt`, `print_int`, `print_repeat`, `print_sep`, `print_header` |
+| **time** | `elapsed`, `wait_until`, `ms_to_sec`, `ms_to_min`, `seconds_since` |
+| **random** | `rand_int`, `rand_range`, `rand_bool`, `pick`, `rand_seed` |
+| **debug** | `assert_eq`, `assert_neq`, `trace`, `trace_val`, `breakpoint`, `dump_heap` |
+
+Install with: `pkg.py add math ./packages/math`
+
 ---
 
 [:material-book-open: Learn how to use ELIN](docs/introduction.md){ .md-button .md-button--primary }

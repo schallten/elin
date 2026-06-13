@@ -84,7 +84,7 @@ nav:
       - Time & RTC: docs/time.md
       - Random Numbers: docs/random.md
       - Debug Mode: docs/debug.md
+      - Packages: docs/packages.md
       - Opcode Table: docs/opcodes.md
   - Changelog: changelog.md
   - Roadmap: roadmap.md
-  - Visualizer: visualizer.md

@@ -16,7 +16,7 @@ A little bytecode language made to run on [System Operating](https://schallten.g
 <div class="cta-group" markdown>
 
 [:material-book-open: Read the docs](docs/introduction.md){ .md-button .md-button--primary }
-[:material-play: Play with the visualizer](visualizer.md){ .md-button }
+[:material-map: Roadmap](roadmap.md){ .md-button }
 
 </div>
 

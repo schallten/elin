@@ -1,4 +1,4 @@
-from ast_nodes import *
+from ast_nodes import N, Node
 from ops import CMP_OPERATORS
 
 
@@ -20,7 +20,7 @@ def get_precedence(op_type, op_val):
 
 def parse(tokens, pos=0):
     stmts, pos = parse_statements(tokens, pos, root=True)
-    return ProgramNode(statements=stmts), pos
+    return N("program", statements=stmts), pos
 
 
 def parse_statements(tokens, pos, root=False):
@@ -52,7 +52,7 @@ def parse_statements(tokens, pos, root=False):
             stmts.append(node)
         elif tok.type == "HALT":
             pos += 1
-            stmts.append(HaltNode())
+            stmts.append(N("halt"))
         elif tok.type == "WRITE":
             node, pos = parse_write(tokens, pos)
             stmts.append(node)
@@ -73,7 +73,7 @@ def parse_statements(tokens, pos, root=False):
               and peek(tokens, pos + 1).type == "EQUALS"):
             node, pos = parse_reassign(tokens, pos)
             stmts.append(node)
-        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN", "ABS", "INPUT", "READ", "STRLEN", "STRCAT", "SUBSTR", "STRCMP", "TIME", "DELAY", "RTC_READ", "RTC_WRITE", "FOPEN", "FREAD", "FWRITE", "FCLOSE", "RAND", "ALLOC", "FREE", "LOAD_H", "STORE_H", "HEAP_LEN"):
+        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN", "ABS", "INPUT", "READ", "STRLEN", "STRCAT", "SUBSTR", "STRCMP", "TIME", "DELAY", "RTC_READ", "RTC_WRITE", "FOPEN", "FREAD", "FWRITE", "FCLOSE", "RAND", "ALLOC", "ALLOC_SEG", "FREE", "LOAD_H", "STORE_H", "HEAP_LEN", "REGION_ENTER", "REGION_EXIT", "SEG_USED"):
             node, pos = parse_expression(tokens, pos)
             stmts.append(node)
         elif tok.type in ("COMMA", "RPAREN", "RBRACKET"):
@@ -88,7 +88,7 @@ def parse_reassign(tokens, pos):
     pos += 1
     pos += 1
     expr, pos = parse_expression(tokens, pos)
-    return ReassignNode(name=name_tok.value, value=expr), pos
+    return N("reassign", name=name_tok.value, value=expr), pos
 
 
 def parse_array_assign(tokens, pos):
@@ -101,7 +101,7 @@ def parse_array_assign(tokens, pos):
     if peek(tokens, pos) and peek(tokens, pos).type == "EQUALS":
         pos += 1
     value_expr, pos = parse_expression(tokens, pos)
-    return ArrayAssignNode(name=name_tok.value, index=index_expr, value=value_expr), pos
+    return N("array_assign", name=name_tok.value, index=index_expr, value=value_expr), pos
 
 
 def parse_let(tokens, pos):
@@ -117,24 +117,24 @@ def parse_let(tokens, pos):
     pos += 1
     expr, pos = parse_expression(tokens, pos)
     full_type = f"arr {type_tok.value}" if is_array else type_tok.value
-    return AssignNode(type_name=full_type, name=name_tok.value, value=expr), pos
+    return N("assign", type_name=full_type, name=name_tok.value, value=expr), pos
 
 
 def parse_print(tokens, pos):
     pos += 1
     expr, pos = parse_expression(tokens, pos)
-    return PrintNode(value_node=expr), pos
+    return N("print", value_node=expr), pos
 
 
 def parse_write(tokens, pos):
     pos += 1
     expr, pos = parse_expression(tokens, pos)
-    return WriteNode(value=expr), pos
+    return N("write", value=expr), pos
 
 
 def parse_flush(tokens, pos):
     pos += 1
-    return FlushNode(), pos
+    return N("flush"), pos
 
 
 def parse_srand(tokens, pos):
@@ -143,7 +143,7 @@ def parse_srand(tokens, pos):
     seed, pos = parse_expression(tokens, pos)
     if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
         pos += 1
-    return SrandNode(seed=seed), pos
+    return N("srand", seed=seed), pos
 
 
 def parse_extern(tokens, pos):
@@ -154,7 +154,7 @@ def parse_extern(tokens, pos):
     pos += 1  # IDENTIFIER (function name)
     if peek(tokens, pos) and peek(tokens, pos).type == "SEMI":
         pos += 1
-    return ExternNode(library=lib_tok.value, func_name=name_tok.value), pos
+    return N("extern", library=lib_tok.value, func_name=name_tok.value), pos
 
 
 def parse_if(tokens, pos):
@@ -170,7 +170,7 @@ def parse_if(tokens, pos):
     while peek(tokens, pos) and peek(tokens, pos).type in ("NEWLINE", "SEMI"):
         pos += 1
     pos += 1
-    return IfNode(condition=cond, body=body, else_body=else_body), pos
+    return N("if", condition=cond, body=body, else_body=else_body), pos
 
 
 def parse_while(tokens, pos):
@@ -180,7 +180,7 @@ def parse_while(tokens, pos):
     while peek(tokens, pos) and peek(tokens, pos).type in ("NEWLINE", "SEMI"):
         pos += 1
     pos += 1
-    return WhileNode(condition=cond, body=body), pos
+    return N("while", condition=cond, body=body), pos
 
 
 def parse_func(tokens, pos):
@@ -204,13 +204,13 @@ def parse_func(tokens, pos):
     body, pos = parse_statements(tokens, pos)
     if peek(tokens, pos) and peek(tokens, pos).type == "END":
         pos += 1
-    return FunctionDefNode(ret_type=ret_type, name=name, params=params, body=body), pos
+    return N("func_def", ret_type=ret_type, name=name, params=params, body=body), pos
 
 
 def parse_return(tokens, pos):
     pos += 1
     expr, pos = parse_expression(tokens, pos)
-    return ReturnNode(value=expr), pos
+    return N("return", value=expr), pos
 
 
 def parse_expression(tokens, pos, precedence=0):
@@ -226,13 +226,13 @@ def parse_expression(tokens, pos, precedence=0):
             pos += 1
             right, pos = parse_expression(tokens, pos, op_prec)
             if curr.value in CMP_OPERATORS:
-                left = ConditionNode(op=curr.value, left=left, right=right)
+                left = N("condition", op=curr.value, left=left, right=right)
             else:
-                left = BinaryOpNode(op=curr.value, left=left, right=right)
+                left = N("binary_op", op=curr.value, left=left, right=right)
             continue
         if curr.type == "LPAREN":
-            if isinstance(left, VariableNode):
-                func_name = left.name
+            if left.type == "variable":
+                func_name = left.fields["name"]
                 pos += 1
                 args = []
                 while pos < len(tokens) and peek(tokens, pos).type != "RPAREN":
@@ -242,14 +242,14 @@ def parse_expression(tokens, pos, precedence=0):
                         pos += 1
                 if pos < len(tokens) and peek(tokens, pos).type == "RPAREN":
                     pos += 1
-                left = FunctionCallNode(name=func_name, args=args)
+                left = N("func_call", name=func_name, args=args)
                 continue
         if precedence == 0 and curr.type in ("NUMBER", "STRING", "IDENTIFIER", "LPAREN", "LBRACKET", "LEN"):
-            if isinstance(left, VariableNode):
-                left = FunctionCallNode(name=left.name, args=[])
-            if isinstance(left, FunctionCallNode):
+            if left.type == "variable":
+                left = N("func_call", name=left.fields["name"], args=[])
+            if left.type == "func_call":
                 arg, pos = parse_expression(tokens, pos, precedence=10)
-                left.args.append(arg)
+                left.fields["args"].append(arg)
                 continue
         break
     return left, pos
@@ -262,13 +262,13 @@ def parse_primary(tokens, pos):
     if tok.type == "OP" and tok.value in ("-", "!"):
         pos += 1
         operand, pos = parse_primary(tokens, pos)
-        return UnaryOpNode(op=tok.value, operand=operand), pos
+        return N("unary_op", op=tok.value, operand=operand), pos
     if tok.type == "NUMBER":
         pos += 1
-        return NumberNode(value=tok.value), pos
+        return N("number", value=tok.value), pos
     if tok.type == "STRING":
         pos += 1
-        return StringNode(value=tok.value), pos
+        return N("string", value=tok.value), pos
     if tok.type == "IDENTIFIER":
         name = tok.value
         pos += 1
@@ -277,8 +277,8 @@ def parse_primary(tokens, pos):
             idx, pos = parse_expression(tokens, pos)
             if peek(tokens, pos) and peek(tokens, pos).type == "RBRACKET":
                 pos += 1
-            return ArrayAccessNode(name=name, index=idx), pos
-        return VariableNode(name=name), pos
+            return N("array_access", name=name, index=idx), pos
+        return N("variable", name=name), pos
     if tok.type == "LBRACKET":
         return parse_array_literal(tokens, pos)
     if tok.type == "LPAREN":
@@ -287,184 +287,62 @@ def parse_primary(tokens, pos):
         if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
             pos += 1
         return expr, pos
-    if tok.type == "LEN":
-        pos += 1
-        pos += 1
-        name_tok = peek(tokens, pos)
-        pos += 1
-        pos += 1
-        return ArrayLenNode(name=name_tok.value), pos
-    if tok.type == "ABS":
-        pos += 1
-        pos += 1
-        expr, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return AbsNode(value=expr), pos
-    if tok.type == "INPUT":
-        pos += 1
-        if peek(tokens, pos) and peek(tokens, pos).type == "LPAREN":
-            pos += 1
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return InputNode(), pos
-    if tok.type == "READ":
-        pos += 1
-        if peek(tokens, pos) and peek(tokens, pos).type == "LPAREN":
-            pos += 1
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return ReadStrNode(), pos
-    if tok.type == "STRLEN":
-        pos += 1
-        pos += 1
-        expr, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return StrLenNode(value=expr), pos
-    if tok.type == "STRCAT":
-        pos += 1
-        pos += 1
-        left, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
-            pos += 1
-        right, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return StrCatNode(left=left, right=right), pos
-    if tok.type == "SUBSTR":
-        pos += 1
-        pos += 1
-        string, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
-            pos += 1
-        offset, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
-            pos += 1
-        length, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return SubstrNode(string=string, offset=offset, length=length), pos
-    if tok.type == "STRCMP":
-        pos += 1
-        pos += 1
-        left, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
-            pos += 1
-        right, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return StrCmpNode(left=left, right=right), pos
-    if tok.type == "TIME":
+
+    # Function-call style keywords: (node_type, expected_args, has_parens, field_names)
+    FUNC_STYLE = {
+        "LEN":     ("array_len", 1, False, ["name"]),
+        "ABS":     ("abs",       1, True,  ["value"]),
+        "STRLEN":  ("strlen",    1, True,  ["value"]),
+        "STRCAT":  ("strcat",    2, True,  ["left", "right"]),
+        "SUBSTR":  ("substr",    3, True,  ["string", "offset", "length"]),
+        "STRCMP":  ("strcmp",    2, True,  ["left", "right"]),
+        "DELAY":   ("delay",     1, True,  ["value"]),
+        "RTC_WRITE": ("rtc_write", 1, True, ["value"]),
+        "FOPEN":   ("fopen",     1, True,  ["path"]),
+        "FREAD":   ("fread",     1, True,  ["fd"]),
+        "FWRITE":  ("fwrite",    2, True,  ["fd", "string"]),
+        "FCLOSE":  ("fclose",    1, True,  ["fd"]),
+        "ALLOC":   ("alloc",     1, True,  ["size"]),
+        "ALLOC_SEG": ("alloc_seg", 2, True, ["size", "segment"]),
+        "FREE":    ("free",      1, True,  ["handle"]),
+        "LOAD_H":  ("load_h",    2, True,  ["handle", "index"]),
+        "STORE_H": ("store_h",   3, True,  ["handle", "index", "value"]),
+        "HEAP_LEN": ("heap_len", 1, True,  ["handle"]),
+        "REGION_ENTER": ("region_enter", 1, True, ["segment"]),
+        "REGION_EXIT":  ("region_exit",  1, True, ["segment"]),
+        "SEG_USED":     ("seg_used",     1, True, ["segment"]),
+    }
+
+    # Zero-arg keywords (just the keyword, optional parens)
+    ZERO_ARG = {
+        "INPUT": "input", "READ": "read_str", "TIME": "time",
+        "RTC_READ": "rtc_read", "RAND": "rand",
+    }
+
+    if tok.type in ZERO_ARG:
         pos += 1
         if peek(tokens, pos) and peek(tokens, pos).type == "LPAREN":
             pos += 1
         if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
             pos += 1
-        return TimeNode(), pos
-    if tok.type == "DELAY":
+        return N(ZERO_ARG[tok.type]), pos
+
+    if tok.type in FUNC_STYLE:
+        node_type, expected_args, has_parens, field_names = FUNC_STYLE[tok.type]
         pos += 1
-        pos += 1 # LPAREN
-        expr, pos = parse_expression(tokens, pos)
+        if has_parens:
+            pos += 1  # skip LPAREN
+        args = []
+        for i in range(expected_args):
+            if i > 0 and peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
+                pos += 1
+            arg, pos = parse_expression(tokens, pos)
+            args.append(arg)
         if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
             pos += 1
-        return DelayNode(value=expr), pos
-    if tok.type == "RTC_READ":
-        pos += 1
-        if peek(tokens, pos) and peek(tokens, pos).type == "LPAREN":
-            pos += 1
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return RtcReadNode(), pos
-    if tok.type == "RTC_WRITE":
-        pos += 1
-        pos += 1 # LPAREN
-        expr, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return RtcWriteNode(value=expr), pos
-    if tok.type == "FOPEN":
-        pos += 1
-        pos += 1
-        path, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return FopenNode(path=path), pos
-    if tok.type == "FREAD":
-        pos += 1
-        pos += 1
-        fd, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return FreadNode(fd=fd), pos
-    if tok.type == "FWRITE":
-        pos += 1
-        pos += 1
-        fd, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
-            pos += 1
-        string_expr, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return FwriteNode(fd=fd, string=string_expr), pos
-    if tok.type == "FCLOSE":
-        pos += 1
-        pos += 1
-        fd, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return FcloseNode(fd=fd), pos
-    if tok.type == "RAND":
-        pos += 1
-        if peek(tokens, pos) and peek(tokens, pos).type == "LPAREN":
-            pos += 1
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return RandNode(), pos
-    if tok.type == "ALLOC":
-        pos += 1  # ALLOC
-        pos += 1  # LPAREN
-        size, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return AllocNode(size=size), pos
-    if tok.type == "FREE":
-        pos += 1  # FREE
-        pos += 1  # LPAREN
-        handle, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return FreeNode(handle=handle), pos
-    if tok.type == "LOAD_H":
-        pos += 1  # LOAD_H
-        pos += 1  # LPAREN
-        handle, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
-            pos += 1
-        index, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return LoadHNode(handle=handle, index=index), pos
-    if tok.type == "STORE_H":
-        pos += 1  # STORE_H
-        pos += 1  # LPAREN
-        handle, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
-            pos += 1
-        index, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
-            pos += 1
-        value, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return StoreHNode(handle=handle, index=index, value=value), pos
-    if tok.type == "HEAP_LEN":
-        pos += 1  # HEAP_LEN
-        pos += 1  # LPAREN
-        handle, pos = parse_expression(tokens, pos)
-        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
-            pos += 1
-        return HeapLenNode(handle=handle), pos
+        fields = dict(zip(field_names, args))
+        return N(node_type, **fields), pos
+
     raise Exception(f"Unexpected token in expression: {tok.type}")
 
 
@@ -478,4 +356,4 @@ def parse_array_literal(tokens, pos):
             pos += 1
     if pos < len(tokens) and peek(tokens, pos).type == "RBRACKET":
         pos += 1
-    return ArrayNode(elements=elements), pos
+    return N("array", elements=elements), pos

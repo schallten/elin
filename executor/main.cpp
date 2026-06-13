@@ -81,12 +81,15 @@ const int SRAND_OP = 85;
 const int CALL_EXTERN_OP = 86;
 const int TRACE = 90;
 
-// --- Bump Allocator Opcodes (Item M1) ---
-const int ALLOC_OP = 44;    // Allocate cells on heap, push handle
-const int FREE_OP = 45;     // Invalidate a handle
-const int LOAD_H_OP = 46;   // Read from heap via handle + index
-const int STORE_H_OP = 47;  // Write to heap via handle + index
-const int HEAP_LEN_OP = 48; // Push the size of a handle's block
+// --- Multi-Segment Heap Opcodes (Item M1 + M2) ---
+const int ALLOC_OP = 44;      // Allocate cells, push handle
+const int FREE_OP = 45;       // Invalidate a handle
+const int LOAD_H_OP = 46;     // Read cell via handle + index
+const int STORE_H_OP = 47;    // Write cell via handle + index
+const int HEAP_LEN_OP = 48;   // Push handle's block size
+const int REGION_ENTER_OP = 49; // Save current segment's bump pointer
+const int REGION_EXIT_OP = 50;  // Reset segment, invalidate its handles
+const int SEG_USED_OP = 51;   // Push how many cells a segment has used
 
 #include <random>
 static mt19937_64 rng(random_device{}());
@@ -133,29 +136,42 @@ static void register_externals() {
   extern_registry.push_back(extern_div);  // 3
 }
 
-// --- Bump Allocator (Item M1) ---
+// --- Multi-Segment Heap (Item M2) ---
 //
-// The heap is one big flat array of ll values. When ELIN asks for N cells,
-// we carve out N slots starting at the bump pointer and move the pointer forward.
+// Instead of one big heap, we split memory into 4 independent segments.
+// Each segment has its own bump pointer and size. This lets us:
+//   - Allocate temporary data in function calls (Temp segment)
+//   - Wipe all temp data when a function returns (REGION_EXIT)
+//   - Keep long-lived data separate from scratch data (Main segment)
 //
-// Each allocation gets a "handle" — just an integer ID. The handle table maps
-// that ID to where the allocation lives in the heap, how big it is, and whether
-// it's still valid.
+// Segments:
+//   0 = Main    — long-lived data, freed manually with FREE
+//   1 = Temp    — scratch-pad for functions, auto-freed on REGION_EXIT
+//   2 = Interrupt — reserved for ISR use (sized at compile time)
+//   3 = Spare   — overflow or special use
 //
-// When you FREE a handle, we mark it invalid and add its ID to the free list.
-// The next ALLOC reuses that ID. The actual memory stays where it is — the bump
-// pointer never moves backward.
-//
-// This is dead simple: no splitting, no coalescing, no碎片. It just works.
+// REGION_ENTER saves the bump pointer. REGION_EXIT resets it back and
+// invalidates every handle that was allocated in that segment. This is
+// how temp memory gets cleaned up without per-object tracking.
 
-static const ll HEAP_SIZE = 65536;        // 64K cells — plenty for now
-static ll heap[HEAP_SIZE];                // the actual memory
-static ll bump_ptr = 0;                   // next free slot in the heap
+static const int NUM_SEGMENTS = 4;
+static const ll SEG_SIZES[NUM_SEGMENTS] = {49152, 12288, 2048, 2048};
+// Main=48K, Temp=12K, Interrupt=2K, Spare=2K  (total=64K)
+
+// Each segment has its own piece of the big heap array
+static ll heap[65536];
+static ll seg_start[NUM_SEGMENTS];   // where each segment begins in the heap
+static ll seg_bump[NUM_SEGMENTS];    // current bump pointer for each segment
+static ll seg_limit[NUM_SEGMENTS];   // one past the last valid cell
+
+// Saved bump pointers for REGION_ENTER/EXIT
+static ll saved_bump[NUM_SEGMENTS];
 
 struct Handle {
   ll offset;     // where this handle's data starts in the heap
   ll size;       // how many cells it owns
-  bool valid;    // false after FREE
+  ll segment;    // which segment it belongs to
+  bool valid;    // false after FREE or REGION_EXIT
 };
 
 static const ll MAX_HANDLES = 4096;
@@ -163,12 +179,31 @@ static Handle handle_table[MAX_HANDLES];
 static ll next_handle = 1;                // handle 0 is reserved (null handle)
 static vector<ll> free_list;              // IDs we can reuse
 
-// allocate(size) -> handle
-// Grabs N cells from the heap and returns an ID you can use to read/write them.
-// Returns 0 (null handle) if the heap is full.
-static ll heap_alloc(ll size) {
-  // Not enough room? Bail out.
-  if (bump_ptr + size > HEAP_SIZE) {
+// Set up the segment boundaries at startup
+static void heap_init() {
+  ll offset = 0;
+  for (int i = 0; i < NUM_SEGMENTS; i++) {
+    seg_start[i] = offset;
+    seg_bump[i] = offset;
+    seg_limit[i] = offset + SEG_SIZES[i];
+    saved_bump[i] = offset;
+    offset += SEG_SIZES[i];
+  }
+}
+
+// allocate(size, segment) -> handle
+// Grabs N cells from the given segment and returns an ID.
+// Returns 0 if the segment is full.
+static ll heap_alloc(ll size, ll segment) {
+  // Validate segment number
+  if (segment < 0 || segment >= NUM_SEGMENTS) {
+    cout << "[VM ERROR] Invalid segment " << segment << "\n";
+    return 0;
+  }
+
+  // Not enough room in this segment? Bail out.
+  if (seg_bump[segment] + size > seg_limit[segment]) {
+    cout << "[VM ERROR] Segment " << segment << " full (need " << size << " cells)\n";
     return 0;
   }
 
@@ -183,19 +218,19 @@ static ll heap_alloc(ll size) {
   }
 
   // Record where this allocation lives
-  handle_table[id].offset = bump_ptr;
+  handle_table[id].offset = seg_bump[segment];
   handle_table[id].size = size;
+  handle_table[id].segment = segment;
   handle_table[id].valid = true;
 
   // Move the bump pointer past this allocation
-  bump_ptr += size;
+  seg_bump[segment] += size;
 
   return id;
 }
 
 // free(handle)
 // Marks a handle as invalid so its slot can be reused later.
-// The memory isn't actually zeroed or returned — the bump pointer only goes forward.
 static void heap_free(ll id) {
   if (id <= 0 || id >= next_handle) return;
   if (!handle_table[id].valid) {
@@ -207,8 +242,7 @@ static void heap_free(ll id) {
 }
 
 // load_h(handle, index) -> value
-// Reads one cell from inside a handle's block. Checks that the handle is valid
-// and the index is within bounds before reading.
+// Reads one cell from inside a handle's block.
 static ll heap_load(ll id, ll index) {
   if (id <= 0 || id >= next_handle || !handle_table[id].valid) {
     cout << "[VM ERROR] Use-after-free or invalid handle " << id << "\n";
@@ -223,7 +257,7 @@ static ll heap_load(ll id, ll index) {
 }
 
 // store_h(handle, index, value)
-// Writes one cell into a handle's block. Same safety checks as load.
+// Writes one cell into a handle's block.
 static void heap_store(ll id, ll index, ll value) {
   if (id <= 0 || id >= next_handle || !handle_table[id].valid) {
     cout << "[VM ERROR] Use-after-free or invalid handle " << id << "\n";
@@ -235,6 +269,40 @@ static void heap_store(ll id, ll index, ll value) {
     return;
   }
   heap[handle_table[id].offset + index] = value;
+}
+
+// region_enter(segment)
+// Saves the current bump pointer so we can restore it later.
+static void region_enter(ll segment) {
+  if (segment < 0 || segment >= NUM_SEGMENTS) return;
+  saved_bump[segment] = seg_bump[segment];
+}
+
+// region_exit(segment)
+// Resets the bump pointer back to where it was at region_enter.
+// Invalidates every handle that was allocated in this segment since then.
+static void region_exit(ll segment) {
+  if (segment < 0 || segment >= NUM_SEGMENTS) return;
+
+  // Walk the handle table and invalidate anything in this segment
+  // that was allocated after the saved bump point
+  for (ll i = 1; i < next_handle; i++) {
+    if (handle_table[i].valid &&
+        handle_table[i].segment == segment &&
+        handle_table[i].offset >= saved_bump[segment]) {
+      handle_table[i].valid = false;
+      free_list.push_back(i);
+    }
+  }
+
+  // Reset the bump pointer — all that memory is now "free"
+  seg_bump[segment] = saved_bump[segment];
+}
+
+// seg_used(segment) -> number of cells used in that segment
+static ll seg_used(ll segment) {
+  if (segment < 0 || segment >= NUM_SEGMENTS) return 0;
+  return seg_bump[segment] - seg_start[segment];
 }
 
 class Printer {
@@ -631,17 +699,27 @@ void execute() {
       }
       break;
     }
-    // --- Bump Allocator Opcodes (Item M1) ---
+    // --- Multi-Segment Heap Opcodes (M1 + M2) ---
     case ALLOC_OP: {
-      // Pop size from stack, allocate that many cells, push the handle
-      if (!eval_stack.empty()) {
-        ll size = eval_stack.top();
-        eval_stack.pop();
+      // Pop size and segment from stack, allocate, push handle
+      // If only one arg, default to segment 0 (Main)
+      if (eval_stack.size() >= 2) {
+        ll segment = eval_stack.top(); eval_stack.pop();
+        ll size = eval_stack.top(); eval_stack.pop();
         if (size <= 0) {
           printer.print_str("[VM ERROR] ALLOC size must be > 0");
           eval_stack.push(0);
         } else {
-          ll handle = heap_alloc(size);
+          ll handle = heap_alloc(size, segment);
+          eval_stack.push(handle);
+        }
+      } else if (!eval_stack.empty()) {
+        ll size = eval_stack.top(); eval_stack.pop();
+        if (size <= 0) {
+          printer.print_str("[VM ERROR] ALLOC size must be > 0");
+          eval_stack.push(0);
+        } else {
+          ll handle = heap_alloc(size, 0);  // default to Main segment
           eval_stack.push(handle);
         }
       }
@@ -686,6 +764,34 @@ void execute() {
         } else {
           eval_stack.push(0);
         }
+      }
+      break;
+    }
+    // --- Region System (M2) ---
+    case REGION_ENTER_OP: {
+      // Pop segment number, save its bump pointer
+      if (!eval_stack.empty()) {
+        ll segment = eval_stack.top();
+        eval_stack.pop();
+        region_enter(segment);
+      }
+      break;
+    }
+    case REGION_EXIT_OP: {
+      // Pop segment number, reset it and invalidate temp handles
+      if (!eval_stack.empty()) {
+        ll segment = eval_stack.top();
+        eval_stack.pop();
+        region_exit(segment);
+      }
+      break;
+    }
+    case SEG_USED_OP: {
+      // Pop segment number, push how many cells it has used
+      if (!eval_stack.empty()) {
+        ll segment = eval_stack.top();
+        eval_stack.pop();
+        eval_stack.push(seg_used(segment));
       }
       break;
     }
@@ -1113,6 +1219,7 @@ int main(int argc, char *argv[]) {
   file.close();
 
   register_externals();
+  heap_init();
 
   printer.print_str("=== Execution Started ===");
   execute();

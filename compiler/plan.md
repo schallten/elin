@@ -93,13 +93,15 @@ bootstrapping the compiler. Supports labels, forward references, and pool defini
 
 ---
 
-### Item 21 — Package manager (elin-pkg)
+### Item 21 — Package manager (elin-pkg) ✅
 Manage dependencies:
-- `elin-pkg init` — create `elin.json` manifest
-- `elin-pkg add math` — pull from git URL or local path
-- `elin-pkg build` — compile everything together
+- `pkg.py init` — create `elin.json` manifest
+- `pkg.py add <name> <source>` — pull from git URL or local path
+- `pkg.py remove <name>` — remove a dependency
+- `pkg.py list` — show installed packages
+- `pkg.py build` — find all .elin files, compile together
 
-No registry server — just git URLs and local paths.
+No registry server — just git URLs and local paths. Packages stored in `.elin_packages/`.
 
 ---
 

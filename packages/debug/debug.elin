@@ -1,0 +1,51 @@
+# debug.elin — Debug utilities for ELIN
+# Provides: assert, trace, dump_vars, breakpoint
+
+func int assert_eq int actual int expected;
+    if actual != expected;
+        print(99999);
+        print(actual);
+        print(expected);
+    end;
+    return 0;
+end;
+
+func int assert_neq int actual int unexpected;
+    if actual == unexpected;
+        print(88888);
+        print(actual);
+    end;
+    return 0;
+end;
+
+func int trace str msg;
+    write "[TRACE] ";
+    write msg;
+    write "\n";
+    flush;
+    return 0;
+end;
+
+func int trace_val str msg int val;
+    write "[TRACE] ";
+    write msg;
+    write " = ";
+    print val;
+    flush;
+    return 0;
+end;
+
+func int breakpoint;
+    print(-1);
+    return 0;
+end;
+
+func int dump_heap int h;
+    let int sz = heap_len(h);
+    let int i = 0;
+    while i < sz;
+        print(load_h(h, i));
+        i = i + 1;
+    wend;
+    return 0;
+end;

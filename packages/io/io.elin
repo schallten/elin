@@ -1,0 +1,38 @@
+# io.elin — Formatted I/O utilities for ELIN
+# Provides: prompt, print_int, print_repeat, print_sep, print_header
+
+func str prompt str message;
+    write message;
+    flush;
+    return read();
+end;
+
+func int print_int int val;
+    print(val);
+    return 0;
+end;
+
+func int print_repeat str c int n;
+    let int i = 0;
+    while i < n;
+        write c;
+        i = i + 1;
+    wend;
+    flush;
+    return 0;
+end;
+
+func int print_sep;
+    write "----------------------------------------";
+    write "\n";
+    flush;
+    return 0;
+end;
+
+func int print_header str title;
+    write "\n=== ";
+    write title;
+    write " ===\n";
+    flush;
+    return 0;
+end;

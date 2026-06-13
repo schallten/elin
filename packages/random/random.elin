@@ -1,0 +1,35 @@
+# random.elin — Random number utilities for ELIN
+# Provides: rand_int, rand_range, rand_bool, pick
+
+func int rand_int();
+    return rand();
+end;
+
+func int rand_range int lo int hi;
+    let int r = rand();
+    if r < 0;
+        r = 0 - r;
+    end;
+    let int range = hi - lo + 1;
+    if range <= 0;
+        return lo;
+    end;
+    return lo + (r % range);
+end;
+
+func int rand_bool int chance_pct;
+    let int r = rand_range(0, 99);
+    if r < chance_pct;
+        return 1;
+    end;
+    return 0;
+end;
+
+func int pick int a int b;
+    return rand_range(0, 1);
+end;
+
+func int rand_seed int seed;
+    srand(seed);
+    return 0;
+end;

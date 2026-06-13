@@ -1,259 +1,34 @@
+"""
+Compact AST node representation for ELIN.
+
+Instead of 30+ individual dataclasses, we use a single generic Node class
+with a type string and a fields dict. This cuts ast_nodes.py from ~260 lines
+to ~30 lines while keeping the same semantics.
+
+Old:  AllocNode(size=expr)     →  node.type == "alloc", node.fields["size"]
+New:  Node("alloc", {"size": expr})
+"""
+
 from dataclasses import dataclass, field
 
 
 @dataclass
-class ProgramNode:
-    statements: list = field(default_factory=list)
-
-
-@dataclass
-class AssignNode:
-    type_name: str = ""
-    name: str = ""
-    value: object = None
-
-
-@dataclass
-class ReassignNode:
-    name: str = ""
-    value: object = None
-
-
-@dataclass
-class PrintNode:
-    value_node: object = None
-
-
-@dataclass
-class IfNode:
-    condition: object = None
-    body: list = field(default_factory=list)
-    else_body: list = field(default_factory=list)
-
-
-@dataclass
-class WhileNode:
-    condition: object = None
-    body: list = field(default_factory=list)
-
-
-@dataclass
-class HaltNode:
-    pass
-
-
-@dataclass
-class NumberNode:
-    value: str = ""
-
-
-@dataclass
-class StringNode:
-    value: str = ""
-
-
-@dataclass
-class VariableNode:
-    name: str = ""
-
-
-@dataclass
-class BinaryOpNode:
-    op: str = ""
-    left: object = None
-    right: object = None
-
-
-@dataclass
-class ConditionNode:
-    op: str = ""
-    left: object = None
-    right: object = None
-
-
-@dataclass
-class ArrayNode:
-    elements: list = field(default_factory=list)
-
-
-@dataclass
-class ArrayAccessNode:
-    name: str = ""
-    index: object = None
-
-
-@dataclass
-class ArrayAssignNode:
-    name: str = ""
-    index: object = None
-    value: object = None
-
-
-@dataclass
-class ArrayLenNode:
-    name: str = ""
-
-
-@dataclass
-class FunctionDefNode:
-    ret_type: str = ""
-    name: str = ""
-    params: list = field(default_factory=list)
-    body: list = field(default_factory=list)
-
-
-@dataclass
-class FunctionCallNode:
-    name: str = ""
-    args: list = field(default_factory=list)
-
-
-@dataclass
-class UnaryOpNode:
-    op: str = ""
-    operand: object = None
-
-
-@dataclass
-class AbsNode:
-    value: object = None
-
-
-@dataclass
-class InputNode:
-    pass
-
-
-@dataclass
-class ReturnNode:
-    value: object = None
-
-
-@dataclass
-class ReadStrNode:
-    pass
-
-
-@dataclass
-class WriteNode:
-    value: object = None
-
-
-@dataclass
-class FlushNode:
-    pass
-
-
-@dataclass
-class StrLenNode:
-    value: object = None
-
-
-@dataclass
-class StrCatNode:
-    left: object = None
-    right: object = None
-
-
-@dataclass
-class SubstrNode:
-    string: object = None
-    offset: object = None
-    length: object = None
-
-
-@dataclass
-class StrCmpNode:
-    left: object = None
-    right: object = None
-
-
-@dataclass
-class TimeNode:
-    pass
-
-
-@dataclass
-class DelayNode:
-    value: object = None
-
-
-@dataclass
-class RtcReadNode:
-    pass
-
-
-@dataclass
-class RtcWriteNode:
-    value: object = None
-
-
-@dataclass
-class FopenNode:
-    path: object = None
-
-
-@dataclass
-class FreadNode:
-    fd: object = None
-
-
-@dataclass
-class FwriteNode:
-    fd: object = None
-    string: object = None
-
-
-@dataclass
-class FcloseNode:
-    fd: object = None
-
-
-@dataclass
-class RandNode:
-    pass
-
-
-@dataclass
-class SrandNode:
-    seed: object = None
-
-
-@dataclass
-class ExternNode:
-    library: str = ""
-    func_name: str = ""
-
-
-@dataclass
-class CallExternNode:
-    func_name: str = ""
-    args: list = field(default_factory=list)
-
-
-@dataclass
-class AllocNode:
-    size: object = None
-
-
-@dataclass
-class FreeNode:
-    handle: object = None
-
-
-@dataclass
-class LoadHNode:
-    handle: object = None
-    index: object = None
-
-
-@dataclass
-class StoreHNode:
-    handle: object = None
-    index: object = None
-    value: object = None
-
-
-@dataclass
-class HeapLenNode:
-    handle: object = None
+class Node:
+    """Generic AST node. type is a string like 'assign', 'print', 'alloc'.
+    Fields are stored in a dict — access them as node.fields['name']."""
+    type: str = ""
+    fields: dict = field(default_factory=dict)
+
+
+# Shorthand so the parser can write N("alloc", size=expr) instead of
+# Node("alloc", {"size": expr}) — cleaner and less error-prone.
+class N(Node):
+    """Shorthand constructor: N("type", key=val, ...) builds Node("type", {key: val})."""
+    def __init__(self, node_type: str, **kwargs):
+        super().__init__(type=node_type, fields=kwargs)
+
+
+# Node type constants — makes code self-documenting
+REGION_ENTER = "region_enter"
+REGION_EXIT = "region_exit"
+SEG_USED = "seg_used"

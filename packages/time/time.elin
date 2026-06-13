@@ -1,0 +1,27 @@
+# time.elin — Timing utilities for ELIN
+# Provides: elapsed, wait_until, measure (conceptual)
+
+func int elapsed int start_time;
+    return time() - start_time;
+end;
+
+func int wait_until int target_ms;
+    let int now = time();
+    if target_ms > now;
+        delay(target_ms - now);
+    end;
+    return 0;
+end;
+
+func int ms_to_sec int ms;
+    return ms / 1000;
+end;
+
+func int ms_to_min int ms;
+    return ms / 60000;
+end;
+
+func int seconds_since int start_time;
+    let int ms = time() - start_time;
+    return ms / 1000;
+end;

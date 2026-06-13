@@ -115,6 +115,11 @@ LOAD_H  = 46 # Read cell from heap via handle + index
 STORE_H = 47 # Write cell to heap via handle + index
 HEAP_LEN = 48 # Push the size of a handle's block
 
+# --- Multi-Segment Memory (Item M2) ---
+REGION_ENTER = 49 # Save segment's bump pointer
+REGION_EXIT  = 50 # Reset segment, invalidate temp handles
+SEG_USED     = 51 # Push how many cells a segment has used
+
 # --- Mappings ---
 # These dictionaries help the compiler convert text like '+' or '==' into the numbers above.
 
