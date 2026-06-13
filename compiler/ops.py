@@ -105,6 +105,16 @@ RTC_WRITE = 83 # Write ESP RTC memory (no-op on PC)
 RAND = 84  # Push random 64-bit integer
 SRAND = 85 # Seed the random generator
 
+# --- FFI Library (Item 17) ---
+CALL_EXTERN = 86 # Call registered external function by ID
+
+# --- Bump Allocator (Item M1) ---
+ALLOC   = 44 # Allocate N cells on heap, push handle
+FREE    = 45 # Invalidate a handle
+LOAD_H  = 46 # Read cell from heap via handle + index
+STORE_H = 47 # Write cell to heap via handle + index
+HEAP_LEN = 48 # Push the size of a handle's block
+
 # --- Mappings ---
 # These dictionaries help the compiler convert text like '+' or '==' into the numbers above.
 

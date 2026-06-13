@@ -12,7 +12,8 @@ from ops import (
     STRLEN, STRCAT, SUBSTR, STRCMP,
     TIME, DELAY, RTC_READ, RTC_WRITE,
     FOPEN, FREAD, FWRITE, FCLOSE,
-    RAND, SRAND
+    RAND, SRAND, CALL_EXTERN,
+    ALLOC, FREE, LOAD_H, STORE_H, HEAP_LEN
 )
 from ast_nodes import *
 from lexer import lex
@@ -25,6 +26,7 @@ def make_env():
     return {
         "variables": {},
         "functions": {},
+        "externs": {},
         "current_locals": None,
     }
 
@@ -102,11 +104,26 @@ def tc_infer_type(node, env):
             return "int"
         case SrandNode():
             return "int"
+        case ExternNode():
+            return "void"
+        case AllocNode():
+            return "int"
+        case FreeNode():
+            return "void"
+        case LoadHNode():
+            return "int"
+        case StoreHNode():
+            return "void"
+        case HeapLenNode():
+            return "int"
         case FunctionCallNode(name=n):
             funcs = env["functions"]
-            if n not in funcs:
-                raise Exception(f"Type Error: Function '{n}' undefined")
-            return funcs[n]["ret_type"]
+            externs = env["externs"]
+            if n in funcs:
+                return funcs[n]["ret_type"]
+            if n in externs:
+                return externs[n]["ret_type"]
+            raise Exception(f"Type Error: Function '{n}' undefined")
         case _:
             return "unknown"
 
@@ -164,20 +181,6 @@ def check(ast, env):
                 env = check(s, env)
             env["current_locals"] = old
             return env
-        case FunctionCallNode(name=n, args=args):
-            funcs = env["functions"]
-            if n not in funcs:
-                raise Exception(f"Type Error: Function '{n}' undefined")
-            info = funcs[n]
-            if len(args) != len(info["params"]):
-                raise Exception(
-                    f"Type Error: {n} expects {len(info['params'])} args, got {len(args)}"
-                )
-            for i, arg in enumerate(args):
-                at = tc_infer_type(arg, env)
-                if at != info["params"][i]:
-                    raise Exception(f"Type Error: Arg {i} {at} -> {info['params'][i]}")
-            return env
         case UnaryOpNode(operand=oper):
             return check(oper, env)
         case BinaryOpNode(left=l, right=r):
@@ -232,6 +235,41 @@ def check(ast, env):
             return env
         case SrandNode(seed=s):
             return check(s, env)
+        case ExternNode(library=lib, func_name=fn):
+            env["externs"][fn] = {"library": lib, "ret_type": "int"}
+            return env
+        case AllocNode(size=s):
+            return check(s, env)
+        case FreeNode(handle=h):
+            return check(h, env)
+        case LoadHNode(handle=h, index=idx):
+            check(h, env)
+            return check(idx, env)
+        case StoreHNode(handle=h, index=idx, value=v):
+            check(h, env)
+            check(idx, env)
+            return check(v, env)
+        case HeapLenNode(handle=h):
+            return check(h, env)
+        case FunctionCallNode(name=n, args=args):
+            funcs = env["functions"]
+            externs = env["externs"]
+            if n in funcs:
+                info = funcs[n]
+                if len(args) != len(info["params"]):
+                    raise Exception(
+                        f"Type Error: {n} expects {len(info['params'])} args, got {len(args)}"
+                    )
+                for i, arg in enumerate(args):
+                    at = tc_infer_type(arg, env)
+                    if at != info["params"][i]:
+                        raise Exception(f"Type Error: Arg {i} {at} -> {info['params'][i]}")
+            elif n in externs:
+                for arg in args:
+                    check(arg, env)
+            else:
+                raise Exception(f"Type Error: Function '{n}' undefined")
+            return env
         case ReturnNode(value=v):
             return check(v, env)
         case _:
@@ -250,6 +288,7 @@ def make_state(package_name):
         "array_pool": [],
         "constant_pool": [],
         "functions": {},
+        "externs": {},
         "current_scope_locals": None,
         "local_next_index": 0,
     }
@@ -290,7 +329,11 @@ def cg_infer_type(node, state):
                 return state["current_scope_locals"][n]["type"]
             return state["variables"][n]["type"]
         case FunctionCallNode(name=n):
-            return state["functions"][n]["ret_type"]
+            if n in state["functions"]:
+                return state["functions"][n]["ret_type"]
+            if n in state["externs"]:
+                return state["externs"][n]["ret_type"]
+            return "int"
         case _:
             return "int"
 
@@ -592,6 +635,41 @@ def generate(ast, state):
             cg_add_operation(SRAND, state)
             return state
 
+        case ExternNode(library=lib, func_name=fn):
+            extern_id = len(state["externs"])
+            state["externs"][fn] = {
+                "id": extern_id, "library": lib, "ret_type": "int"
+            }
+            return state
+
+        case AllocNode(size=s):
+            state = generate(s, state)
+            cg_add_operation(ALLOC, state)
+            return state
+
+        case FreeNode(handle=h):
+            state = generate(h, state)
+            cg_add_operation(FREE, state)
+            return state
+
+        case LoadHNode(handle=h, index=idx):
+            state = generate(h, state)
+            state = generate(idx, state)
+            cg_add_operation(LOAD_H, state)
+            return state
+
+        case StoreHNode(handle=h, index=idx, value=v):
+            state = generate(h, state)
+            state = generate(idx, state)
+            state = generate(v, state)
+            cg_add_operation(STORE_H, state)
+            return state
+
+        case HeapLenNode(handle=h):
+            state = generate(h, state)
+            cg_add_operation(HEAP_LEN, state)
+            return state
+
         case FunctionDefNode(ret_type=rt, name=n, params=params, body=body):
             jmp_idx = len(state["bytecode"])
             state["bytecode"].append("JMP_PLACEHOLDER")
@@ -618,10 +696,16 @@ def generate(ast, state):
             return state
 
         case FunctionCallNode(name=n, args=args):
-            func = state["functions"][n]
-            for arg in args:
-                state = generate(arg, state)
-            cg_add_operation(f"{CALL} {func['address']} {func['argc']}", state)
+            if n in state["externs"]:
+                for arg in args:
+                    state = generate(arg, state)
+                extern_id = state["externs"][n]["id"]
+                cg_add_operation(f"{CALL_EXTERN} {extern_id} {len(args)}", state)
+            else:
+                func = state["functions"][n]
+                for arg in args:
+                    state = generate(arg, state)
+                cg_add_operation(f"{CALL} {func['address']} {func['argc']}", state)
             return state
 
         case ReturnNode(value=v):

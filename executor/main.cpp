@@ -78,7 +78,15 @@ const int RTC_READ = 82;
 const int RTC_WRITE = 83;
 const int RAND_OP = 84;
 const int SRAND_OP = 85;
+const int CALL_EXTERN_OP = 86;
 const int TRACE = 90;
+
+// --- Bump Allocator Opcodes (Item M1) ---
+const int ALLOC_OP = 44;    // Allocate cells on heap, push handle
+const int FREE_OP = 45;     // Invalidate a handle
+const int LOAD_H_OP = 46;   // Read from heap via handle + index
+const int STORE_H_OP = 47;  // Write to heap via handle + index
+const int HEAP_LEN_OP = 48; // Push the size of a handle's block
 
 #include <random>
 static mt19937_64 rng(random_device{}());
@@ -89,6 +97,145 @@ auto vm_boot_time = chrono::steady_clock::now();
 // --- File I/O state ---
 static unordered_map<ll, fstream*> open_files;
 static ll next_fd = 1;
+
+// --- FFI Registry (Item 17) ---
+typedef ll (*ExternFn)(vector<ll>&);
+static vector<ExternFn> extern_registry;
+
+static ll extern_add(vector<ll>& args) {
+  ll a = args.size() > 0 ? args[0] : 0;
+  ll b = args.size() > 1 ? args[1] : 0;
+  return a + b;
+}
+
+static ll extern_sub(vector<ll>& args) {
+  ll a = args.size() > 0 ? args[0] : 0;
+  ll b = args.size() > 1 ? args[1] : 0;
+  return a - b;
+}
+
+static ll extern_mul(vector<ll>& args) {
+  ll a = args.size() > 0 ? args[0] : 0;
+  ll b = args.size() > 1 ? args[1] : 0;
+  return a * b;
+}
+
+static ll extern_div(vector<ll>& args) {
+  ll a = args.size() > 0 ? args[0] : 0;
+  ll b = args.size() > 1 ? args[1] : 1;
+  return b != 0 ? a / b : 0;
+}
+
+static void register_externals() {
+  extern_registry.push_back(extern_add);  // 0
+  extern_registry.push_back(extern_sub);  // 1
+  extern_registry.push_back(extern_mul);  // 2
+  extern_registry.push_back(extern_div);  // 3
+}
+
+// --- Bump Allocator (Item M1) ---
+//
+// The heap is one big flat array of ll values. When ELIN asks for N cells,
+// we carve out N slots starting at the bump pointer and move the pointer forward.
+//
+// Each allocation gets a "handle" — just an integer ID. The handle table maps
+// that ID to where the allocation lives in the heap, how big it is, and whether
+// it's still valid.
+//
+// When you FREE a handle, we mark it invalid and add its ID to the free list.
+// The next ALLOC reuses that ID. The actual memory stays where it is — the bump
+// pointer never moves backward.
+//
+// This is dead simple: no splitting, no coalescing, no碎片. It just works.
+
+static const ll HEAP_SIZE = 65536;        // 64K cells — plenty for now
+static ll heap[HEAP_SIZE];                // the actual memory
+static ll bump_ptr = 0;                   // next free slot in the heap
+
+struct Handle {
+  ll offset;     // where this handle's data starts in the heap
+  ll size;       // how many cells it owns
+  bool valid;    // false after FREE
+};
+
+static const ll MAX_HANDLES = 4096;
+static Handle handle_table[MAX_HANDLES];
+static ll next_handle = 1;                // handle 0 is reserved (null handle)
+static vector<ll> free_list;              // IDs we can reuse
+
+// allocate(size) -> handle
+// Grabs N cells from the heap and returns an ID you can use to read/write them.
+// Returns 0 (null handle) if the heap is full.
+static ll heap_alloc(ll size) {
+  // Not enough room? Bail out.
+  if (bump_ptr + size > HEAP_SIZE) {
+    return 0;
+  }
+
+  // Pick a handle ID — reuse one from the free list if available
+  ll id;
+  if (!free_list.empty()) {
+    id = free_list.back();
+    free_list.pop_back();
+  } else {
+    id = next_handle++;
+    if (id >= MAX_HANDLES) return 0;
+  }
+
+  // Record where this allocation lives
+  handle_table[id].offset = bump_ptr;
+  handle_table[id].size = size;
+  handle_table[id].valid = true;
+
+  // Move the bump pointer past this allocation
+  bump_ptr += size;
+
+  return id;
+}
+
+// free(handle)
+// Marks a handle as invalid so its slot can be reused later.
+// The memory isn't actually zeroed or returned — the bump pointer only goes forward.
+static void heap_free(ll id) {
+  if (id <= 0 || id >= next_handle) return;
+  if (!handle_table[id].valid) {
+    cout << "[VM ERROR] Double free on handle " << id << "\n";
+    return;
+  }
+  handle_table[id].valid = false;
+  free_list.push_back(id);
+}
+
+// load_h(handle, index) -> value
+// Reads one cell from inside a handle's block. Checks that the handle is valid
+// and the index is within bounds before reading.
+static ll heap_load(ll id, ll index) {
+  if (id <= 0 || id >= next_handle || !handle_table[id].valid) {
+    cout << "[VM ERROR] Use-after-free or invalid handle " << id << "\n";
+    return 0;
+  }
+  if (index < 0 || index >= handle_table[id].size) {
+    cout << "[VM ERROR] Out-of-bounds access on handle " << id
+         << " (index " << index << ", size " << handle_table[id].size << ")\n";
+    return 0;
+  }
+  return heap[handle_table[id].offset + index];
+}
+
+// store_h(handle, index, value)
+// Writes one cell into a handle's block. Same safety checks as load.
+static void heap_store(ll id, ll index, ll value) {
+  if (id <= 0 || id >= next_handle || !handle_table[id].valid) {
+    cout << "[VM ERROR] Use-after-free or invalid handle " << id << "\n";
+    return;
+  }
+  if (index < 0 || index >= handle_table[id].size) {
+    cout << "[VM ERROR] Out-of-bounds write on handle " << id
+         << " (index " << index << ", size " << handle_table[id].size << ")\n";
+    return;
+  }
+  heap[handle_table[id].offset + index] = value;
+}
 
 class Printer {
 public:
@@ -461,6 +608,84 @@ void execute() {
         ll seed = eval_stack.top();
         eval_stack.pop();
         rng.seed((unsigned long long)seed);
+      }
+      break;
+    }
+    case CALL_EXTERN_OP: {
+      int func_id = (int)tokens[1];
+      int argc = (int)tokens[2];
+      vector<ll> args;
+      for (int i = 0; i < argc; i++) {
+        if (!eval_stack.empty()) {
+          args.push_back(eval_stack.top());
+          eval_stack.pop();
+        }
+      }
+      reverse(args.begin(), args.end());
+      if (func_id >= 0 && func_id < (int)extern_registry.size()) {
+        ll result = extern_registry[func_id](args);
+        eval_stack.push(result);
+      } else {
+        printer.print_debug("Invalid extern function ID", func_id);
+        eval_stack.push(0);
+      }
+      break;
+    }
+    // --- Bump Allocator Opcodes (Item M1) ---
+    case ALLOC_OP: {
+      // Pop size from stack, allocate that many cells, push the handle
+      if (!eval_stack.empty()) {
+        ll size = eval_stack.top();
+        eval_stack.pop();
+        if (size <= 0) {
+          printer.print_str("[VM ERROR] ALLOC size must be > 0");
+          eval_stack.push(0);
+        } else {
+          ll handle = heap_alloc(size);
+          eval_stack.push(handle);
+        }
+      }
+      break;
+    }
+    case FREE_OP: {
+      // Pop handle from stack, invalidate it
+      if (!eval_stack.empty()) {
+        ll handle = eval_stack.top();
+        eval_stack.pop();
+        heap_free(handle);
+      }
+      break;
+    }
+    case LOAD_H_OP: {
+      // Pop index and handle, push heap[handle][index]
+      if (eval_stack.size() >= 2) {
+        ll index = eval_stack.top(); eval_stack.pop();
+        ll handle = eval_stack.top(); eval_stack.pop();
+        ll value = heap_load(handle, index);
+        eval_stack.push(value);
+      }
+      break;
+    }
+    case STORE_H_OP: {
+      // Pop value, index, and handle → set heap[handle][index] = value
+      if (eval_stack.size() >= 3) {
+        ll value  = eval_stack.top(); eval_stack.pop();
+        ll index  = eval_stack.top(); eval_stack.pop();
+        ll handle = eval_stack.top(); eval_stack.pop();
+        heap_store(handle, index, value);
+      }
+      break;
+    }
+    case HEAP_LEN_OP: {
+      // Pop handle, push its size
+      if (!eval_stack.empty()) {
+        ll handle = eval_stack.top();
+        eval_stack.pop();
+        if (handle > 0 && handle < next_handle && handle_table[handle].valid) {
+          eval_stack.push(handle_table[handle].size);
+        } else {
+          eval_stack.push(0);
+        }
       }
       break;
     }
@@ -886,6 +1111,8 @@ int main(int argc, char *argv[]) {
     bytecode_program.push_back(make_pair(index++, line));
   }
   file.close();
+
+  register_externals();
 
   printer.print_str("=== Execution Started ===");
   execute();

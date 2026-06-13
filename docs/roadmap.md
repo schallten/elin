@@ -67,31 +67,31 @@ On PC we use `std::mt19937_64`; on ESP we use the hardware `random()`. Same inte
 
 ---
 
-### Item 17 — FFI (CALL_EXTERN)
+### Item 17 — FFI (CALL_EXTERN) <span style="color: #4ade80;">✓ Done</span>
 
-This is how we bridge ELIN to the host system. A source declaration like `EXTERN "math" sin;` emits **CALL_EXTERN (86)**. We maintain a function registry per platform: C++ stdlib on PC, GPIO and WiFi on ESP. Same opcode, different registration tables.
+This is how we bridge ELIN to the host system. A source declaration like `extern "math" add;` emits **CALL_EXTERN (86)**. We maintain a function registry per platform: C++ stdlib on PC, GPIO and WiFi on ESP. Same opcode, different registration tables.
 
 ---
 
 ## Tooling
 
-### Item M1 — Core bump allocator
+### Item M1 — Core bump allocator <span style="color: #4ade80;">✓ Done</span>
 
 A single heap segment using bump-pointer allocation. Each allocation returns a handle (integer ID) rather than a raw address. A flat handle table maps IDs to block metadata (pointer, size, validity flag). Allocation is O(1) — increment a pointer. Deallocation is explicit: `FREE` invalidates the handle and recycles its slot; memory is not reclaimed, the bump pointer only advances. `LOAD_H` / `STORE_H` opcodes access cells with bounds checking. Use-after-free, double-free, and OOB are caught at runtime — no silent corruption.
 
 ---
 
-### Item 18 — Bytecode assembler
+### Item 18 — Bytecode assembler <span style="color: #4ade80;">✓ Done</span>
 
-We're building `elin-asm` — a human-readable text format that assembles to `.outz`:
+We built `elin-asm` — a human-readable text format that assembles to `.outz`:
 
 ```
-PUSH 42
+PUSH_CONST 0
 STORE 0
 HALT
 ```
 
-We want to hand-write optimized bytecode, test individual opcodes, and bootstrap the compiler — all without hex-editing raw `.outz` files.
+For hand-writing optimized bytecode, testing individual opcodes, and bootstrapping the compiler — all without hex-editing raw `.outz` files. Supports labels, forward references, and pool definitions.
 
 ---
 

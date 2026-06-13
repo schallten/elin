@@ -148,4 +148,58 @@ As projects grow, they collect "dust"—old code that isn't used anymore but sti
 
 ---
 
+## v0.4.1 — FFI, Assembler & Bump Allocator
+
+Three new features that turn ELIN from a sandboxed language into a practical system.
+
+### FFI — Foreign Function Interface (Item 17)
+
+ELIN can now call C/C++ functions registered in the VM. Declare an external function with `extern`, then call it like any other function:
+
+```elin
+extern "math" add;
+let int result = add(5, 3);
+print result;   # 8
+```
+
+The compiler assigns each `extern` a sequential ID. The VM maintains a function registry — a table of C function pointers — and dispatches `CALL_EXTERN (86)` to the right one. On PC the registry wraps stdlib math; on ESP32 it would wrap GPIO, WiFi, or sensor APIs. Same opcode, different backend.
+
+### Bytecode Assembler — elin-asm (Item 18)
+
+A new tool at `compiler/asm.py` that turns human-readable text into `.outz` bytecode files:
+
+```asm
+CONST 0 42
+PUSH_CONST 0
+PRINT
+HALT
+```
+
+Supports labels (`LABEL loop:` / `JMP loop`), forward references, and all opcodes including `CALL_EXTERN`. The assembler is the bridge for bootstrapping — the first ELIN compiler written in ELIN will emit text in this format, and the assembler will turn it into executable bytecode.
+
+### Bump Allocator — Core Heap (Item M1)
+
+Five new opcodes give ELIN dynamic heap memory:
+
+| Opcode | Name | Description |
+|--------|------|-------------|
+| 44 | ALLOC | Pop size, allocate cells, push handle |
+| 45 | FREE | Invalidate a handle |
+| 46 | LOAD_H | Read cell via handle + index |
+| 47 | STORE_H | Write cell via handle + index |
+| 48 | HEAP_LEN | Push handle's block size |
+
+```elin
+let int h = alloc(3);
+store_h(h, 0, 10);
+store_h(h, 1, 20);
+print load_h(h, 0);   # 10
+print heap_len(h);     # 3
+free(h);
+```
+
+The heap is a 64K-cell flat array with a bump pointer. Allocation is O(1) — just move the pointer forward. Deallocation marks handles as invalid and recycles their IDs via a free list. Use-after-free, double-free, and out-of-bounds access are all caught at runtime with error messages.
+
+---
+
 [:material-book-open: Learn how to use ELIN](docs/introduction.md){ .md-button .md-button--primary }

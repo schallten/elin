@@ -79,6 +79,12 @@ def lex(code_string):
                 elif part == "fclose": tokens.append(Token("FCLOSE"))
                 elif part == "rand": tokens.append(Token("RAND"))
                 elif part == "srand": tokens.append(Token("SRAND"))
+                elif part == "extern": tokens.append(Token("EXTERN"))
+                elif part == "alloc": tokens.append(Token("ALLOC"))
+                elif part == "free": tokens.append(Token("FREE"))
+                elif part == "load_h": tokens.append(Token("LOAD_H"))
+                elif part == "store_h": tokens.append(Token("STORE_H"))
+                elif part == "heap_len": tokens.append(Token("HEAP_LEN"))
                 elif part in ["int", "str"]: tokens.append(Token("TYPE", part))
                 else: tokens.append(Token("IDENTIFIER", part))
                 continue

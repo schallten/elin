@@ -217,3 +217,43 @@ class RandNode:
 @dataclass
 class SrandNode:
     seed: object = None
+
+
+@dataclass
+class ExternNode:
+    library: str = ""
+    func_name: str = ""
+
+
+@dataclass
+class CallExternNode:
+    func_name: str = ""
+    args: list = field(default_factory=list)
+
+
+@dataclass
+class AllocNode:
+    size: object = None
+
+
+@dataclass
+class FreeNode:
+    handle: object = None
+
+
+@dataclass
+class LoadHNode:
+    handle: object = None
+    index: object = None
+
+
+@dataclass
+class StoreHNode:
+    handle: object = None
+    index: object = None
+    value: object = None
+
+
+@dataclass
+class HeapLenNode:
+    handle: object = None

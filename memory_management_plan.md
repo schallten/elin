@@ -112,7 +112,7 @@ The memory subsystem is designed for deterministic allocation, zero hidden pause
 
 | Phase | Status |
 |-------|--------|
-| 1 — Core Bump Allocator | **Planned** |
+| 1 — Core Bump Allocator | **Done** |
 | 2 — Multi-Segment + Regions | **Planned** |
 | 3 — Embedded Hardening | **Planned** |
 | 4 — PC Comfort | **Planned** |

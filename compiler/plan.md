@@ -57,32 +57,39 @@ PC: `std::mt19937_64`. ESP: hardware `random()`.
 
 ---
 
-### Item 17 — FFI (CALL_EXTERN)
+### Item 17 — FFI (CALL_EXTERN) ✅
 Bridge ELIN to the host system:
 - **CALL_EXTERN (86)** — call registered external function by ID
-- Source declaration: `EXTERN "math" sin;`
+- Source declaration: `extern "math" add;`
 - Per-platform function registry (C++ stdlib on PC, GPIO/WiFi on ESP)
+- Compiler assigns sequential IDs; VM dispatches via function pointer table
 
 ---
 
 ## Tooling
 
-### Item M1 — Core bump allocator
+### Item M1 — Core bump allocator ✅
 Single heap segment, bump-pointer allocation. Handle-based, O(1) alloc, explicit FREE.
+- **ALLOC (44)** — pop size, allocate cells, push handle
+- **FREE (45)** — pop handle, invalidate it
+- **LOAD_H (46)** — pop index and handle, push cell value
+- **STORE_H (47)** — pop value, index, and handle, write cell
+- **HEAP_LEN (48)** — pop handle, push its size
+- Safety: use-after-free, double-free, and out-of-bounds caught at runtime
 
 ---
 
-### Item 18 — Bytecode assembler (elin-asm)
+### Item 18 — Bytecode assembler (elin-asm) ✅
 Human-readable text format that assembles to `.outz`:
 
 ```
-PUSH 42
+PUSH_CONST 0
 STORE 0
 HALT
 ```
 
 For hand-writing optimized bytecode, testing individual opcodes, and
-bootstrapping the compiler.
+bootstrapping the compiler. Supports labels, forward references, and pool definitions.
 
 ---
 

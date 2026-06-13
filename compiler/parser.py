@@ -62,6 +62,9 @@ def parse_statements(tokens, pos, root=False):
         elif tok.type == "SRAND":
             node, pos = parse_srand(tokens, pos)
             stmts.append(node)
+        elif tok.type == "EXTERN":
+            node, pos = parse_extern(tokens, pos)
+            stmts.append(node)
         elif (tok.type == "IDENTIFIER" and pos + 1 < len(tokens)
               and peek(tokens, pos + 1).type == "LBRACKET"):
             node, pos = parse_array_assign(tokens, pos)
@@ -70,7 +73,7 @@ def parse_statements(tokens, pos, root=False):
               and peek(tokens, pos + 1).type == "EQUALS"):
             node, pos = parse_reassign(tokens, pos)
             stmts.append(node)
-        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN", "ABS", "INPUT", "READ", "STRLEN", "STRCAT", "SUBSTR", "STRCMP", "TIME", "DELAY", "RTC_READ", "RTC_WRITE", "FOPEN", "FREAD", "FWRITE", "FCLOSE", "RAND"):
+        elif tok.type in ("IDENTIFIER", "LPAREN", "LBRACKET", "NUMBER", "STRING", "LEN", "ABS", "INPUT", "READ", "STRLEN", "STRCAT", "SUBSTR", "STRCMP", "TIME", "DELAY", "RTC_READ", "RTC_WRITE", "FOPEN", "FREAD", "FWRITE", "FCLOSE", "RAND", "ALLOC", "FREE", "LOAD_H", "STORE_H", "HEAP_LEN"):
             node, pos = parse_expression(tokens, pos)
             stmts.append(node)
         elif tok.type in ("COMMA", "RPAREN", "RBRACKET"):
@@ -141,6 +144,17 @@ def parse_srand(tokens, pos):
     if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
         pos += 1
     return SrandNode(seed=seed), pos
+
+
+def parse_extern(tokens, pos):
+    pos += 1  # EXTERN
+    lib_tok = peek(tokens, pos)
+    pos += 1  # STRING (library name)
+    name_tok = peek(tokens, pos)
+    pos += 1  # IDENTIFIER (function name)
+    if peek(tokens, pos) and peek(tokens, pos).type == "SEMI":
+        pos += 1
+    return ExternNode(library=lib_tok.value, func_name=name_tok.value), pos
 
 
 def parse_if(tokens, pos):
@@ -407,6 +421,50 @@ def parse_primary(tokens, pos):
         if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
             pos += 1
         return RandNode(), pos
+    if tok.type == "ALLOC":
+        pos += 1  # ALLOC
+        pos += 1  # LPAREN
+        size, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return AllocNode(size=size), pos
+    if tok.type == "FREE":
+        pos += 1  # FREE
+        pos += 1  # LPAREN
+        handle, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return FreeNode(handle=handle), pos
+    if tok.type == "LOAD_H":
+        pos += 1  # LOAD_H
+        pos += 1  # LPAREN
+        handle, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
+            pos += 1
+        index, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return LoadHNode(handle=handle, index=index), pos
+    if tok.type == "STORE_H":
+        pos += 1  # STORE_H
+        pos += 1  # LPAREN
+        handle, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
+            pos += 1
+        index, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "COMMA":
+            pos += 1
+        value, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return StoreHNode(handle=handle, index=index, value=value), pos
+    if tok.type == "HEAP_LEN":
+        pos += 1  # HEAP_LEN
+        pos += 1  # LPAREN
+        handle, pos = parse_expression(tokens, pos)
+        if peek(tokens, pos) and peek(tokens, pos).type == "RPAREN":
+            pos += 1
+        return HeapLenNode(handle=handle), pos
     raise Exception(f"Unexpected token in expression: {tok.type}")
 
 

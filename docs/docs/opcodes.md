@@ -36,6 +36,11 @@ The following instructions are the raw commands the ELIN Virtual Machine underst
 | 41 | RET | Return value and pop Frame |
 | 42 | PUSH_LOCAL | Push local variable from current frame |
 | 43 | STORE_LOCAL | Store to local variable in current frame |
+| 44 | ALLOC | Allocate N cells on heap, push handle |
+| 45 | FREE | Invalidate a heap handle |
+| 46 | LOAD_H | Read cell from heap via handle + index |
+| 47 | STORE_H | Write cell to heap via handle + index |
+| 48 | HEAP_LEN | Push size of a handle's block |
 | 55 | MOD | Pop two values, push remainder of division |
 | 56 | ABS | Pop one value, push its absolute value |
 | 60 | DUP | Duplicate the top value on the stack |
@@ -64,6 +69,7 @@ The following instructions are the raw commands the ELIN Virtual Machine underst
 | 83 | RTC_WRITE | Write ESP RTC memory (no-op on PC) |
 | 84 | RAND | Push random 64-bit integer |
 | 85 | SRAND | Seed the random generator |
+| 86 | CALL_EXTERN | Call registered external function by ID |
 | 90 | TRACE | Toggle debug output on/off |
 
 </details>

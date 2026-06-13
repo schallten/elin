@@ -1,31 +1,107 @@
 const examples = {
     hello: `# Hello World in ELIN Bytecode
+VERSION 1
+CONST_COUNT 0
+STR_COUNT 1
+
 STR 0 Hello, World!
-1 0 0 0 0
-3 0
-21 0
-9`,
-    fib: `# Fibonacci (Recursive Example)
-# Simplified bytecode representation
-1 0 0 0 10
-3 0
-# logic here...
-9`,
+
+PUSH_STR 0
+PRINT_STR
+HALT`,
+    fib: `# Fibonacci (Recursive)
+VERSION 1
+CONST_COUNT 3
+STR_COUNT 0
+
+CONST 0 10
+CONST 1 1
+CONST 2 0
+
+JMP main
+
+LABEL fib:
+LOAD_LOCAL 0
+PUSH_CONST 2
+CMP_LTE
+JZ fib_recurse
+LOAD_LOCAL 0
+RET
+
+LABEL fib_recurse:
+LOAD_LOCAL 0
+PUSH_CONST 1
+SUB
+CALL fib 1
+LOAD_LOCAL 0
+PUSH_CONST 2
+SUB
+CALL fib 1
+ADD
+RET
+
+LABEL main:
+PUSH_CONST 0
+CALL fib 1
+PRINT
+HALT`,
     math: `# Math Operations
-1 0 0 0 10
-1 0 0 0 20
-4
-3 0
-8 0
-9`,
+VERSION 1
+CONST_COUNT 2
+STR_COUNT 0
+
+CONST 0 10
+CONST 1 20
+
+PUSH_CONST 0
+PUSH_CONST 1
+ADD
+PRINT
+PUSH_CONST 0
+PUSH_CONST 1
+SUB
+PRINT
+PUSH_CONST 0
+PUSH_CONST 1
+MUL
+PRINT
+HALT`,
     loop: `# Array Loop
-STR 0 Element: 
-1 0 0 0 5
-30 3
-3 0
-1 0 0 0 0
-3 1
-9`
+VERSION 1
+CONST_COUNT 3
+STR_COUNT 1
+
+CONST 0 0
+CONST 1 5
+CONST 2 1
+
+STR 0 Element:
+
+ARR 0 10,20,30,40,50
+PUSH_ARR 0
+STORE 0
+PUSH_CONST 0
+STORE 1
+
+LABEL loop:
+LOAD 1
+PUSH_CONST 1
+CMP_LT
+JZ done
+PUSH_STR 0
+PRINT_STR
+LOAD 0
+LOAD 1
+ARR_GET
+PRINT
+LOAD 1
+PUSH_CONST 2
+ADD
+STORE 1
+JMP loop
+
+LABEL done:
+HALT`
 };
 
 function loadExample(key) {
@@ -87,6 +163,9 @@ function reset() {
     state.vars = {};
     state.stringPool = {};
     state.arrayPool = {};
+    state.constPool = {};
+    state.heap = {};
+    state.heapHandles = {};
     state.callStack = [];
     state.halted = false;
     state.output = [];
@@ -98,10 +177,27 @@ function parseSource(source) {
     state.lines = source.split('\n');
     state.instructions = [];
     reset();
+    if (!state.constPool) state.constPool = {};
+
+    const labels = {};
+    const placeholders = [];
 
     for (let i = 0; i < state.lines.length; i++) {
         const line = state.lines[i].trim();
         if (!line || line.startsWith('#')) continue;
+
+        if (line.startsWith('VERSION') || line.startsWith('CONST_COUNT') ||
+            line.startsWith('STR_COUNT') || line.startsWith('ARR_COUNT')) {
+            continue;
+        }
+
+        if (line.startsWith('CONST ')) {
+            const parts = line.split(' ');
+            const idx = parseInt(parts[1], 10);
+            const val = parseInt(parts[2], 10);
+            state.constPool[idx] = val;
+            continue;
+        }
 
         if (line.startsWith('STR ')) {
             const parts = line.split(' ');
@@ -124,6 +220,20 @@ function parseSource(source) {
             continue;
         }
 
+        // Handle labels: "LABEL name:" or "name:"
+        if (line.toUpperCase().startsWith('LABEL ') && line.includes(':')) {
+            const labelName = line.split(/\s+/)[1].replace(/:$/, '');
+            labels[labelName] = state.instructions.length;
+            continue;
+        }
+        if (line.endsWith(':') && !line.startsWith(' ')) {
+            const labelName = line.slice(0, -1).trim();
+            if (labelName && !labelName.match(/^\d+$/)) {
+                labels[labelName] = state.instructions.length;
+                continue;
+            }
+        }
+
         const tokens = line.split(/\s+/);
         const opcode = parseInt(tokens[0], 10);
 
@@ -134,14 +244,47 @@ function parseSource(source) {
             text: line
         };
 
-        if (opcode === 1) { // PUSH
+        if (opcode === 1) { // PUSH (legacy)
             instruction.args = [tokens.length >= 5 ? BigInt(tokens[4]) : 0n];
-        } else if ([2, 3, 8, 16, 17, 18, 20, 21, 30, 31, 32, 33, 34, 40, 41, 42, 43, 66, 67].includes(opcode)) {
-            // Updated to handle all opcodes with operands
+        } else if (opcode === 22) { // PUSH_CONST
+            instruction.args = [parseInt(tokens[1], 10)];
+        } else if ([16, 17, 18].includes(opcode) && tokens.length >= 2) { // JMP/JZ/JNZ
+            const arg = tokens[1];
+            if (labels[arg] !== undefined) {
+                instruction.args = [labels[arg]];
+            } else if (arg.match(/^\d+$/)) {
+                instruction.args = [parseInt(arg, 10)];
+            } else {
+                placeholders.push({ instrIndex: state.instructions.length, label: arg });
+                instruction.args = [0];
+            }
+        } else if (opcode === 40 && tokens.length >= 2) { // CALL
+            const addrArg = tokens[1];
+            const argcArg = tokens.length >= 3 ? parseInt(tokens[2], 10) : 0;
+            if (labels[addrArg] !== undefined) {
+                instruction.args = [labels[addrArg], argcArg];
+            } else if (addrArg.match(/^\d+$/)) {
+                instruction.args = [parseInt(addrArg, 10), argcArg];
+            } else {
+                placeholders.push({ instrIndex: state.instructions.length, label: addrArg, isCall: true, argc: argcArg });
+                instruction.args = [0, argcArg];
+            }
+        } else if ([2, 3, 8, 20, 21, 30, 31, 32, 33, 34, 41, 42, 43, 44, 45, 46, 47, 48, 55, 56, 66, 67, 86].includes(opcode)) {
             instruction.args = tokens.slice(1).map(t => parseInt(t, 10));
         }
 
         state.instructions.push(instruction);
+    }
+
+    // Resolve label placeholders
+    for (const ph of placeholders) {
+        if (labels[ph.label] !== undefined) {
+            if (ph.isCall) {
+                state.instructions[ph.instrIndex].args = [labels[ph.label], ph.argc];
+            } else {
+                state.instructions[ph.instrIndex].args = [labels[ph.label]];
+            }
+        }
     }
 
     document.getElementById('visualizer').style.display = 'block';
@@ -192,6 +335,26 @@ function updateUI(highlightStack = false, updatedVarIndex = -1) {
     }
 
     document.getElementById('console-output').textContent = state.output.join('\n');
+
+    // Render Heap
+    const varsDiv = document.getElementById('vars-display');
+    if (varsDiv) {
+        let heapHtml = '';
+        if (state.heapHandles && Object.keys(state.heapHandles).length > 0) {
+            for (const [id, h] of Object.entries(state.heapHandles)) {
+                const status = h.valid ? '' : ' (freed)';
+                let cells = [];
+                for (let i = 0; i < h.size; i++) {
+                    const val = state.heap[h.offset + i];
+                    cells.push(val !== undefined ? val.toString() : '0');
+                }
+                heapHtml += `<div class="var-item">H${id}: [${cells.join(', ')}]${status}</div>`;
+            }
+        } else {
+            heapHtml = '<div style="color:#888; font-style:italic;">Empty</div>';
+        }
+        varsDiv.innerHTML = heapHtml;
+    }
 }
 
 function getExplanation(instr) {
@@ -201,11 +364,20 @@ function getExplanation(instr) {
         case 2: return `<strong>LOAD</strong> Retrieve value from variable Index ${instr.args[0]} and push to stack.`;
         case 3: return `<strong>STORE</strong> Pop top value from stack and store into variable Index ${instr.args[0]}.`;
         case 4: return `<strong>ADD</strong> Pop top two values, add them, and push the result.`;
-        case 8: return `<strong>PRINT</strong> Output value of variable Index ${instr.args[0]} to console.`;
+        case 5: return `<strong>SUB</strong> Pop top two values, subtract second from first, and push the result.`;
+        case 6: return `<strong>MUL</strong> Pop top two values, multiply them, and push the result.`;
+        case 7: return `<strong>DIV</strong> Pop top two values, divide first by second, and push the result.`;
+        case 8: return `<strong>PRINT</strong> Pop top of stack and print to console.`;
         case 9: return `<strong>HALT</strong> Stop execution.`;
         case 20:
             const s = state.stringPool[instr.args[0]] || "";
             return `<strong>PUSH_STR</strong> index ${instr.args[0]} ("${s}").`;
+        case 21: return `<strong>PRINT_STR</strong> Print string from pool at index ${instr.args[0]}.`;
+        case 22: {
+            const cpool = state.constPool || {};
+            const val = cpool[instr.args[0]];
+            return `<strong>PUSH_CONST</strong> Push constant pool[${instr.args[0]}] = <span style="font-weight:bold">${val !== undefined ? val : '?'}</span>.`;
+        }
         case 16: return `<strong>JMP</strong> Jump to instruction at index ${instr.args[0]}.`;
         case 17: return `<strong>JZ</strong> Pop value. If 0, jump to index ${instr.args[0]}.`;
         case 18: return `<strong>JNZ</strong> Pop value. If !0, jump to index ${instr.args[0]}.`;
@@ -227,6 +399,11 @@ function getExplanation(instr) {
         case 64: return `<strong>NOT</strong> Logical NOT (0 -> 1, else 0).`;
         case 66: return `<strong>INC</strong> Increment variable Index ${instr.args[0]} by 1.`;
         case 67: return `<strong>DEC</strong> Decrement variable Index ${instr.args[0]} by 1.`;
+        case 44: return `<strong>ALLOC</strong> Pop size ${instr.args[0]}, allocate cells on heap, push handle.`;
+        case 45: return `<strong>FREE</strong> Invalidate heap handle ${instr.args[0]}.`;
+        case 46: return `<strong>LOAD_H</strong> Read cell at index ${instr.args[0]} from heap handle.`;
+        case 47: return `<strong>STORE_H</strong> Write value to cell at index ${instr.args[0]} of heap handle.`;
+        case 48: return `<strong>HEAP_LEN</strong> Push size of heap handle ${instr.args[0]}.`;
         case 68: return `<strong>INPUT</strong> Read integer from stdin.`;
         case 69: return `<strong>READ</strong> Read line to string pool.`;
         case 70: return `<strong>WRITE</strong> Print string handle without newline.`;
@@ -243,6 +420,7 @@ function getExplanation(instr) {
         case 81: return `<strong>DELAY</strong> Sleep for N ms.`;
         case 82: return `<strong>RTC_READ</strong> Read RTC memory.`;
         case 83: return `<strong>RTC_WRITE</strong> Write RTC memory.`;
+        case 86: return `<strong>CALL_EXTERN</strong> Call external function ID ${instr.args[0]} with ${instr.args[1]} args.`;
         case 90: return `<strong>TRACE</strong> Toggle debug trace mode.`;
         default: return `<strong>OP ${instr.op}</strong> Executing internal instruction.`;
     }
@@ -257,10 +435,16 @@ function step() {
     let updatedVarIndex = -1;
 
     switch (instr.op) {
-        case 1: // PUSH
+        case 1: // PUSH (legacy)
             state.stack.push(instr.args[0]);
             highlightStack = true;
             break;
+        case 22: { // PUSH_CONST
+            const cpool = state.constPool || {};
+            state.stack.push(BigInt(cpool[instr.args[0]] || 0));
+            highlightStack = true;
+            break;
+        }
         case 20: // PUSH_STR
             state.stack.push(BigInt(instr.args[0]));
             highlightStack = true;
@@ -501,6 +685,54 @@ function step() {
         case 79: // FCLOSE (stub)
             state.stack.pop(); // pop fd
             break;
+        case 44: { // ALLOC
+            const size = Number(state.stack.pop());
+            if (!state.heap) state.heap = {};
+            if (!state.heapHandles) state.heapHandles = {};
+            const id = Object.keys(state.heapHandles).length + 1;
+            state.heapHandles[id] = { offset: Object.keys(state.heap).length, size: size, valid: true };
+            for (let i = 0; i < size; i++) state.heap[Object.keys(state.heap).length] = 0n;
+            state.stack.push(BigInt(id));
+            highlightStack = true;
+            break;
+        }
+        case 45: { // FREE
+            const id = Number(state.stack.pop());
+            if (state.heapHandles && state.heapHandles[id]) state.heapHandles[id].valid = false;
+            break;
+        }
+        case 46: { // LOAD_H
+            const index = Number(state.stack.pop());
+            const id = Number(state.stack.pop());
+            let val = 0n;
+            if (state.heapHandles && state.heapHandles[id] && state.heapHandles[id].valid) {
+                const off = state.heapHandles[id].offset + index;
+                val = state.heap[off] || 0n;
+            }
+            state.stack.push(val);
+            highlightStack = true;
+            break;
+        }
+        case 47: { // STORE_H
+            const value = state.stack.pop();
+            const index = Number(state.stack.pop());
+            const id = Number(state.stack.pop());
+            if (state.heapHandles && state.heapHandles[id] && state.heapHandles[id].valid) {
+                const off = state.heapHandles[id].offset + index;
+                state.heap[off] = value;
+            }
+            break;
+        }
+        case 48: { // HEAP_LEN
+            const id = Number(state.stack.pop());
+            let sz = 0n;
+            if (state.heapHandles && state.heapHandles[id] && state.heapHandles[id].valid) {
+                sz = BigInt(state.heapHandles[id].size);
+            }
+            state.stack.push(sz);
+            highlightStack = true;
+            break;
+        }
         case 80: // TIME
             state.stack.push(BigInt(Date.now()));
             highlightStack = true;
@@ -515,6 +747,13 @@ function step() {
         case 83: // RTC_WRITE (stub)
             state.stack.pop();
             break;
+        case 86: { // CALL_EXTERN
+            const argc = instr.args[1];
+            for (let i = 0; i < argc; i++) state.stack.pop();
+            state.stack.push(0n);
+            highlightStack = true;
+            break;
+        }
         case 90: // TRACE (no-op in visualizer as it's always tracing)
             break;
     }
@@ -594,3 +833,24 @@ function updateIntellisense() {
     overlay.innerHTML = highlighted + '\n';
     syncScroll();
 }
+
+// File input handler
+document.addEventListener('DOMContentLoaded', () => {
+    const fileInput = document.getElementById('file-input');
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const input = document.getElementById('source-input');
+                if (input) {
+                    input.value = ev.target.result;
+                    updateIntellisense();
+                    loadFromInput();
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
+});
